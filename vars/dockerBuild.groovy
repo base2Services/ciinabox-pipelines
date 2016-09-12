@@ -4,7 +4,7 @@
  builds a docker image
 
 example usage
- dockerBuild {
+dockerBuild {
   dir: .
   repo: myrepo
   image: myimage
