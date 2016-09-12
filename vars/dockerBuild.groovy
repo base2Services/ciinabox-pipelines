@@ -34,20 +34,27 @@ def call(body) {
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
   }
-  sh "docker build -t ${dockerRepo}:${tags[0]} ${buildArgs} ${buildDir}"
+  sh "docker build -t ${dockerRepo}:${lookupTag(tags[0])} ${buildArgs} ${buildDir}"
   if(tags.size() > 1) {
     tags.each { tag ->
-      sh "docker tag -f ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
+      sh "docker tag -f ${dockerRepo}:${lookupTag(tags[0])} ${dockerRepo}:${lookupTag(tag)}"
     }
   }
   if(push) {
     tags.each { tag ->
-      sh "docker push ${dockerRepo}:${tag}"
+      sh "docker push ${dockerRepo}:${lookupTag(tag)}"
     }
   }
   if(cleanup) {
     tags.each { tag ->
-      sh "docker rmi ${dockerRepo}:${tag}"
+      sh "docker rmi ${dockerRepo}:${lookupTag(tag)}"
     }
   }
+}
+
+def lookupTag(tag) {
+  if(tag.startsWith('env:')) {
+      return '${' + tag.split('env:')[1] + '}'
+  }
+  tag
 }
