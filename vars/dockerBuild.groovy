@@ -29,9 +29,9 @@ def call(body) {
   def dockerRepo = "${config.repo}/${config.image}"
   def buildDir = config.get('dir', '.')
   def push = config.get('push', false)
-  def cleanup = config.get('push', false)
+  def cleanup = config.get('cleanup', false)
   def buildArgs = ""
-  config.get('args',[:]).each { arg, value
+  config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
   }
   sh "docker build -t ${dockerRepo}:${tags[0]} ${buildArgs} ${buildDir}"
