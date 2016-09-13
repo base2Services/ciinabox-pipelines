@@ -35,6 +35,8 @@ def call(body) {
      buildArgs += "--build-arg ${arg}=${value} "
   }
 
+  println "config:${config}"
+
   sh "docker build -t ${dockerRepo}:${tags[0]} ${buildArgs} ${buildDir}"
   if(tags.size() > 1) {
     tags.each { tag ->
