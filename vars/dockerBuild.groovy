@@ -5,16 +5,18 @@
 
 example usage
 dockerBuild {
-  dir: .
-  repo: myrepo
-  image: myimage
-  tags:
-    - env.BUILD_NUMBER
-    - latest
-  - args:
-      nodeVersion: 0.10.33
-  push: true
-  cleanup: true
+  dir = '.'
+  repo = 'myrepo'
+  image = 'myimage'
+  tags = [
+    '${BUILD_NUMBER}',
+    'latest'
+  ]
+  args = [
+    'nodeVersion':'0.10.33'
+  ]
+  push = true
+  cleanup = true
 }
 ************************************/
 
