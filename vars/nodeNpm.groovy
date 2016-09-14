@@ -7,8 +7,8 @@ example usage
 nodeNpm {
   version = '0.10.33'
   sshAgent = true
-  dir = app/
-  env = production
+  dir = 'app/'
+  env = 'production'
   tasks = [
     'install'
   ]
