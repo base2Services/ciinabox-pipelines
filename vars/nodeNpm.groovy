@@ -30,6 +30,8 @@ def call(body) {
   def nodeEnv = config.get('env', 'production')
   def nodeVersion = config.get('version', 'node:latest')
   def archive = config.get('archive', [:])
+  def archiveFile = archive.get('file','source.tar.gz')
+  def archivePath = archive.get('path', '.')
   def sshAgentEnabled = config.get('sshAgent',false)
   def sshAgent = ''
   if(sshAgentEnabled) {
@@ -38,7 +40,7 @@ def call(body) {
   sh """
     #!/bin/bash
     docker run --rm ${appVolume} ${sshAgent} -e "NODE_ENV=${nodeEnv}" ${nodeVersion} npm install && chown -R 1000:1000 .
-    tar -czf ${archive.get('file','source.tar.gz')} ${archive.get('path', '.')} --exclude-vcs --exclude .tar.gz
+    tar -czf ${archiveFile} --exclude-vcs --exclude '${archiveFile}' ${archivePath}
   """
 
 }
