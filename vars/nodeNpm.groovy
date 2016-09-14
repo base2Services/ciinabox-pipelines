@@ -38,7 +38,7 @@ def call(body) {
   sh """
     #!/bin/bash
     docker run --rm ${appVolume} ${sshAgent} -e "NODE_ENV=${nodeEnv}" ${nodeVersion} npm install && chown -R 1000:1000 .
-    tar -czf ${archive.get('file','source.tar.gz')} ${archive.get('path', '.')} --exclude .git
+    tar -czf ${archive.get('file','source.tar.gz')} ${archive.get('path', '.')} --exclude-vcs --exclude .tar.gz
   """
 
 }
