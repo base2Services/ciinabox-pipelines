@@ -11,6 +11,7 @@ withFile('*.json') {
 
 def call(pattern, body) {
   def currentDir = new File()
+  println "looking for ${pattern} in ${currentDir.absolutePath}/"
   new FileNameFinder().getFileNames("${currentDir.absolutePath}/",pattern).each { filename ->
     body()
   }
