@@ -15,12 +15,12 @@ def call(pattern, body) {
   body.delegate = config
   body()
 
-  def currentDir = new File(config.get('dir','.'))
+  def currentDir = config.get('dir','.')
   def filePattern = config.get('filenameFilter', '.*')
   def matching = []
 
-  echo "looking for ${pattern} in ${currentDir.absolutePath}/"
-  new FileNameFinder().getFileNames("${currentDir.absolutePath}/",filePattern).each { filename ->
+  echo "looking for ${pattern} in ${currentDir}/${filePattern}"
+  new FileNameFinder().getFileNames("${currentDir}/",filePattern).each { filename ->
     def file = new File(filename);
     echo "looking for ${pattern} in ${filename}/"
     if(file.text.contains(pattern)) {
