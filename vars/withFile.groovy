@@ -10,7 +10,8 @@ withFile('*.json') {
 ************************************/
 
 def call(pattern, body) {
-  new FileNameFinder().getFileNames(pattern).each { filename ->
+  def currentDir = new File()
+  new FileNameFinder().getFileNames("${currentDir.absolutePath}/",pattern).each { filename ->
     body()
   }
 }
