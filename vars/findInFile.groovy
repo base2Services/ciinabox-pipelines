@@ -21,7 +21,8 @@ def call(pattern, body) {
 
   sh 'printenv'
   echo "looking for ${pattern} in ${currentDir}/${filePattern}"
-  new FileNameFinder().getFileNames("${currentDir}/",filePattern).each { filename ->
+  echo "environments/aries.json exists:${new File(currentDir + '/environments/aries.json').text}"
+  new FileNameFinder().getFileNames("${currentDir}",filePattern).each { filename ->
     def file = new File(filename);
     echo "looking for ${pattern} in ${filename}/"
     if(file.text.contains(pattern)) {
