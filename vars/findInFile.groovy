@@ -19,9 +19,8 @@ def call(pattern, body) {
   def filePattern = config.get('filenameFilter', '.*')
   def matching = []
 
-  sh 'printenv'
+  sh "printenv && ls -al ${currentDir}"
   echo "looking for ${pattern} in ${currentDir}/${filePattern}"
-  echo "environments/aries.json exists:${new File(currentDir + '/environments/aries.json').text}"
   new FileNameFinder().getFileNames("${currentDir}",filePattern).each { filename ->
     def file = new File(filename);
     echo "looking for ${pattern} in ${filename}/"
