@@ -17,16 +17,11 @@ def call(pattern, body) {
 
   def currentDir = config.get('dir',pwd())
   def filePattern = config.get('filenameFilter', '.*')
-  def matching = []
 
   sh "printenv && ls -al ${currentDir}"
   echo "looking for ${pattern} in ${currentDir}/${filePattern}"
-  new FileNameFinder().getFileNames("${currentDir}",filePattern).each { filename ->
-    def file = new File(filename);
-    echo "looking for ${pattern} in ${filename}/"
-    if(file.text.contains(pattern)) {
-      matching << filename
-    }
-  }
+  sh "find ${currentDir} -name ${filePattern} | xargs grep '${pattern}' | cut -d ':' -f 1 | cut -d '/' -f 2 > matches.txt"
+  def matching = readFile('matches.txt').split("\r?\n")
+  sh 'rm matches.txt'
   matching
 }
