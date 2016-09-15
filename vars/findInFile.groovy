@@ -15,7 +15,7 @@ def call(pattern, body) {
   body.delegate = config
   body()
 
-  def currentDir = config.get('dir','.')
+  def currentDir = config.get('dir',pwd())
   def filePattern = config.get('filenameFilter', '.*')
   def matching = []
 
