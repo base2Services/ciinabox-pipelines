@@ -18,8 +18,6 @@ def call(pattern, body) {
   def currentDir = config.get('dir',pwd())
   def filePattern = config.get('filenameFilter', '.*')
 
-  sh "printenv && ls -al ${currentDir}"
-  echo "looking for ${pattern} in ${currentDir}/${filePattern}"
   sh "find ${currentDir} -name '${filePattern}' | xargs grep '${pattern}' | cut -d ':' -f 1 | rev | cut -d '/' -f 1 | rev > matches.txt"
   def matching = readFile('matches.txt').split("\r?\n")
   sh 'rm matches.txt'
