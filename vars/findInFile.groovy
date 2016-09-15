@@ -22,6 +22,7 @@ def call(pattern, body) {
   echo "looking for ${pattern} in ${currentDir.absolutePath}/"
   new FileNameFinder().getFileNames("${currentDir.absolutePath}/",filePattern).each { filename ->
     def file = new File(filename);
+    echo "looking for ${pattern} in ${filename}/"
     if(file.text.contains(pattern)) {
       matching << filename
     }
