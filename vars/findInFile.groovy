@@ -24,7 +24,7 @@ def call(pattern, body) {
       find ${CURRENT_DIR} -name ${FILEPATTERN} > checking.txt
       while read e; do
         echo "checking $e for ${PATTERN}"
-        grep -q "${PATTERN}" $e && echo $e rev |  cut -d '/' -f 1 | rev >> matches.txt
+        grep -q "${PATTERN}" $e && echo $e | rev |  cut -d '/' -f 1 | rev >> matches.txt
       done <checking.txt
     '''
   }
