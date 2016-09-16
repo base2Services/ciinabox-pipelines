@@ -18,8 +18,16 @@ def call(pattern, body) {
   def currentDir = config.get('dir',pwd())
   def filePattern = config.get('filenameFilter', '.*')
 
-  sh "find ${currentDir} -name '${filePattern}' | xargs grep '${pattern}' | cut -d ':' -f 1 | rev | cut -d '/' -f 1 | rev > matches.txt"
+  //sh "find ${currentDir} -name '${filePattern}' | xargs grep '${pattern}' | cut -d ':' -f 1 | rev | cut -d '/' -f 1 | rev > matches.txt"
+  withEnv(["CURRENT_DIR=${currentDir}", "FILEPATTERN=${filePattern}", "PATTERN=${pattern}"])
+  sh '''
+    find ${CURRENT_DIR} -name ${FILEPATTERN} > checking.txt
+    while read e; do
+      echo "checking $e for ${PATTERN}"
+      grep -q "${PATTERN}" $e && echo $e >> matches.txt
+    done <checking.txt
+  '''
   def matching = readFile('matches.txt').split("\r?\n")
-  sh 'rm matches.txt'
+  sh 'rm matches.txt checking.txt'
   matching
 }
