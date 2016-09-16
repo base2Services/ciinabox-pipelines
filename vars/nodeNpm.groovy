@@ -45,12 +45,11 @@ def call(body) {
 	    echo "Build Failed!"
       exit 2
     fi
-    docker run --rm ${appVolume} ${nodeVersion}  chown -R 1000:1000 .
+    docker run --rm ${appVolume} ${nodeVersion} chown -R 1000:1000 .
     if [ $? -ne 0 ]; then
     	echo "failed to chown!"
         exit 2
     fi
     tar -czf ${archiveFile} --exclude-vcs --exclude '${archiveFile}' ${archivePath}
   """
-
 }
