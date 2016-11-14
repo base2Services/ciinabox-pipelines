@@ -21,7 +21,7 @@ def call(pattern, body) {
   //sh "find ${currentDir} -name '${filePattern}' | xargs grep '${pattern}' | cut -d ':' -f 1 | rev | cut -d '/' -f 1 | rev > matches.txt"
   withEnv(["CURRENT_DIR=${currentDir}", "FILEPATTERN=${filePattern}", "PATTERN=${pattern}"]) {
     sh '''
-      find ${CURRENT_DIR} -name ${FILEPATTERN} > checking.txt
+      find ${CURRENT_DIR} -name "${FILEPATTERN}" > checking.txt
       while read e; do
         echo "checking $e for ${PATTERN}"
         grep -q "${PATTERN}" $e && echo $e | rev |  cut -d '/' -f 1 | rev >> matches.txt
