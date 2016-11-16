@@ -16,9 +16,7 @@ def call(pattern, body) {
   body()
 
   def currentDir = config.get('dir',pwd())
-  def filePattern = config.get('filenameFilter')
-
-  echo "Filename filter provided : ${filePattern}"
+  def filePattern = config.get('filenameFilter', '.*')
 
   //sh "find ${currentDir} -name '${filePattern}' | xargs grep '${pattern}' | cut -d ':' -f 1 | rev | cut -d '/' -f 1 | rev > matches.txt"
   withEnv(["CURRENT_DIR=${currentDir}", "FILEPATTERN=\"${filePattern}\"", "PATTERN=${pattern}"]) {
