@@ -8,5 +8,5 @@
  ************************************/
 
 def call(body) {
-    echo "Slack message stubg method\n\t >>>> $body"
+    echo "Slack message stub method\n\t >>>> $body"
 }
