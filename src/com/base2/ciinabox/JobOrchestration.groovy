@@ -91,18 +91,19 @@ def collectJobClosures(jobDefinitions, runInParallel) {
     def jobClosure,
         parallelBranchName
 
+    if(!jobConfig.name){
+      jobConfig.name = "Parallel Branch $j"
+    }
+
     //dynamically binding jobs
     if (jobConfig.job instanceof Closure) {
-      if(!jobConfig.name){
-        jobConfig.name = "Parallel Branch $j"
-      }
       jobClosure = jobConfig.job
-      parallelBranchName = jobConfig.name
     }
     else {
       jobClosure = buildJobStep(jobConfig.job, jobConfig.wait, jobConfig.parameters)
-      parallelBranchName = jobConfig.job
     }
+
+    parallelBranchName = jobConfig.name
 
     if (runInParallel) closures[parallelBranchName] = jobClosure
     if (!runInParallel) closures << jobClosure

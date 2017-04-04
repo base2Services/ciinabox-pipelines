@@ -34,7 +34,6 @@ def buildConfigs = [
 def pipelineConfiguration = [
         'Build'                      : [
                 parallel: true,
-
                 jobs    : []
         ],
         // Bake Base AMI
