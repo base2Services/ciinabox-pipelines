@@ -1,10 +1,5 @@
 #!groovy
-
 @Library('github.com/base2Services/ciinabox-pipelines@master')
-
-//
-//  NOTE: You will need job 'MyJobName' within 'MyFolder' folder on your Jenkins installation in order for pipeline to complete with success
-//
 
 // late binded job parameter
 def myJobParameter
