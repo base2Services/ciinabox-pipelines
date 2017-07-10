@@ -11,5 +11,6 @@
 def call(cmd) {
 
   def out = sh script: cmd, returnStdout: true
+
   return out.replace('\n', '')
 }
