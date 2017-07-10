@@ -10,6 +10,7 @@
 
 def call(cmd) {
 
-  def out = sh script: command, returnStdout: true
+  def out = sh script: cmd, returnStdout: true
+
   return out.replace('\n', '')
 }
