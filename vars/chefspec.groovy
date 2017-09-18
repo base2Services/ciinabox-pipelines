@@ -9,13 +9,13 @@
 
 def call(body) {
     echo "Slack message stub method\n\t >>>> $body"
-    sh '''#!/bin/bash
+    sh """#!/bin/bash
     eval "$(/opt/chefdk/bin/chef shell-init bash)"
     export LC_CTYPE=en_US.UTF-8
     echo "=========================================="
-    echo "run chef build for cookbook: $body"
+    echo "run chef build for cookbook: ${body}"
     echo "=========================================="
-    cd $WORKSPACE/$cb
+    cd $WORKSPACE/$body
     gem install version
     berks install
     if [ $? -ne 0 ]; then
@@ -31,6 +31,5 @@ def call(body) {
     echo "=========================================="
     echo "completed cookbook build $body"
     echo "=========================================="
-    '''
-
+    """
 }
