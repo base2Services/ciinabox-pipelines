@@ -8,7 +8,6 @@
  ************************************/
 
 def call(body) {
-    echo "Slack message stub method\n\t >>>> $body"
     withEnv(["COOKBOOK=${body}"]) {
       sh '''#!/bin/bash
       eval "$(/opt/chefdk/bin/chef shell-init bash)"
