@@ -15,7 +15,7 @@ def call(body) {
     echo '=========================================='
     echo 'run chef build for cookbook: ${body}'
     echo '=========================================='
-    cd $body
+    cd ${body}
     gem install version
     berks install
     if [ $? -ne 0 ]; then
@@ -29,7 +29,7 @@ def call(body) {
         exit 2
     fi
     echo '=========================================='
-    echo 'completed cookbook build $body'
+    echo 'completed cookbook build ${body}'
     echo '=========================================='
     cd ..
     """
