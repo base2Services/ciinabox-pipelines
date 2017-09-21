@@ -16,9 +16,7 @@ import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 
 def call(body) {
-  def config = [:]
-  body.resolveStrategy = Closure.DELEGATE_FIRST
-  body.delegate = config
+  def config = body
 
   println "lookup config:${config}"
 
