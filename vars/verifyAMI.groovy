@@ -10,7 +10,7 @@
    def config = body
    deleteDir()
    unstash 'baked-ami'
-   unstash 'cookbooks'
+   unstash 'cookbook'
    withEnv(["ROLE=${config.get('role')}"]) {
      sh '''
        ls -al
