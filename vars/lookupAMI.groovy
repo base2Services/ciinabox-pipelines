@@ -50,8 +50,8 @@ def lookupAMI(config) {
   )
   if(imagesList.images.size () > 0) {
     println "images:${imagesList.images}"
-    def images = imagesList.images.sort { it.creationDate }
-    return images[images.size()-1]
+    imagesList.images.sort { it.creationDate }
+    return imagesList.images[imagesList.images.size()-1]
   }
   return null
 }
