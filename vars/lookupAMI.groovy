@@ -18,13 +18,13 @@ import com.amazonaws.services.securitytoken.model.*
 def call(body) {
   def config = body
 
-  println "lookup config:${config}"
-
   if(!config['owner']) {
     config.owner = lookupAccountId()
   }
+  println "lookup config:${config}"
   def image = lookupAMI(config)
   if(image) {
+    println "image:${image.imageId}"
     env.SOURCE_AMI = image.imageId
   }
 }
