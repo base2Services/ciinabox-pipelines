@@ -27,7 +27,7 @@ def call(body) {
   config.amiName = config.get('baseAMI')
 
   println "bake config:${config}"
-
+  deleteDir()
   git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
   withEnv(bakeEnv) {
     lookupAMI config
