@@ -26,6 +26,8 @@ def call(body) {
   if(image) {
     println "image:${image.imageId}"
     env.SOURCE_AMI = image.imageId
+  } else {
+    prinln "ami not found for ${config}"
   }
 }
 
