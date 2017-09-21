@@ -20,6 +20,9 @@ def call(body) {
   bakeEnv << "CLIENT=${config.get('client')}"
   bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
   bakeEnv << "AMI_USERS=${config.get('shareAmiWith')}"
+  bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize')}"
+  shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+  bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
 
   println "bake config:${config}"
@@ -39,12 +42,12 @@ def call(body) {
     echo "==================================================="
     echo "Baking AMI: ${ROLE}"
     echo "==================================================="
-    printenv
-    cat base_params.json
-    ls -al
+    AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
+    ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
     echo "==================================================="
     echo "completed baking AMI for : ${ROLE}"
     echo "==================================================="
     '''
+    stash(name: 'baked-ami', includes: '**/*-ami-*.yml')
   }
 }
