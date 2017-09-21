@@ -1,7 +1,7 @@
 /***********************************
  chefspec DSL
 
- Invokes chefspec for a cookbook
+ Invokes package and stash cookbook
 
  example usage
  chefspec 'cookbook_dir'

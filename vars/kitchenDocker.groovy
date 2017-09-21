@@ -1,7 +1,7 @@
 /***********************************
  chefspec DSL
 
- Invokes chefspec for a cookbook
+ Invokes run kitchen test using docker
 
  example usage
  chefspec 'cookbook_dir'
