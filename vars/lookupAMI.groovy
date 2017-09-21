@@ -50,6 +50,7 @@ def lookupAMI(config) {
   )
   if(imagesList.images.size () > 0) {
     def images = imagesList.images.sort { it.creationDate }
+    println images
     return images[images.size()-1]
   }
   return null
