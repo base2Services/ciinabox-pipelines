@@ -38,6 +38,8 @@ def call(body) {
     mkdir -p data_bags
     mkdir -p environments
     mkdir -p encrypted_data_bag_secret
+    ls -al
+    ls -al cookbooks
     '''
     sh '''#!/bin/bash
     echo "==================================================="
