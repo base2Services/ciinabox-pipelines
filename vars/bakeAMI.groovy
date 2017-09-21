@@ -12,7 +12,7 @@ def call(body) {
 
   bakeEnv = []
   bakeEnv << "REGION=${config.get('region')}"
-  bakeEnv << "PACKER_INSTANCE_TYPE=${config.get(''bakeAMIType', 'm4.large'')}"
+  bakeEnv << "PACKER_INSTANCE_TYPE=${config.get('bakeAMIType', 'm4.large')}"
   bakeEnv << "CHEF_RUN_LIST=${config.get('bakeChefRunList')}"
   bakeEnv << "PACKER_DEFAULT_PARAMS=${config.get('bakeParams', 'base_params.json')}"
   bakeEnv << "COOKBOOK_TAR=${config.get('bakeCookbookPackage, 'cookbooks.tar.gz')}"
