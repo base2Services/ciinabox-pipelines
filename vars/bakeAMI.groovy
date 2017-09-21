@@ -18,6 +18,6 @@ def call(body) {
   println "bake config:${config}"
 
   git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
-  lookupAMI region: region, amiName: baseAMI
+  lookupAMI config 
   sh 'echo "SOURCE_AMI:${SOURCE_AMI}"'
 }
