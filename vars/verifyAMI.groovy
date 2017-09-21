@@ -13,7 +13,7 @@
    deleteDir()
    unstash 'baked-ami'
    unstash 'cookbook'
-   withEnv(["ROLE=${config.get('role')}", "COOKBOOK=${config.get(cookbook)}"]) {
+   withEnv(["ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
      sh '''
        tar xfz cookbooks.tar.gz
        ls -al
