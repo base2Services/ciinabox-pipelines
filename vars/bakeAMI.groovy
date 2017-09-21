@@ -10,15 +10,41 @@
 def call(body) {
   def config = body
 
-  def region = config.get('region')
-  def baseAMI = config.get('baseAMI')
-  def shareAmiWith = config.get('shareAmiWith')
-  def ciinabox = config.get('ciinabox', 'ciinabox')
-  config.amiName = baseAMI
+  bakeEnv = []
+  bakeEnv << "REGION=${config.get('region')}"
+  bakeEnv << "PACKER_INSTANCE_TYPE=${config.get(''bakeAMIType', 'm4.large'')}"
+  bakeEnv << "CHEF_RUN_LIST=${config.get('bakeChefRunList')}"
+  bakeEnv << "PACKER_DEFAULT_PARAMS=${config.get('bakeParams', 'base_params.json')}"
+  bakeEnv << "COOKBOOK_TAR=${config.get('bakeCookbookPackage, 'cookbooks.tar.gz')}"
+  bakeEnv << "ROLE=${config.get('role')}"
+  bakeEnv << "CLIENT=${config.get('client')}"
+  bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
+  bakeEnv << "AMI_USERS=${config.get('shareAmiWith')}"
+  config.amiName = config.get('baseAMI')
 
   println "bake config:${config}"
 
   git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
-  lookupAMI config
-  sh 'echo "SOURCE_AMI:${SOURCE_AMI}"'
+  withEnv(bakeEnv) {
+    lookupAMI config
+    sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
+    unstash 'cookbook'
+    sh '''
+    tar xvfz cookbooks.tar.gz
+    mkdir -p data_bags
+    mkdir -p environments
+    mkdir -p encrypted_data_bag_secret
+    '''
+    sh '''#!/bin/bash
+    echo "==================================================="
+    echo "Baking AMI: ${ROLE}"
+    echo "==================================================="
+    printenv
+    cat base_params.json
+    ls -al
+    echo "==================================================="
+    echo "completed baking AMI for : ${ROLE}"
+    echo "==================================================="
+    '''
+  }
 }
