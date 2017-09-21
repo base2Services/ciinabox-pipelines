@@ -12,10 +12,11 @@
    unstash 'baked-ami'
    unstash 'cookbooks'
    withEnv(["ROLE=${config.get('role')}"]) {
-   sh '''
-     ls -al
-     SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
-     echo $SOURCE_AMI
-     cat .kitchen.yml
-   '''
+     sh '''
+       ls -al
+       SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
+       echo $SOURCE_AMI
+       cat .kitchen.yml
+     '''
+   }
 }
