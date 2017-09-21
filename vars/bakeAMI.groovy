@@ -15,7 +15,7 @@ def call(body) {
   bakeEnv << "PACKER_INSTANCE_TYPE=${config.get('bakeAMIType', 'm4.large')}"
   bakeEnv << "CHEF_RUN_LIST=${config.get('bakeChefRunList')}"
   bakeEnv << "PACKER_DEFAULT_PARAMS=${config.get('bakeParams', 'base_params.json')}"
-  bakeEnv << "COOKBOOK_TAR=${config.get('bakeCookbookPackage, 'cookbooks.tar.gz')}"
+  bakeEnv << "COOKBOOK_TAR=${config.get('bakeCookbookPackage', 'cookbooks.tar.gz')}"
   bakeEnv << "ROLE=${config.get('role')}"
   bakeEnv << "CLIENT=${config.get('client')}"
   bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
