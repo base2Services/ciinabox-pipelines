@@ -6,14 +6,14 @@
  example usage
  verifyAMI ......
  ************************************/
- @Grab('org.yaml:snakeyaml:1.18')
 
  def call(body) {
    def config = body
    deleteDir()
    unstash 'baked-ami'
    unstash 'cookbook'
-   withEnv(["ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
+   withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
+     createKitchenLocalOverride()
      sh '''
        tar xfz cookbooks.tar.gz
        ls -al
@@ -22,8 +22,53 @@
        cd cookbooks/$COOKBOOK
        cat .kitchen.yml
      '''
+     withAWSKeyPair(config.get('region')) {
+       sh '''
+        echo ${KEYNAME}
+        cat ${KEYNAME}
+       '''
+     }
    }
 }
 
-def createKitchenLocalOverride() {
+def createKitchenLocalOverride(keyname, sourceAMI) {
+  def kitchenLocal = """
+---
+
+driver:
+  aws_ssh_key_id: ${keyname}
+  user_data: userdata.sh
+
+platforms:
+  - name: amazonLinux
+    driver:
+      image_id: ${sourceAMI}
+
+transport:
+  ssh_key: ${keyname}
+
+  """
+  def file = new File('.kitchen.local.yml')
+  file << kitchenLocal
+  file.close()
 }
+
+/*
+cat <<EOT > cookbooks/imfree/.kitchen.local.yml
+---
+
+driver:
+  aws_ssh_key_id: ${KEYNAME}
+  user_data: userdata.sh
+
+platforms:
+  - name: amazonLinux
+    driver:
+      image_id: ${SOURCE_AMI}
+
+transport:
+  ssh_key: ${KEYNAME}
+
+
+EOT
+*/
