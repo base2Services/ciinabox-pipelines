@@ -50,12 +50,25 @@ def lookupAMI(config) {
   )
   if(imagesList.images.size () > 0) {
     def images = imagesList.images.collect()
-    println "pre sort:${images.class}"
-    images = images.sort {a, b -> b.creationDate<=>a.creationDate}
-    println "sorted:${images}"
-    return images.first()
+    println "imaage:${images}"
+    return images.get(findNewestImage(images))
   }
   return null
+}
+
+def findNewestImage(images) {
+  def index = 0
+  def newest = Date.parse("yyyy-MM-dd", "2000-01-01")
+  def found = 0
+  images.each { image ->
+    imageDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss", image.creationDate)
+    if(imageDate >= newest) {
+      found = index
+      newest = imageDate
+    }
+    index++
+  }
+  return found
 }
 
 def lookupAccountId() {
