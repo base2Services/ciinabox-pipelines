@@ -49,9 +49,11 @@ def lookupAMI(config) {
     .withFilters(filters)
   )
   if(imagesList.images.size () > 0) {
-    println "images:${imagesList.images}"
-    imagesList.images.sort {a, b -> b.creationDate<=>a.creationDate}
-    return imagesList.images.first()
+    def images = imagesList.images.collect()
+    println "pre sort:${images}"
+    images.sort {a, b -> b.creationDate<=>a.creationDate}
+    println "sorted:${images}"
+    return images.first()
   }
   return null
 }
