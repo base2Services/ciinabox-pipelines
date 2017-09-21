@@ -24,7 +24,7 @@ def call(body) {
   println "lookup config:${config}"
   def image = lookupAMI(config)
   if(image) {
-    println "image:${image.imageId}"
+    println "image:${image}"
     env.SOURCE_AMI = image.imageId
   } else {
     println "ami not found for ${config}"
