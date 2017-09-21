@@ -21,7 +21,7 @@ def call(body) {
   bakeEnv << "CLIENT=${config.get('client')}"
   bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
   bakeEnv << "AMI_USERS=${config.get('shareAmiWith')}"
-  bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize')}"
+  bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
   shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
