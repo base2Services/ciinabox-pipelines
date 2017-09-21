@@ -17,6 +17,8 @@ def call(body) {
   def shareAmiWith = config.get('shareAmiWith')
   def ciinabox = config.get('ciinabox', 'ciinabox')
 
+  println "bake config:${config}"
+
   git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
   lookupAMI region: region, amiName: baseAMI
   sh 'echo "SOURCE_AMI:${SOURCE_AMI}"'

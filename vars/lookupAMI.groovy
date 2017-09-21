@@ -20,6 +20,8 @@ def call(body) {
   body.resolveStrategy = Closure.DELEGATE_FIRST
   body.delegate = config
 
+  println "lookup config:${config}"
+
   if(!config['owner']) {
     config.owner = lookupAccountId()
   }
