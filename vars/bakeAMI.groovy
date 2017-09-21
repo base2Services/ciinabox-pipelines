@@ -14,10 +14,11 @@ def call(body) {
   def baseAMI = config.get('baseAMI')
   def shareAmiWith = config.get('shareAmiWith')
   def ciinabox = config.get('ciinabox', 'ciinabox')
+  config.amiName = baseAMI
 
   println "bake config:${config}"
 
   git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
-  lookupAMI config 
+  lookupAMI config
   sh 'echo "SOURCE_AMI:${SOURCE_AMI}"'
 }
