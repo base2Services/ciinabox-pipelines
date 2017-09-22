@@ -21,13 +21,14 @@ def call(region, name=null, body) {
     if(keyName == null) {
       keyName = UUID.randomUUID().toString()
     }
-    createKeyPair(region,keyName)
+    writeFile file: keyName, text: createKeyPair(region,keyName)
     withEnv(["REGION=$region", "KEYNAME=${keyName}"]) {
       body()
     }
     deleteKeyPair(region,keyName)
 }
 
+@NonCPS
 def createKeyPair(region, name) {
   def ec2 = AmazonEC2ClientBuilder.standard()
     .withRegion(region)
@@ -35,12 +36,13 @@ def createKeyPair(region, name) {
 
   def keyPairResult = ec2.createKeyPair(new CreateKeyPairRequest().withKeyName(name))
   if(keyPairResult) {
-    writeFile file: name, text: keyPairResult.keyPair.keyMaterial
+    return keyPairResult.keyPair.keyMaterial
   } else {
     throw new RuntimeException("unable to create temporary keypair " + name + " in " + region)
   }
 }
 
+@NonCPS
 def deleteKeyPair(region, name) {
   def ec2 = AmazonEC2ClientBuilder.standard()
     .withRegion(region)
