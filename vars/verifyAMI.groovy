@@ -21,7 +21,7 @@ SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
 echo $SOURCE_AMI
 cd cookbooks/$COOKBOOK
 
-cat <<EOT > cookbooks/imfree/.kitchen.local.yml
+cat <<EOT > .kitchen.local.yml
 ---
 
 driver:
