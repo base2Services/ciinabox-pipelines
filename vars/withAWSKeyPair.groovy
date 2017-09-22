@@ -35,9 +35,7 @@ def createKeyPair(region, name) {
 
   def keyPairResult = ec2.createKeyPair(new CreateKeyPairRequest().withKeyName(name))
   if(keyPairResult) {
-    File keyFile = new File(name)
-    keyFile.write(keyPairResult.keyPair.keyMaterial)
-    keyFile.close()
+    writeFile file: name, text: keyPairResult.keyPair.keyMaterial
   } else {
     throw new RuntimeException("unable to create temporary keypair " + name + " in " + region)
   }
