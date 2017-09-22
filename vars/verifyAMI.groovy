@@ -7,28 +7,28 @@
  verifyAMI ......
  ************************************/
 
- def call(body) {
-   def config = body
-   deleteDir()
-   unstash 'baked-ami'
-   unstash 'cookbook'
-   withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
-     withAWSKeyPair(config.get('region')) {
-       sh '''
-         tar xfz cookbooks.tar.gz
-         ls -al
-         SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
-         echo $SOURCE_AMI
-         cd cookbooks/$COOKBOOK
-         cat .kitchen.yml
-         echo ${KEYNAME}
-         cat ${KEYNAME}
-       '''
-       }
-     }
-   }
-   sh 'ls -al'
+def call(body) {
+  def config = body
+  deleteDir()
+  unstash 'baked-ami'
+  unstash 'cookbook'
+  withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
+    withAWSKeyPair(config.get('region')) {
+      sh '''
+        tar xfz cookbooks.tar.gz
+        ls -al
+        SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
+        echo $SOURCE_AMI
+        cd cookbooks/$COOKBOOK
+        cat .kitchen.yml
+        echo ${KEYNAME}
+        cat ${KEYNAME}
+      '''
+    }
+  }
+  sh 'ls -al'
 }
+
 
 def createKitchenLocalOverride(keyname, sourceAMI) {
   def kitchenLocal = """
