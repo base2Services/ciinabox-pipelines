@@ -16,7 +16,7 @@ import com.amazonaws.services.ec2.*
 import com.amazonaws.services.ec2.model.*
 import com.amazonaws.regions.*
 
-def call(region, nmae=null, body) {
+def call(region, name=null, body) {
     keyName = name
     if(keyName == null) {
       keyName = UUID.randomUUID().toString()
