@@ -15,18 +15,38 @@ def call(body) {
   withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
     withAWSKeyPair(config.get('region')) {
       sh '''
-        tar xfz cookbooks.tar.gz
-        ls -al
-        SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
-        echo $SOURCE_AMI
-        cd cookbooks/$COOKBOOK
-        cat .kitchen.yml
-        echo ${KEYNAME}
-        cat ${KEYNAME}
+tar xfz cookbooks.tar.gz
+
+SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
+echo $SOURCE_AMI
+cd cookbooks/$COOKBOOK
+
+cat <<EOT > cookbooks/imfree/.kitchen.local.yml
+---
+
+driver:
+  aws_ssh_key_id: ${KEYNAME}
+  user_data: userdata.sh
+
+platforms:
+  - name: amazonLinux
+    driver:
+      image_id: ${SOURCE_AMI}
+
+transport:
+  ssh_key: ${WORKSPACE}/${KEYNAME}
+EOT
+
+cat <<EOT > userdata.sh
+#!/bin/bash
+/opt/base2/bin/ec2-bootstrap ap-southeast-2 537712071186
+EOT
+gem install kitchen-ec2 --no-rdoc
+kitchen destroy
+kitchen test
       '''
     }
   }
-  sh 'ls -al'
 }
 
 
