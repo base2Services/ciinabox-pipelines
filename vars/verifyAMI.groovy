@@ -15,6 +15,8 @@ def call(body) {
   withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
     withAWSKeyPair(config.get('region')) {
       sh '''
+eval "$(/opt/chefdk/bin/chef shell-init bash)"
+
 tar xfz cookbooks.tar.gz
 
 SOURCE_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
