@@ -33,10 +33,14 @@ def createKeyPair(region, name) {
     .withRegion(region)
     .build()
 
-  def keyPair= ec2.createKeyPair(new CreateKeyPairRequest().withKeyName(name))
-  File keyFile = new File(name)
-  keyFile.write(keyPair.keyMaterial)
-  keyFile.close()
+  def keyPairResult = ec2.createKeyPair(new CreateKeyPairRequest().withKeyName(name))
+  if(keyPairResult) {
+    File keyFile = new File(name)
+    keyFile.write(keyPairResult.keyPair.keyMaterial)
+    keyFile.close()
+  } else {
+    throw new RuntimeException("unable to create temporary keypair " + name + " in " + region)
+  }
 }
 
 def deleteKeyPair(region, name) {
