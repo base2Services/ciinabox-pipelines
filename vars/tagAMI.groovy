@@ -14,6 +14,7 @@
 
  def call(body) {
    def config = body
+   println config
    addTags(config.region, config.ami, config.tags)
 }
 
