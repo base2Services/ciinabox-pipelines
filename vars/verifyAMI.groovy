@@ -14,7 +14,7 @@ def call(body) {
   unstash 'cookbook'
   withEnv(["REGION=${config.get('region')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
     withAWSKeyPair(config.get('region')) {
-      sh '''
+      sh '''#!/bin/bash
 eval "$(/opt/chefdk/bin/chef shell-init bash)"
 
 tar xfz cookbooks.tar.gz
