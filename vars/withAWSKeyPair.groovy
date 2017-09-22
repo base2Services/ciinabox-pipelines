@@ -19,7 +19,7 @@ import com.amazonaws.regions.*
 def call(region, name=null, body) {
     keyName = name
     if(keyName == null) {
-      keyName = UUID.randomUUID().toString()
+      keyName = 'tmp-' + UUID.randomUUID().toString()
     }
     writeFile file: keyName, text: createKeyPair(region,keyName)
     withEnv(["REGION=$region", "KEYNAME=${keyName}"]) {
