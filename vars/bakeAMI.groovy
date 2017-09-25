@@ -26,6 +26,8 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
 
+  role = config.get('role').toUpperCase()
+
   node {
     println "bake config:${config}"
     deleteDir()
@@ -52,13 +54,12 @@ def call(body) {
       echo "completed baking AMI for : ${ROLE}"
       echo "==================================================="
       '''
-      stash(name: 'baked-ami', includes: '**/*-ami-*.yml')
       bakedAMI = shellOut('''#!/bin/bash
       BAKED_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
       echo $BAKED_AMI
       ''')
-      env.BAKED_AMI=bakedAMI
-      println "baked AMI:${env.BAKED_AMI}"
+      env["${role}_BAKED_AMI"]=bakedAMI
+      println "${role} baked AMI:" + env["${role}_BAKED_AMI"]
     }
   }
 }
