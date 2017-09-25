@@ -27,6 +27,12 @@ driver:
   aws_ssh_key_id: ${KEYNAME}
   user_data: userdata.sh
 
+verifier:
+  name: inspec
+  sudo: true
+  format: junit
+  output: ./reports/%{platform}_%{suite}_inspec.xml
+
 platforms:
   - name: amazonLinux
     driver:
