@@ -10,7 +10,7 @@
 def call(body) {
   def config = body
 
-  bakeEnv = []
+  def bakeEnv = []
   bakeEnv << "REGION=${config.get('region')}"
   bakeEnv << "PACKER_INSTANCE_TYPE=${config.get('bakeAMIType', 'm4.large')}"
   bakeEnv << "CHEF_RUN_LIST=${config.get('bakeChefRunList')}"
