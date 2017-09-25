@@ -26,7 +26,7 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
 
-  role = config.get('role').toUpperCase()
+  def role = config.get('role').toUpperCase()
 
   node {
     println "bake config:${config}"
