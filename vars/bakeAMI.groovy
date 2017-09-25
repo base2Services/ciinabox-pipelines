@@ -26,37 +26,39 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
 
-  println "bake config:${config}"
-  deleteDir()
-  git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
-  withEnv(bakeEnv) {
-    lookupAMI config
-    sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-    unstash 'cookbook'
-    sh '''
-    tar xvfz cookbooks.tar.gz
-    mkdir -p data_bags
-    mkdir -p environments
-    mkdir -p encrypted_data_bag_secret
-    ls -al
-    ls -al cookbooks
-    '''
-    sh '''#!/bin/bash
-    echo "==================================================="
-    echo "Baking AMI: ${ROLE}"
-    echo "==================================================="
-    AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
-    ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
-    echo "==================================================="
-    echo "completed baking AMI for : ${ROLE}"
-    echo "==================================================="
-    '''
-    stash(name: 'baked-ami', includes: '**/*-ami-*.yml')
-    bakedAMI = shellOut('''#!/bin/bash
-    BAKED_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
-    echo $BAKED_AMI
-    ''')
-    env.BAKED_AMI=bakedAMI
-    println "baked AMI:${env.BAKED_AMI}"
+  node {
+    println "bake config:${config}"
+    deleteDir()
+    git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
+    withEnv(bakeEnv) {
+      lookupAMI config
+      sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
+      unstash 'cookbook'
+      sh '''
+      tar xvfz cookbooks.tar.gz
+      mkdir -p data_bags
+      mkdir -p environments
+      mkdir -p encrypted_data_bag_secret
+      ls -al
+      ls -al cookbooks
+      '''
+      sh '''#!/bin/bash
+      echo "==================================================="
+      echo "Baking AMI: ${ROLE}"
+      echo "==================================================="
+      AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
+      ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
+      echo "==================================================="
+      echo "completed baking AMI for : ${ROLE}"
+      echo "==================================================="
+      '''
+      stash(name: 'baked-ami', includes: '**/*-ami-*.yml')
+      bakedAMI = shellOut('''#!/bin/bash
+      BAKED_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
+      echo $BAKED_AMI
+      ''')
+      env.BAKED_AMI=bakedAMI
+      println "baked AMI:${env.BAKED_AMI}"
+    }
   }
 }
