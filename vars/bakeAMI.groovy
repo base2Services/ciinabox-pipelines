@@ -52,5 +52,11 @@ def call(body) {
     echo "==================================================="
     '''
     stash(name: 'baked-ami', includes: '**/*-ami-*.yml')
+    bakedAMI = sh(returnStdout: true, script: '''#!/bin/bash
+    BAKED_AMI=$(grep 'ami:' ${ROLE}-ami-*.yml | awk -F ':' {'print $2'})
+    echo $BAKED_AMI
+    ''')
+    env.BAKED_AMI=bakedAMI
+    println "baked AMI:${env.BAKED_AMI}"
   }
 }
