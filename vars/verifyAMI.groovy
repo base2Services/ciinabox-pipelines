@@ -9,11 +9,12 @@
 
 def call(body) {
   def config = body
-  deleteDir()
-  unstash 'cookbook'
-  withEnv(["REGION=${config.get('region')}", "VERIFY_AMI=${config.get('ami')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
-    withAWSKeyPair(config.get('region')) {
-      sh '''#!/bin/bash
+  node {
+    deleteDir()
+    unstash 'cookbook'
+    withEnv(["REGION=${config.get('region')}", "VERIFY_AMI=${config.get('ami')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
+      withAWSKeyPair(config.get('region')) {
+        sh '''#!/bin/bash
 eval "$(/opt/chefdk/bin/chef shell-init bash)"
 
 tar xfz cookbooks.tar.gz
@@ -50,6 +51,7 @@ gem install kitchen-ec2 --no-rdoc
 kitchen destroy
 kitchen test
       '''
+      }
     }
   }
 }
