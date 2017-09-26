@@ -4,7 +4,7 @@
  Tags an AMI
 
  example usage
- lookupAMI region: 'ap-southeast-2',  ami: 'xyz', tags: ['status':'verifed']
+ tagAMI region: 'ap-southeast-2',  ami: 'xyz', tags: ['status':'verifed']
  ************************************/
  @Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.198')
 

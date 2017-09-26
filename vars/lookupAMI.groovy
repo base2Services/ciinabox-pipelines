@@ -4,7 +4,7 @@
  Looks up an AMI to
 
  example usage
- lookupAMI region: 'ap-southeast-2',  name: 'xyz', tags: [{'status','verifed'}]
+ lookupAMI region: 'ap-southeast-2',  name: 'xyz', tags: ['status':'verifed']
  ************************************/
 @Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.198')
 @Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.198')

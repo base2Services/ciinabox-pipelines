@@ -1,10 +1,18 @@
 /***********************************
- chefspec DSL
+ bakeAMI DSL
 
- Invokes package and stash cookbook
+ Bakes an AMI using https://github.com/base2Services/ciinabox-bakery
 
  example usage
- chefspec 'cookbook_dir'
+ bakeAMI(region: env.REGION,
+   role: 'MyServer',
+   baseAMI: 'amzn-ami-hvm-2017.03.*',
+   bakeChefRunList: 'recipe[mycookbook::default]',
+   owner: env.BASE_AMI_OWNER,
+   client: env.CLIENT,
+   shareAmiWith: env.SHARE_AMI_WITH,
+   packerTemplate: env.PACKER_TEMPLATE
+ )
  ************************************/
 
 def call(body) {

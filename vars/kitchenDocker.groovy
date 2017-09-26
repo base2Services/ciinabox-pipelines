@@ -1,10 +1,10 @@
 /***********************************
- chefspec DSL
+ kitchenDocker DSL
 
  Invokes run kitchen test using docker
 
  example usage
- chefspec 'cookbook_dir'
+ kitchenDocker 'cookbook_dir'
  ************************************/
 
 def call(body) {

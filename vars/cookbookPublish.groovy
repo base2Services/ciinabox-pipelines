@@ -1,10 +1,10 @@
 /***********************************
- chefspec DSL
+ cookbookPublish DSL
 
- Invokes package and stash cookbook
+ Invokes berks package and stash cookbook in the pipeline
 
  example usage
- chefspec 'cookbook_dir'
+ cookbookPublish 'cookbook_dir'
  ************************************/
 
 def call(body) {

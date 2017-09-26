@@ -4,7 +4,7 @@
  Verifies a baked AMI using Test Kitchen and InSpec
 
  example usage
- verifyAMI ......
+ verifyAMI role: 'MyRole', cookbook: env.COOKBOOK, ami: env.MYROLE_BAKED_AMI
  ************************************/
 
 def call(body) {
@@ -45,7 +45,7 @@ EOT
 
 cat <<EOT > userdata.sh
 #!/bin/bash
-/opt/base2/bin/ec2-bootstrap ap-southeast-2 537712071186
+/opt/base2/bin/ec2-bootstrap ${REGION} 123456789098
 EOT
 gem install kitchen-ec2 --no-rdoc
 kitchen destroy
