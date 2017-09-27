@@ -40,7 +40,7 @@ def call(body) {
   sh "docker build -t ${dockerRepo}:${tags[0]} -f ${dockerfile} ${buildArgs} ${buildDir}"
   if(tags.size() > 1) {
     tags.each { tag ->
-      sh "docker tag -f ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
+      sh "docker tag ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
     }
   }
   if(push) {
