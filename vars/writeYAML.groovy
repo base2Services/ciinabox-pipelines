@@ -21,6 +21,7 @@ def call(body) {
 def mapToYaml(map) {
   def options = new DumperOptions()
   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
+  options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
   options.setIndent(4)
   def yaml = new Yaml(options)
   return yaml.dump(map)
