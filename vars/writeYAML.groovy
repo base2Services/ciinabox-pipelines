@@ -1,12 +1,12 @@
 /***********************************
- bakeAMI DSL
+ writeYAML DSL
 
- Bakes an AMI using https://github.com/base2Services/ciinabox-bakery
+ writes a groovy map to a yaml file
 
  example usage
  writeYAML
-   map: ['mykey':'myvalue'],
-   s3Bucket: env.SOURCE_BUCKET
+   file: 'myfile.yaml'
+   map: ['mykey':'myvalue']
  )
  ************************************/
 @Grab(group='org.yaml', module='snakeyaml', version='1.18')
