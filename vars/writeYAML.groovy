@@ -26,6 +26,6 @@ def mapToYaml(map) {
   options.setDefaultScalarStyle(DumperOptions.ScalarStyle.LITERAL);
   options.setIndent(4)
   def yaml = new Yaml(options)
-  // return yaml.dump(map)
-  return json
+  def result = yaml.load(json)
+  return yaml.dump(result)
 }
