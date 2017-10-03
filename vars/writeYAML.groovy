@@ -19,10 +19,12 @@ def call(body) {
 
 @NonCPS
 def mapToYaml(map) {
+  def json = JsonOutput.toJson(map)
   def options = new DumperOptions()
   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
   options.setDefaultScalarStyle(DumperOptions.ScalarStyle.LITERAL);
   options.setIndent(4)
   def yaml = new Yaml(options)
-  return yaml.dump(map)
+  // return yaml.dump(map)
+  return json
 }
