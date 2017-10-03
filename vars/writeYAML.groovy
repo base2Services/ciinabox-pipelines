@@ -11,6 +11,7 @@
  ************************************/
 @Grab(group='org.yaml', module='snakeyaml', version='1.18')
 import org.yaml.snakeyaml.*
+import groovy.json.JsonOutput
 
 def call(body) {
   def config = body
