@@ -10,13 +10,11 @@
  )
  ************************************/
 @Grab(group='org.yaml', module='snakeyaml', version='1.18')
-
 import org.yaml.snakeyaml.*
 
-@NonCPS
 def call(body) {
   def config = body
-  writeFile file: config.file text: mapToYaml(config.map)
+  writeFile file: config.file, text: mapToYaml(config.map)
 }
 
 @NonCPS
