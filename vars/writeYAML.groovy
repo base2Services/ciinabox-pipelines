@@ -15,9 +15,14 @@ import org.yaml.snakeyaml.*
 
 def call(body) {
   def config = body
+  writeFile file: config.file text: mapToYaml(config.map)
+}
+
+@NonCPS
+def mapToYaml(map) {
   def options = new DumperOptions()
   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
   options.setIndent(4)
   def yaml = new Yaml(options)
-  writeFile file: config.file text: yaml.dump(config.map)
+  return yaml.dump(map)
 }
