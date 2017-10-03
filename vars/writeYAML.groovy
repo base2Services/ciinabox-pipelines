@@ -13,6 +13,7 @@
 
 import org.yaml.snakeyaml.*
 
+@NonCPS
 def call(body) {
   def config = body
   writeFile file: config.file text: mapToYaml(config.map)
