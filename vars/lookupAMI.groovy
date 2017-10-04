@@ -25,7 +25,7 @@ def call(body) {
   def image = lookupAMI(config)
   if(image) {
     println "image:${image}"
-    env["${role}_SOURCE_AMI"]=image.imageId
+    env["SOURCE_AMI"]=image.imageId
     return image.imageId
   } else {
     println "ami not found for ${config}"
