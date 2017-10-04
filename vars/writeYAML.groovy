@@ -11,6 +11,7 @@
  ************************************/
 @Grab(group='org.yaml', module='snakeyaml', version='1.18')
 import org.yaml.snakeyaml.*
+import groovy.json.JsonOutput
 
 def call(body) {
   def config = body
@@ -19,10 +20,12 @@ def call(body) {
 
 @NonCPS
 def mapToYaml(map) {
+  def json = JsonOutput.toJson(map)
   def options = new DumperOptions()
   options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
-  options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
+  options.setDefaultScalarStyle(DumperOptions.ScalarStyle.LITERAL);
   options.setIndent(4)
   def yaml = new Yaml(options)
-  return yaml.dump(map)
+  def result = yaml.load(json)
+  return yaml.dump(result)
 }
