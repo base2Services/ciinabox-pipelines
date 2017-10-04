@@ -40,8 +40,9 @@ def call(body) {
     println "bake config:${config}"
     deleteDir()
     git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
+    def sourceAMI = lookupAMI config
+    bakeEnv << "SOURCE_AMI=${sourceAMI}"
     withEnv(bakeEnv) {
-      lookupAMI config
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
       unstash 'cookbook'
       sh '''
