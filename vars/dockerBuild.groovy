@@ -22,14 +22,12 @@ dockerBuild {
 
 def call(body) {
   // evaluate the body block, and collect configuration into the object
-  def config = [:]
-  body.resolveStrategy = Closure.DELEGATE_FIRST
-  body.delegate = config
-  body()
+  def config = body
 
   def tags = config.get('tags',['latest'])
   def dockerRepo = "${config.repo}/${config.image}"
   def buildDir = config.get('dir', '.')
+  def dockerfile = config.get('dockerfile', 'Dockerfile')
   def push = config.get('push', false)
   def cleanup = config.get('cleanup', false)
   def buildArgs = ""
@@ -39,10 +37,10 @@ def call(body) {
 
   println "config:${config}"
 
-  sh "docker build -t ${dockerRepo}:${tags[0]} ${buildArgs} ${buildDir}"
+  sh "docker build -t ${dockerRepo}:${tags[0]} -f ${dockerfile} ${buildArgs} ${buildDir}"
   if(tags.size() > 1) {
     tags.each { tag ->
-      sh "docker tag -f ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
+      sh "docker tag ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
     }
   }
   if(push) {
