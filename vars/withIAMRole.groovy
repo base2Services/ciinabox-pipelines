@@ -17,14 +17,14 @@ def call(awsAccountId, region, roleName, body) {
   def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName;
   def roleSessionName = "sts-session-" + awsAccountId;
   println "assuming IAM role ${roleArn}"
-  AWSSecurityTokenService sts = new AWSSecurityTokenServiceClient(new InstanceProfileCredentialsProvider());
+  def sts = new AWSSecurityTokenServiceClient();
   if (!region.equals("us-east-1")) {
       sts.setEndpoint("sts." + region + ".amazonaws.com");
   }
-  AssumeRoleResult assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-            .withRoleArn(roleArn).withDurationSeconds(DEFAULT_DURATION_SECONDS)
+  def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
+            .withRoleArn(roleArn).withDurationSeconds(3600)
             .withRoleSessionName(roleSessionName));
-  Credentials stsCredentials = assumeRoleResult.getCredentials();
+  def stsCredentials = assumeRoleResult.getCredentials();
   env['AWS_ACCESS_KEY_ID'] = stsCredentials.getAccessKeyId();
   env['AWS_SECRET_ACCESS_KEY'] = stsCredentials.getSecretAccessKey();
   env['AWS_SESSION_TOKEN'] = stsCredentials.getSessionToken();
