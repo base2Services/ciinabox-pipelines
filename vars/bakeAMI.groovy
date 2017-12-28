@@ -59,6 +59,10 @@ def call(body) {
       echo "==================================================="
       AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
       ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
+      if [ $? != 0 ]; then
+        echo "ERROR: Packer Baking failed"
+        exit 1
+      fi
       echo "==================================================="
       echo "completed baking AMI for : ${ROLE}"
       echo "==================================================="
