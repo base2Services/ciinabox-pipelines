@@ -57,7 +57,7 @@ def call(body) {
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
       echo "==================================================="
-      AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
+      AMI_BUILD_NUMBER=${BRANCH_NAME/\//-}-${BUILD_NUMBER}
       ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
       echo "==================================================="
       echo "completed baking AMI for : ${ROLE}"
