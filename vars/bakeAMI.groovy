@@ -41,6 +41,7 @@ def call(body) {
     deleteDir()
     git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
     def sourceAMI = lookupAMI config
+    def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
@@ -57,7 +58,7 @@ def call(body) {
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
       echo "==================================================="
-      AMI_BUILD_NUMBER=${BRANCH_NAME}-${BUILD_NUMBER}
+      AMI_BUILD_NUMBER=${branchName}-${BUILD_NUMBER}
       ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
       if [ $? != 0 ]; then
         echo "ERROR: Packer Baking failed"
