@@ -40,6 +40,7 @@ def lookupAMI(config) {
 
   def filters = []
   filters << new Filter().withName('name').withValues(config.amiName)
+  filters << new Filter().withName('root-device-type').withValues('ebs')
   if(config['tags']) {
     config.tags.each { key, value ->
       filters << new Filter("tag:${key}").withValues("${value}")
