@@ -11,7 +11,8 @@
    owner: env.BASE_AMI_OWNER,
    client: env.CLIENT,
    shareAmiWith: env.SHARE_AMI_WITH,
-   packerTemplate: env.PACKER_TEMPLATE
+   packerTemplate: env.PACKER_TEMPLATE,
+   amiBuildNumber: env.AMI_BUILD_NUMBER
  )
  ************************************/
 
@@ -30,6 +31,7 @@ def call(body) {
   bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
   bakeEnv << "AMI_USERS=${config.get('shareAmiWith')}"
   bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
+  bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
   shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
@@ -55,17 +57,19 @@ def call(body) {
       ls -al cookbooks
       '''
       sh '''#!/bin/bash
+      AMI_BUILD_ID=${branchName}-${AMI_BUILD_NUMBER}
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
+      exho "AMI Build NO: ${AMI_BUILD_ID}"
       echo "==================================================="
-      AMI_BUILD_NUMBER=${branchName}-${BUILD_NUMBER}
-      ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_NUMBER $SOURCE_AMI $AMI_BUILD_NUMBER $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
+      ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_ID $SOURCE_AMI $AMI_BUILD_ID $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
       if [ $? != 0 ]; then
         echo "ERROR: Packer Baking failed"
         exit 1
       fi
       echo "==================================================="
       echo "completed baking AMI for : ${ROLE}"
+      exho "AMI Build NO: ${AMI_BUILD_ID}"
       echo "==================================================="
       '''
       bakedAMI = shellOut('''#!/bin/bash
