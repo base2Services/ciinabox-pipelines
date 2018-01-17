@@ -36,6 +36,12 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   config.amiName = config.get('baseAMI')
 
+  // Windows chef env vars
+  bakeEnv << "CHEF_PATH=${config.chefPath}"
+  bakeEnv << "SOURCE_BUCKET=${config.sourceBucket}"
+  bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
+  bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
+
   def role = config.get('role').toUpperCase()
 
   node {
