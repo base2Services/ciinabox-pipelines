@@ -6,7 +6,8 @@
    accountId: '1234567890',
    region: 'ap-southeast-2',
    image: 'myrepo/image',
-   otherAccountIds: ['0987654321','5432167890']
+   otherAccountIds: ['0987654321','5432167890'],
+   taggedCleanup: ['master','develop']
  )
  ************************************/
 
@@ -21,6 +22,39 @@ def call(body) {
   if (config.otherAccountIds) {
     setRepositoryPolicy(ecr,config)
   }
+
+  def rules = [
+    [
+      rulePriority: 100,
+      description: "remove all untagged images",
+      selection: [
+        tagStatus: "untagged",
+        countType: "imageCountMoreThan",
+        countNumber: 1
+      ],
+      action: [
+        type: "expire"
+      ]
+    ]
+  ]
+
+  if (config.taggedCleanup) {
+    rules =+ [
+      rulePriority: 200,
+      description: "Keep last 10 ${config.taggedCleanup.join(" ")} builds",
+      selection: [
+        tagStatus: "tagged",
+        countType: "imageCountMoreThan",
+        countNumber: 10,
+        tagPrefixList: config.taggedCleanup
+      ],
+      action: [
+        type: "expire"
+      ]
+    ]
+  }
+
+  setLifcyclePolicy(ecr,rules,config)
 }
 
 def createRepo(ecr,repo) {
@@ -58,6 +92,17 @@ def setRepositoryPolicy(ecr,config) {
     .withRepositoryName(config.image)
     .withRegistryId(config.accountId)
     .withPolicyText(document.toString())
+  )
+}
+
+def setLifcyclePolicy(ecr,rules,config) {
+  def policy = [ rules: rules ]
+  def builder = new groovy.json.JsonBuilder(policy)
+  println "Applying ECR lifecycle policy\n${builder.toPrettyString()}"
+  ecr.putLifecyclePolicy(new PutLifecyclePolicyRequest()
+    .withRepositoryName(config.image)
+    .withRegistryId(config.accountId)
+    .withLifecyclePolicyText(builder.toString())
   )
 }
 
