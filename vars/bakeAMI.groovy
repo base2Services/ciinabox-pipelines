@@ -51,6 +51,7 @@ def call(body) {
     def sourceAMI = lookupAMI config
     def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
+    bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
       unstash 'cookbook'
@@ -63,7 +64,7 @@ def call(body) {
       ls -al cookbooks
       '''
       sh '''#!/bin/bash
-      AMI_BUILD_ID=${branchName}-${AMI_BUILD_NUMBER}
+      AMI_BUILD_ID=${BRANCH}-${AMI_BUILD_NUMBER}
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
       exho "AMI Build NO: ${AMI_BUILD_ID}"
