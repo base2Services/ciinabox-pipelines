@@ -26,7 +26,7 @@ def call(body) {
 
 def putObject(client,file,config) {
 
-  def inputStream = FileInputStream(file)
+  def inputStream = new FileInputStream(file)
 
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
