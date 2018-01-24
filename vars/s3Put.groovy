@@ -13,10 +13,14 @@ s3
 )
 ************************************/
 
+import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.model.*
+import com.amazonaws.regions.*
+
 def call(body) {
   def config = body
   File file = new File(config.file)
-  def s3 = setupClient(config.region)
+  AmazonS3 s3 = setupClient(config.region)
   putObject(s3,file,config)
 }
 
