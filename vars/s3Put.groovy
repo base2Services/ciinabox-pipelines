@@ -16,7 +16,7 @@ s3
 def call(body) {
   def config = body
   File file = new File(config.file)
-  AmazonS3 s3 = setupClient(config.region)
+  def s3 = setupClient(config.region)
   putObject(s3,file,config)
 }
 
