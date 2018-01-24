@@ -26,16 +26,19 @@ def call(body) {
 
 def putObject(client,file,config) {
 
+  def inputStream = file.getInputStream();
+
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
     "${config.prefix}${config.file}",
-    file
+    inputStream,
+    new ObjectMetadata()
   )
 
   if (config.publicRead) {
     request.withCannedAcl(CannedAccessControlList.PublicRead)
   }
-
+  println "copying ${config.file} to s3://${config.bucket}/${config.prefix}${config.file}"
   client.putObject(request)
 
 }
