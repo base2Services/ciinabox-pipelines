@@ -12,7 +12,8 @@
    client: env.CLIENT,
    shareAmiWith: env.SHARE_AMI_WITH,
    packerTemplate: env.PACKER_TEMPLATE,
-   amiBuildNumber: env.AMI_BUILD_NUMBER
+   amiBuildNumber: env.AMI_BUILD_NUMBER,
+   sshUsername: env.SSH_USERNAME
  )
  ************************************/
 
@@ -34,6 +35,7 @@ def call(body) {
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
   shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   bakeEnv << "GIT_COMMIT=${shortCommit}"
+  bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
   config.amiName = config.get('baseAMI')
 
   // Windows chef env vars
