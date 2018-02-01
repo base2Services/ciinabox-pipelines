@@ -13,6 +13,10 @@ s3
 )
 ************************************/
 
+import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.model.*
+import com.amazonaws.regions.*
+
 def call(body) {
   def config = body
   File file = new File(config.file)
@@ -22,16 +26,19 @@ def call(body) {
 
 def putObject(client,file,config) {
 
+  def inputStream = new FileInputStream(file)
+
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
     "${config.prefix}${config.file}",
-    file
+    inputStream,
+    new ObjectMetadata()
   )
 
   if (config.publicRead) {
     request.withCannedAcl(CannedAccessControlList.PublicRead)
   }
-
+  println "copying ${config.file} to s3://${config.bucket}/${config.prefix}${config.file}"
   client.putObject(request)
 
 }
