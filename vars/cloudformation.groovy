@@ -35,6 +35,10 @@ def call(body) {
       delete(cf, config.stackName)
       success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
     break
+    case 'update':
+      update(cf, config)
+      success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+    break
   }
   if(!success) {
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
@@ -65,7 +69,38 @@ def delete(cf, stackName) {
     cf.deleteStack(new DeleteStackRequest()
       .withStackName(stackName)
     )
+  } else {
+    println "ignoring delete since stack ${stackName} does not exist"
   }
+}
+
+@NonCPS
+def update(cf, config) {
+  if(doesStackExist(cf, stackName)) {
+    cf.updateStack(new UpdateStackRequest()
+      .withStackName(config.stackName)
+      .withParameters(getStackParams(cf, config.stackName, config.parameters))
+      .withTemplateURL(config.templateUrl)
+      .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
+    )
+  } else {
+    throw new Exception("unable to update stack ${config.stackName} it does not exist")
+  }
+}
+
+@NonCPS
+def getStackParams(cf, stackName, overrideParams) {
+  def stackParams = [:]
+  def stacks = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
+  if (!stacks.isEmpty()) {
+    for(Parameter param: stacks.get(0).getParameters()) {
+      stackParams.put(param.getParameterKey(), new Parameter().withParameterKey(param.getParameterKey()).withUsePreviousValue(true))
+    }
+    overrideParams.each {
+      stackParams.put(it.key, new Parameter().withParameterKey(it.key).withParameterValue(it.value))
+    }
+  }
+  return stackParams
 }
 
 @NonCPS
