@@ -24,10 +24,19 @@ import com.amazonaws.regions.*
 def call(body) {
   def config = body
   def cf = setupClient(config.region)
+  def success = false
   switch(config.action) {
     case 'create':
       create(cf, config)
+      success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
     break
+    case 'delete':
+      delete(cf, config.stackName)
+      success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
+    break
+  }
+  if(!success) {
+    throw new Exception("Stack ${config.stackName} failed to ${config.action}")
   }
 }
 
@@ -44,8 +53,6 @@ def create(cf, config) {
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
       .withParameters(params)
       .withTemplateURL(config.templateUrl));
-    if(!wait(cf,config.stackName)) {
-      throw new Exception("Stack ${config.stackName} failed to create")
     }
   } else {
     println "Environment ${config.stackName} already Exists"
@@ -53,41 +60,37 @@ def create(cf, config) {
 }
 
 @NonCPS
-def wait(cf, stackName) {
-  def wait = new DescribeStacksRequest().withStackName(stackName)
-  def completed = false
-  def success = false
-  while (!completed) {
-    List<Stack> stacks = cf.describeStacks(wait).getStacks()
-    if (stacks.isEmpty()) {
-        completed   = true
-        success = false
-        println "Stack: ${stackName} completed but has failed - ${stack.getStackStatus()}"
-    } else {
-        for (Stack stack : stacks) {
-            switch(stack.getStackStatus()) {
-              case StackStatus.CREATE_COMPLETE.toString():
-                completed = true
-                success = true
-                println "Stack: ${stackName} completed successfully"
-              break
-              case StackStatus.CREATE_FAILED.toString():
-              case StackStatus.ROLLBACK_FAILED.toString():
-              case StackStatus.DELETE_FAILED.toString():
-                println "Stack: ${stackName} completed but has failed - ${stack.getStackStatus()}"
-                completed = true
-                success = false
-              break
-            }
-            if(!completed) {
-              println "Stack: ${stack.getStackName()} - ${stack.getStackStatus()}"
-            }
-        }
-    }
-    // Not done yet so sleep for 10 seconds.
-    if (!completed) Thread.sleep(10000)
+def delete(cf, stackName) {
+  if(doesStackExist(cf,config.stackName)) {
+    cf.deleteStack(new DeleteStackRequest()
+      .withStackName(stackName)
+    )
   }
-  return success;
+}
+
+@NonCPS
+def wait(cf, stackName, successStatus) {
+  def waiter = null
+  switch(successStatus) {
+    case StackStatus.CREATE_COMPLETE:
+      waiter = cf.waiters().stackCreateComplete()
+    break
+    case StackStatus.UPDATE_COMPLETE:
+      waiter = cf.waiters().stackUpdateComplete()
+    break
+    case StackStatus.DELETE_COMPLETE:
+      waiter = cf.waiters().stackUpdateComplete()
+    break
+    try {
+      waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName));
+      println "Stack: ${stackName} success - ${successStatus}"
+      return true
+     }
+     catch(Exception e) {
+       println "Stack: ${stackName} failed - ${e}"
+       return false
+     }
+  }
 }
 
 @NonCPS
