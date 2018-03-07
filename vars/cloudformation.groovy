@@ -20,6 +20,7 @@ cloudformation
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
 import com.amazonaws.regions.*
+import com.amazonaws.waiters.*
 
 def call(body) {
   def config = body
@@ -79,15 +80,14 @@ def wait(cf, stackName, successStatus) {
       waiter = cf.waiters().stackUpdateComplete()
     break
     case StackStatus.DELETE_COMPLETE:
-      waiter = cf.waiters().stackUpdateComplete()
+      waiter = cf.waiters().stackDeleteComplete()
     break
   }
   try {
-    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName));
+    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName))
     println "Stack: ${stackName} success - ${successStatus}"
     return true
-   }
-   catch(Exception e) {
+   } catch(Exception e) {
      println "Stack: ${stackName} failed - ${e}"
      return false
    }
