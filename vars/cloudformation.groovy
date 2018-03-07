@@ -5,10 +5,10 @@ performs cloudformation operations
 
 example usage
 cloudformation
-  stackName: dev
-  action: create|update|delete|create_or_update,
-  region: ap-southeast-2,
-  templateUrl: 's3://mybucket/cloudformation/app/master.json',
+  stackName: 'dev'
+  action: 'create'|'update'|'delete',
+  region: 'ap-southeast-2',
+  templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
   parameters: [
     'ENVIRONMENT_NAME' : 'dev',
   ]
@@ -43,6 +43,8 @@ def call(body) {
     case 'update':
       update(cf, config)
       success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+    break
+    case 'create_or_update'
     break
   }
   if(!success) {
@@ -101,7 +103,7 @@ def getStackParams(cf, stackName, overrideParams) {
       stackParams.put(it.key, new Parameter().withParameterKey(it.key).withParameterValue(it.value))
     }
   }
-  println "params: ${stackParams}"
+  println "stack params: ${stackParams.values()}"
   return stackParams.values()
 }
 
