@@ -15,7 +15,7 @@ cloudformation
   useExistingTemplate: true #ignores templateUrl if true
 )
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.288')
+@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
 
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
@@ -62,24 +62,24 @@ def wait(cf, stackName) {
     if (stacks.isEmpty()) {
         completed   = true
         success = false
-        println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
+        println "Stack: ${stackName} completed but has failed - ${stack.getStackStatus()}"
     } else {
         for (Stack stack : stacks) {
             switch(stack.getStackStatus()) {
               case StackStatus.CREATE_COMPLETE.toString():
                 completed = true
                 success = true
-                println "Stack ${stackName} completed successfully"
+                println "Stack: ${stackName} completed successfully"
               break
               case StackStatus.CREATE_FAILED.toString():
               case StackStatus.ROLLBACK_FAILED.toString():
               case StackStatus.DELETE_FAILED.toString():
-                println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
+                println "Stack: ${stackName} completed but has failed - ${stack.getStackStatus()}"
                 completed = true
                 success = false
               break
             }
-            println "Stack ${stack.getStackName()} - stack.getStackStatus()"
+            println "Stack: ${stack.getStackName()} - ${stack.getStackStatus()}"
         }
     }
     // Not done yet so sleep for 10 seconds.
