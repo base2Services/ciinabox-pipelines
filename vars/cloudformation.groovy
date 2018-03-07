@@ -28,8 +28,12 @@ def call(body) {
   def success = false
   switch(config.action) {
     case 'create':
-      create(cf, config)
-      success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
+      if(!doesStackExist(cf,config.stackName)) {
+        create(cf, config)
+        success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
+      } else {
+        println "Environment ${config.stackName} already Exists"
+      }
     break
     case 'delete':
       delete(cf, config.stackName)
@@ -47,20 +51,16 @@ def call(body) {
 
 @NonCPS
 def create(cf, config) {
-  if(!doesStackExist(cf,config.stackName)) {
-    println "Creating stack ${config.stackName}"
-    def params = []
-    config.parameters.each {
-      params << new Parameter().withParameterKey(it.key).withParameterValue(it.value)
-    }
-    cf.createStack(new CreateStackRequest()
-      .withStackName(config.stackName)
-      .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
-      .withParameters(params)
-      .withTemplateURL(config.templateUrl))
-  } else {
-    println "Environment ${config.stackName} already Exists"
+  println "Creating stack ${config.stackName}"
+  def params = []
+  config.parameters.each {
+    params << new Parameter().withParameterKey(it.key).withParameterValue(it.value)
   }
+  cf.createStack(new CreateStackRequest()
+    .withStackName(config.stackName)
+    .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
+    .withParameters(params)
+    .withTemplateURL(config.templateUrl))
 }
 
 @NonCPS
