@@ -54,7 +54,6 @@ def create(cf, config) {
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
       .withParameters(params)
       .withTemplateURL(config.templateUrl))
-    }
   } else {
     println "Environment ${config.stackName} already Exists"
   }
