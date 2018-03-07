@@ -79,7 +79,9 @@ def wait(cf, stackName) {
                 success = false
               break
             }
-            println "Stack: ${stack.getStackName()} - ${stack.getStackStatus()}"
+            if(!completed) {
+              println "Stack: ${stack.getStackName()} - ${stack.getStackStatus()}"
+            }
         }
     }
     // Not done yet so sleep for 10 seconds.
