@@ -33,6 +33,7 @@ def call(body) {
         success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
       } else {
         println "Environment ${config.stackName} already Exists"
+        success = true
       }
     break
     case 'delete':
