@@ -54,26 +54,26 @@ def create(cf, config) {
 
 @NonCPS
 def wait(cf, stackName) {
-  def wait = new DescribeStacksRequest().withStackName(stackName);
-  def completed = false;
-  def success = false;
+  def wait = new DescribeStacksRequest().withStackName(stackName)
+  def completed = false
+  def success = false
   while (!completed) {
-    List<Stack> stacks = cf.describeStacks(wait).getStacks();
+    List<Stack> stacks = cf.describeStacks(wait).getStacks()
     if (stacks.isEmpty()) {
-        completed   = true;
+        completed   = true
         success = false
         println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
     } else {
         for (Stack stack : stacks) {
             switch(stack.getStackStatus()) {
-              case StackStatus.CREATE_COMPLETE.toString()
+              case StackStatus.CREATE_COMPLETE.toString():
                 completed = true
                 success = true
                 println "Stack ${stackName} completed successfully"
               break
-              case StackStatus.CREATE_FAILED.toString()
-              case StackStatus.ROLLBACK_FAILED.toString()
-              case StackStatus.DELETE_FAILED.toString()
+              case StackStatus.CREATE_FAILED.toString():
+              case StackStatus.ROLLBACK_FAILED.toString():
+              case StackStatus.DELETE_FAILED.toString():
                 println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
                 completed = true
                 success = false
@@ -83,12 +83,12 @@ def wait(cf, stackName) {
     }
 
     // Show we are waiting
-    System.out.print(".");
+    System.out.print(".")
 
     // Not done yet so sleep for 10 seconds.
-    if (!completed) Thread.sleep(10000);
+    if (!completed) Thread.sleep(10000)
   }
-  return success
+  return success;
 }
 
 @NonCPS
