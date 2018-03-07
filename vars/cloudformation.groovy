@@ -100,7 +100,7 @@ def getStackParams(cf, stackName, overrideParams) {
       stackParams.put(it.key, new Parameter().withParameterKey(it.key).withParameterValue(it.value))
     }
   }
-  return stackParams
+  return stackParams.values()
 }
 
 @NonCPS
