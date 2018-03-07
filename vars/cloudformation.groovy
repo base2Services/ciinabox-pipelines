@@ -81,16 +81,16 @@ def wait(cf, stackName, successStatus) {
     case StackStatus.DELETE_COMPLETE:
       waiter = cf.waiters().stackUpdateComplete()
     break
-    try {
-      waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName));
-      println "Stack: ${stackName} success - ${successStatus}"
-      return true
-     }
-     catch(Exception e) {
-       println "Stack: ${stackName} failed - ${e}"
-       return false
-     }
   }
+  try {
+    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName));
+    println "Stack: ${stackName} success - ${successStatus}"
+    return true
+   }
+   catch(Exception e) {
+     println "Stack: ${stackName} failed - ${e}"
+     return false
+   }
 }
 
 @NonCPS
