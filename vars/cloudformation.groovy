@@ -84,7 +84,7 @@ def wait(cf, stackName, successStatus) {
     break
   }
   try {
-    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName))
+    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)))
     println "Stack: ${stackName} success - ${successStatus}"
     return true
    } catch(Exception e) {
