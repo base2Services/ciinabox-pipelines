@@ -43,7 +43,9 @@ def create(cf, config) {
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
       .withParameters(params)
       .withTemplateURL(config.templateUrl));
-    wait(cf,config.stackName)
+    if(!wait(cf,config.stackName)) {
+      throw new Exception("Stack ${config.stackName} failed to create")
+    }
   } else {
     println "Environment ${config.stackName} already Exists"
   }
@@ -52,17 +54,28 @@ def create(cf, config) {
 def wait(cf, stackName) {
   def wait = new DescribeStacksRequest().withStackName(stackName);
   def completed = false;
+  def success = false;
   while (!completed) {
     List<Stack> stacks = cf.describeStacks(wait).getStacks();
     if (stacks.isEmpty()) {
         completed   = true;
+        success = false
+        println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
     } else {
         for (Stack stack : stacks) {
-            if (stack.getStackStatus().equals(StackStatus.CREATE_COMPLETE.toString()) ||
-                    stack.getStackStatus().equals(StackStatus.CREATE_FAILED.toString()) ||
-                    stack.getStackStatus().equals(StackStatus.ROLLBACK_FAILED.toString()) ||
-                    stack.getStackStatus().equals(StackStatus.DELETE_FAILED.toString())) {
-                completed = true;
+            switch(stack.getStackStatus()) {
+              case StackStatus.CREATE_COMPLETE.toString()
+                completed = true
+                success = true
+                println "Stack ${stackName} completed successfully"
+              break
+              case StackStatus.CREATE_FAILED.toString()
+              case StackStatus.ROLLBACK_FAILED.toString()
+              case StackStatus.DELETE_FAILED.toString()
+                println "Stack ${stackName} completed but has failed - ${stack.getStackStatus()}"
+                completed = true
+                success = false
+              break
             }
         }
     }
@@ -73,6 +86,7 @@ def wait(cf, stackName) {
     // Not done yet so sleep for 10 seconds.
     if (!completed) Thread.sleep(10000);
   }
+  return success
 }
 
 def doesStackExist(cf, stackName) {
