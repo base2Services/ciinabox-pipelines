@@ -15,7 +15,7 @@ cloudformation
   useExistingTemplate: true #ignores templateUrl if true
 )
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
+@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.288')
 
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
@@ -79,12 +79,9 @@ def wait(cf, stackName) {
                 success = false
               break
             }
+            println "Stack ${stack.getStackName()} - stack.getStackStatus()"
         }
     }
-
-    // Show we are waiting
-    System.out.print(".")
-
     // Not done yet so sleep for 10 seconds.
     if (!completed) Thread.sleep(10000)
   }
