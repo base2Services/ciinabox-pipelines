@@ -33,6 +33,7 @@ def call(body) {
 
 def create(cf, config) {
   if(!doesStackExist(cf,config.stackName)) {
+    println "Creating stack ${config.stackName}"
     def params = []
     config.parameters.each {
       params << new Parameter().withParameterKey(it.key).withParameterValue(it.value)
@@ -76,7 +77,7 @@ def wait(cf, stackName) {
 
 def doesStackExist(cf, stackName) {
   try {
-    DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName))
+    DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
     return result != null
   } catch (AmazonCloudFormationException ex) {
     return false
