@@ -52,7 +52,7 @@ def create(cf, config) {
       .withStackName(config.stackName)
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
       .withParameters(params)
-      .withTemplateURL(config.templateUrl));
+      .withTemplateURL(config.templateUrl))
     }
   } else {
     println "Environment ${config.stackName} already Exists"
@@ -61,7 +61,7 @@ def create(cf, config) {
 
 @NonCPS
 def delete(cf, stackName) {
-  if(doesStackExist(cf,config.stackName)) {
+  if(doesStackExist(cf, stackName)) {
     cf.deleteStack(new DeleteStackRequest()
       .withStackName(stackName)
     )
