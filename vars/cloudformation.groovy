@@ -76,7 +76,7 @@ def delete(cf, stackName) {
 
 @NonCPS
 def update(cf, config) {
-  if(doesStackExist(cf, stackName)) {
+  if(doesStackExist(cf, config.stackName)) {
     cf.updateStack(new UpdateStackRequest()
       .withStackName(config.stackName)
       .withParameters(getStackParams(cf, config.stackName, config.parameters))
