@@ -100,6 +100,7 @@ def getStackParams(cf, stackName, overrideParams) {
       stackParams.put(it.key, new Parameter().withParameterKey(it.key).withParameterValue(it.value))
     }
   }
+  println "params: ${stackParams}"
   return stackParams.values()
 }
 
