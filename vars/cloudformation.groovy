@@ -44,8 +44,6 @@ def call(body) {
       update(cf, config)
       success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
     break
-    case 'create_or_update'
-    break
   }
   if(!success) {
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
