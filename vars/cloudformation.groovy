@@ -31,6 +31,7 @@ def call(body) {
   }
 }
 
+@NonCPS
 def create(cf, config) {
   if(!doesStackExist(cf,config.stackName)) {
     println "Creating stack ${config.stackName}"
@@ -51,6 +52,7 @@ def create(cf, config) {
   }
 }
 
+@NonCPS
 def wait(cf, stackName) {
   def wait = new DescribeStacksRequest().withStackName(stackName);
   def completed = false;
@@ -89,6 +91,7 @@ def wait(cf, stackName) {
   return success
 }
 
+@NonCPS
 def doesStackExist(cf, stackName) {
   try {
     DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
@@ -98,6 +101,7 @@ def doesStackExist(cf, stackName) {
   }
 }
 
+@NonCPS
 def setupClient(region) {
   return AmazonCloudFormationClientBuilder.standard()
     .withRegion(region)
