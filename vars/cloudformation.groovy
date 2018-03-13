@@ -29,7 +29,7 @@ import com.amazonaws.waiters.*
 
 def call(body) {
   def config = body
-  def cf = setupClient(config.region)
+  def cf = setupClient(config.region, config['awsAccountId'], config['role'])
   def success = false
   switch(config.action) {
     case 'create':
