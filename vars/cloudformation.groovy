@@ -144,7 +144,12 @@ def doesStackExist(cf, stackName) {
 def setupClient(region) {
   def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
   if(env['AWS_SESSION_TOKEN'] != null) {
-    cb.withCredentials(new EnvironmentVariableCredentialsProvider())
+    BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
+      env['AWS_ACCESS_KEY_ID'],
+      env['AWS_SECRET_ACCESS_KEY'],
+      env['AWS_SESSION_TOKEN']
+    )
+    cb.withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)
   }
   return cb.build()
 }
