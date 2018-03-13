@@ -163,7 +163,12 @@ def getCredentials(awsAccountId, region, roleName) {
       env['AWS_SESSION_TOKEN']
     )
   } else if(awsAccountId != null && roleName != null) {
-    return assumeRole(awsAccountId, region, roleName)
+    def stsCreds = assumeRole(awsAccountId, region, roleName)
+    return new BasicSessionCredentials(
+      stsCreds.getAccessKeyId(),
+      stsCreds.getSecretAccessKey(),
+      stsCreds.getSessionToken()
+    )
   } else {
     return null
   }
