@@ -17,6 +17,7 @@ cloudformation
 ************************************/
 @Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
 
+import com.amazonaws.auth.*
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
 import com.amazonaws.regions.*
@@ -141,7 +142,9 @@ def doesStackExist(cf, stackName) {
 
 @NonCPS
 def setupClient(region) {
-  return AmazonCloudFormationClientBuilder.standard()
-    .withRegion(region)
-    .build()
+  def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
+  if(env['AWS_SESSION_TOKEN'] != null) {
+    cb.withCredentials(new EnvironmentVariableCredentialsProvider())
+  }
+  return cb.build()
 }
