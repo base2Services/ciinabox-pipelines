@@ -11,7 +11,9 @@ cloudformation
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
   parameters: [
     'ENVIRONMENT_NAME' : 'dev',
-  ]
+  ],
+  accountId: '1234567890' #the aws account Id you want the stack operation performed in
+  role: 'myrole' # the role to assume from the account the pipeline is running from
   useExistingTemplate: true #ignores templateUrl if true
 )
 ************************************/
@@ -29,7 +31,7 @@ import com.amazonaws.waiters.*
 
 def call(body) {
   def config = body
-  def cf = setupClient(config.region, config['awsAccountId'], config['role'])
+  def cf = setupClient(config.region, config['accountId'], config['role'])
   def success = false
   switch(config.action) {
     case 'create':
