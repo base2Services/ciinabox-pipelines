@@ -16,11 +16,15 @@ cloudformation
 )
 ************************************/
 @Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
+@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.226')
+@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.226')
 
 import com.amazonaws.auth.*
+import com.amazonaws.regions.*
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
-import com.amazonaws.regions.*
+import com.amazonaws.services.securitytoken.*
+import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.waiters.*
 
 def call(body) {
@@ -141,15 +145,41 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupClient(region) {
+def setupClient(region, awsAccountId = null, role =  null) {
   def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
+  def creds = getCredentials(awsAccountId, region, role)
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(sessionCredentials))
+  }
+  return cb.build()
+}
+
+@NonCPS
+def getCredentials(awsAccountId, region, roleName) {
   if(env['AWS_SESSION_TOKEN'] != null) {
-    BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
+    return new BasicSessionCredentials(
       env['AWS_ACCESS_KEY_ID'],
       env['AWS_SECRET_ACCESS_KEY'],
       env['AWS_SESSION_TOKEN']
     )
-    cb.withCredentials(new AWSStaticCredentialsProvider(sessionCredentials))
+  } else if(awsAccountId != null && roleName != null) {
+    return assumeRole(awsAccountId, region, roleName)
+  } else {
+    return null
   }
-  return cb.build()
+}
+
+@NonCPS
+def assumeRole(awsAccountId, region, roleName) {
+  def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
+  def roleSessionName = "sts-session-" + awsAccountId
+  println "assuming IAM role ${roleArn}"
+  def sts = new AWSSecurityTokenServiceClient()
+  if (!region.equals("us-east-1")) {
+      sts.setEndpoint("sts." + region + ".amazonaws.com")
+  }
+  def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
+            .withRoleArn(roleArn).withDurationSeconds(3600)
+            .withRoleSessionName(roleSessionName))
+  return assumeRoleResult.getCredentials()
 }
