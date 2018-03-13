@@ -149,7 +149,7 @@ def setupClient(region) {
       env['AWS_SECRET_ACCESS_KEY'],
       env['AWS_SESSION_TOKEN']
     )
-    cb.withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)
+    cb.withCredentials(new AWSStaticCredentialsProvider(sessionCredentials))
   }
   return cb.build()
 }
