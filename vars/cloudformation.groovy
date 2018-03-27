@@ -87,12 +87,16 @@ def delete(cf, stackName) {
 @NonCPS
 def update(cf, config) {
   if(doesStackExist(cf, config.stackName)) {
-    cf.updateStack(new UpdateStackRequest()
+    def request = new UpdateStackRequest()
       .withStackName(config.stackName)
       .withParameters(getStackParams(cf, config.stackName, config.parameters))
-      .withTemplateURL(config.templateUrl)
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
-    )
+    if(config['templateUrl']) {
+      request.withTemplateURL(config.templateUrl)
+    } else {
+      request.withUsePreviousTemplate(true)
+    }
+    cf.updateStack(request)
   } else {
     throw new Exception("unable to update stack ${config.stackName} it does not exist")
   }
