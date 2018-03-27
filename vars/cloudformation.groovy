@@ -127,7 +127,21 @@ def wait(cf, stackName, successStatus) {
     break
   }
   try {
-    waiter.run(new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)))
+    Future future = waiter.runAsync(
+      new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
+      new WaiterHandler() {
+        @Override
+        public void onWaitSuccess(DescribeStacksRequest request) {
+            print "Waiting for cloudformation operation complete"
+        }
+
+        @Override
+        public void onWaitFailure(Exception e) {
+          print e.getMessage()
+          e.printStackTrace()
+        }
+    )
+    future.get(30, TimeUnit.MINUTES);
     println "Stack: ${stackName} success - ${successStatus}"
     return true
    } catch(Exception e) {
