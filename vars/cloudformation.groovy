@@ -142,6 +142,7 @@ def wait(cf, stackName, successStatus) {
           print e.getMessage()
           e.printStackTrace()
         }
+      }
     )
     future.get(30, TimeUnit.MINUTES);
     println "Stack: ${stackName} success - ${successStatus}"
