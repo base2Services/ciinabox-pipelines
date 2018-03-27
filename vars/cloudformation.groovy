@@ -29,6 +29,8 @@ import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.waiters.*
 
+import java.util.concurrent.*
+
 def call(body) {
   def config = body
   def cf = setupClient(config.region, config['accountId'], config['role'])
