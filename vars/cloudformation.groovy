@@ -156,7 +156,11 @@ def doesStackExist(cf, stackName) {
     DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
     return result != null
   } catch (AmazonCloudFormationException ex) {
-    return false
+    if(ex.message.contains("does not exist")) {
+      return false
+    } else {
+      throw ex
+    }
   }
 }
 
