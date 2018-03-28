@@ -14,8 +14,10 @@ cloudformation
   ],
   accountId: '1234567890' #the aws account Id you want the stack operation performed in
   role: 'myrole' # the role to assume from the account the pipeline is running from
-  useExistingTemplate: true #ignores templateUrl if true
 )
+
+If you omit the templateUrl then for updates it will use the existing template
+
 ************************************/
 @Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
 @Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.226')
@@ -76,6 +78,7 @@ def create(cf, config) {
 @NonCPS
 def delete(cf, stackName) {
   if(doesStackExist(cf, stackName)) {
+    waitUntilComplete(cf, config.stackName)
     cf.deleteStack(new DeleteStackRequest()
       .withStackName(stackName)
     )
@@ -87,6 +90,7 @@ def delete(cf, stackName) {
 @NonCPS
 def update(cf, config) {
   if(doesStackExist(cf, config.stackName)) {
+    waitUntilComplete(cf, config.stackName)
     def request = new UpdateStackRequest()
       .withStackName(config.stackName)
       .withParameters(getStackParams(cf, config.stackName, config.parameters))
@@ -199,4 +203,22 @@ def assumeRole(awsAccountId, region, roleName) {
             .withRoleArn(roleArn).withDurationSeconds(3600)
             .withRoleSessionName(roleSessionName))
   return assumeRoleResult.getCredentials()
+}
+
+@NonCPS
+def waitUntilComplete(cf, stackName) {
+  DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
+  currentState = result.getStacks().get(0).getStackStatus()
+  waitStatus = 'UPDATE_COMPLETE'
+  switch(currentState) {
+    case 'CREATE_COMPLETE':
+    case 'UPDATE_COMPLETE':
+      return
+    break
+    case 'CREATE_IN_PROGRESS':
+      waitStatus = 'CREATE_COMPLETE'
+    break
+  }
+  print "waiting for stack ${stackName} to finish - ${currentState}"
+  wait(cf, stackName, StackStatus.waitStatus)
 }
