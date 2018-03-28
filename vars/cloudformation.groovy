@@ -209,16 +209,16 @@ def assumeRole(awsAccountId, region, roleName) {
 def waitUntilComplete(cf, stackName) {
   DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
   currentState = result.getStacks().get(0).getStackStatus()
-  waitStatus = 'UPDATE_COMPLETE'
+  waitStatus = StackStatus.UPDATE_COMPLETE
   switch(currentState) {
     case 'CREATE_COMPLETE':
     case 'UPDATE_COMPLETE':
       return
     break
     case 'CREATE_IN_PROGRESS':
-      waitStatus = 'CREATE_COMPLETE'
+      waitStatus = StackStatus.CREATE_COMPLETE
     break
   }
   print "waiting for stack ${stackName} to finish - ${currentState}"
-  wait(cf, stackName, StackStatus.waitStatus)
+  wait(cf, stackName, waitStatus)
 }
