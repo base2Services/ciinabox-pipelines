@@ -6,6 +6,8 @@ performs cloudformation operations
 example usage
 cloudformation
   stackName: 'dev'
+  queryType: 'element' | 'output' ,  # either queryType or action should be supplied
+  query: 'mysubstack.logicalname1' | 'outputKey', # depending on queryType
   action: 'create'|'update'|'delete',
   region: 'ap-southeast-2',
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
@@ -36,7 +38,25 @@ import java.util.concurrent.*
 def call(body) {
   def config = body
   def cf = setupClient(config.region, config['accountId'], config['role'])
+
+  if(!(config.action || config.queryType)){
+    throw new GroovyRuntimeException("Either action or queryType (or both) must be specified")
+  }
+
+  if(config.action){
+    handleActionRequest(cf, config)
+  }
+
+  if(config.queryType){
+    return handleQueryRequest(cf, config)
+  }
+
+}
+
+@NonCPS
+def handleActionRequest(cf, config){
   def success = false
+
   switch(config.action) {
     case 'create':
       if(!doesStackExist(cf,config.stackName)) {
@@ -46,20 +66,83 @@ def call(body) {
         println "Environment ${config.stackName} already Exists"
         success = true
       }
-    break
+      break
     case 'delete':
-      delete(cf, config.stackName)
+      delete(cf, config)
       success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
-    break
+      break
     case 'update':
       update(cf, config)
       success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
-    break
+      break
   }
   if(!success) {
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
   }
 }
+
+@NonCPS
+def handleQueryRequest(cf, config){
+  if(!doesStackExist(cf,config.stackName)){
+    throw new GroovyRuntimeException("Can't query stack ${config.stackName} as it does not exist")
+  }
+  switch(config.queryType){
+    case 'element':
+      return queryStackElement(cf, config)
+    case 'output':
+      return queryStackOutput(cf, config)
+    default:
+      throw new GroovyRuntimeException("Unknown queryType '${config.queryType}'. Valid types are: element,output")
+  }
+}
+
+@NonCPS
+def queryStackElement(cf, config){
+  try {
+    def cfnPathElements = config.query.split("\\."),
+        elementName = cfnPathElements[0],
+        result = cf.describeStackResource(new DescribeStackResourceRequest()
+                .withStackName(config.stackName)
+                .withLogicalResourceId(elementName)
+        )
+
+        if(cfnPathElements.size() > 1){
+          config.query = cfnPathElements[1..cfnPathElements.size()-1].join('.')
+          config.stackName = result.stackResourceDetail.physicalResourceId
+          return queryStackElement(cf, config)
+        }
+
+        if(cfnPathElements.size() == 1){
+          return [
+                  LogicalResourceId: result.stackResourceDetail.logicalResourceId,
+                  PhysicalResourceId: result.stackResourceDetail.physicalResourceId,
+                  ResourceStatus: result.stackResourceDetail.resourceStatus,
+                  StackId: result.stackResourceDetail.stackId
+          ]
+        }
+  } catch (AmazonCloudFormationException ex) {
+    throw new GroovyRuntimeException("Couldn't describe stack resource ${config.query} on stack ${config.stackName}", ex)
+  }
+}
+
+@NonCPS
+def queryStackOutput(cf, config){
+  try {
+    def result = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName))
+    def stackInfo = result.getStacks().get(0),
+        output = stackInfo.getOutputs().find { it.outputKey.equals(config.query) }
+
+    if (output == null){
+      throw new GroovyRuntimeException("Stack ${config.stackName} does not have output named '${config.query}'")
+    }
+
+    return output.outputValue
+
+  } catch (AmazonCloudFormationException ex) {
+    throw new GroovyRuntimeException("Couldn't describe stack ${config.stackName}", ex)
+  }
+}
+
 
 @NonCPS
 def create(cf, config) {
@@ -76,11 +159,11 @@ def create(cf, config) {
 }
 
 @NonCPS
-def delete(cf, stackName) {
-  if(doesStackExist(cf, stackName)) {
+def delete(cf, config) {
+  if(doesStackExist(cf, config.stackName)) {
     waitUntilComplete(cf, config.stackName)
     cf.deleteStack(new DeleteStackRequest()
-      .withStackName(stackName)
+      .withStackName(config.stackName)
     )
   } else {
     println "ignoring delete since stack ${stackName} does not exist"
@@ -123,7 +206,7 @@ def getStackParams(cf, stackName, overrideParams) {
 }
 
 @NonCPS
-def wait(cf, stackName, successStatus) {
+def wait(cf, stackName, successStatus)   {
   def waiter = null
   switch(successStatus) {
     case StackStatus.CREATE_COMPLETE:
