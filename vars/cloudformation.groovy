@@ -100,7 +100,13 @@ def update(cf, config) {
     } else {
       request.withUsePreviousTemplate(true)
     }
-    cf.updateStack(request)
+    try {
+      cf.updateStack(request)
+    } catch(AmazonCloudFormationException ex) {
+      if(!ex.message.contains("No updates are to be performed")) {
+        throw ex
+      }
+    }
   } else {
     throw new Exception("unable to update stack ${config.stackName} it does not exist")
   }
