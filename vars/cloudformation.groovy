@@ -52,8 +52,11 @@ def call(body) {
       success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
     break
     case 'update':
-      update(cf, config)
-      success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+      if(update(cf, config)) {
+        success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+      } else {
+        success = true
+      }
     break
   }
   if(!success) {
@@ -102,10 +105,12 @@ def update(cf, config) {
     }
     try {
       cf.updateStack(request)
+      return true
     } catch(AmazonCloudFormationException ex) {
       if(!ex.message.contains("No updates are to be performed")) {
         throw ex
       }
+      return false
     }
   } else {
     throw new Exception("unable to update stack ${config.stackName} it does not exist")
