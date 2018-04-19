@@ -72,9 +72,12 @@ def handleActionRequest(cf, config){
       success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
       break
     case 'update':
-      update(cf, config)
-      success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
-      break
+      if(update(cf, config)) {
+        success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+      } else {
+        success = true
+      }
+    break
   }
   if(!success) {
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
@@ -183,7 +186,15 @@ def update(cf, config) {
     } else {
       request.withUsePreviousTemplate(true)
     }
-    cf.updateStack(request)
+    try {
+      cf.updateStack(request)
+      return true
+    } catch(AmazonCloudFormationException ex) {
+      if(!ex.message.contains("No updates are to be performed")) {
+        throw ex
+      }
+      return false
+    }
   } else {
     throw new Exception("unable to update stack ${config.stackName} it does not exist")
   }
