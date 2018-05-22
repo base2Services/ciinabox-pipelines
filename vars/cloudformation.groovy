@@ -240,6 +240,7 @@ def wait(cf, stackName, successStatus)   {
     return true
    } catch(Exception e) {
      println "Stack: ${stackName} failed - ${e}"
+     e.printStackTrace()
      return false
    }
 }
