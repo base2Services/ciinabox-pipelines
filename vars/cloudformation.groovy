@@ -235,12 +235,18 @@ def wait(cf, stackName, successStatus)   {
       new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
       new NoOpWaiterHandler()
     )
-    future.get(30, TimeUnit.MINUTES);
+    while(!future.isDone()) {
+      try {
+        echo "waitng for stack operation to complete"
+        Thread.sleep(10000)
+      } catch(InterruptedException ex) {
+          echo "We seem to be timing out ${e}...ignoring"
+      }
+    }
     println "Stack: ${stackName} success - ${successStatus}"
     return true
    } catch(Exception e) {
      println "Stack: ${stackName} failed - ${e}"
-     e.printStackTrace()
      return false
    }
 }
