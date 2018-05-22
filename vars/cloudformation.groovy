@@ -240,7 +240,7 @@ def wait(cf, stackName, successStatus)   {
         echo "waitng for stack operation to complete"
         Thread.sleep(10000)
       } catch(InterruptedException ex) {
-          echo "We seem to be timing out ${e}...ignoring"
+          echo "We seem to be timing out ${ex}...ignoring"
       }
     }
     println "Stack: ${stackName} success - ${successStatus}"
