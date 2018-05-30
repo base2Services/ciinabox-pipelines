@@ -169,7 +169,7 @@ def delete(cf, config) {
       .withStackName(config.stackName)
     )
   } else {
-    println "ignoring delete since stack ${stackName} does not exist"
+    println "ignoring delete since stack ${config.stackName} does not exist"
   }
 }
 
