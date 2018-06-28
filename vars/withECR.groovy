@@ -14,7 +14,7 @@ withECR(1234567890,region) {
 
 def call(awsAccountId, region, body) {
     withEnv(["REGION=$region"]) {
-      sh 'eval $(aws ecr get-login --region ${REGION})'
+      sh 'eval $(aws ecr get-login --region ${REGION} --no-include-email)'
       body()
       sh "docker logout  https://${awsAccountId}.dkr.ecr.${region}.amazonaws.com"
     }
