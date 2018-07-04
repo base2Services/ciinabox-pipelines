@@ -26,6 +26,7 @@
 
 import groovy.json.JsonSlurperClassic
 
+@NonCPS
 def parseJsonToMap(String json) {
   final slurper = new JsonSlurperClassic()
   return new HashMap<>(slurper.parseText(json))
@@ -33,9 +34,8 @@ def parseJsonToMap(String json) {
 
 def call(body) {
   def config = body
-  def shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-  def applicionIDjson = sh(returnStdout: true, script:
-    "curl -X GET 'https://api.newrelic.com/v2/applications.json' \
+  def shortCommit = shellOut("git log -n 1 --pretty=format:'%h'")
+  def applicionIDjson = shellOut("curl -X GET 'https://api.newrelic.com/v2/applications.json' \
       -H 'X-Api-Key:${config.apiKey}' \
       -G -d 'filter[name]=${config.application}'")
   def applicionIDmap = parseJsonToMap(applicionIDjson)
