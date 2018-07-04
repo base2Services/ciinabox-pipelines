@@ -21,9 +21,9 @@ cloudformation
 If you omit the templateUrl then for updates it will use the existing template
 
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.198')
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.226')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.226')
+@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
 
 import com.amazonaws.auth.*
 import com.amazonaws.regions.*
