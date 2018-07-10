@@ -31,14 +31,22 @@ def call(body) {
   def push = config.get('push', false)
   def cleanup = config.get('cleanup', false)
   def forceTag = config.get('forcetag','')
+  def noCache = config.get('noCache', false)
   def buildArgs = ""
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
   }
 
   println "config:${config}"
+ 
+  def cliOpts = "-t ${dockerRepo}:${tags[0]} "
+  cliOpts += "-f ${dockerfile} "
+  if(noCache) {
+    cliOpts += " --no-cache "
+  }
+  cliOpts += " ${buildArgs} ${buildDir} "
 
-  sh "docker build -t ${dockerRepo}:${tags[0]} -f ${dockerfile} ${buildArgs} ${buildDir}"
+  sh "docker build ${cliOpts}"
   if(tags.size() > 1) {
     tags.each { tag ->
       sh "docker tag ${forceTag} ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
