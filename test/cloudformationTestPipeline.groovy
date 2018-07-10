@@ -1,10 +1,10 @@
-@Library('ciinabox_toshke') _
+@Library('github.com/toshke/ciinabox-pipelines@feature/cloudformation-query') _
 
 pipeline {
   agent any
-  environment {
-    SOURCE_BUCKET = 'demo-source.ci.base2.services'
-    AWS_REGION = 'ap-southeast-2'
+  parameters {
+    string(name: 'SOURCE_BUCKET', defaultValue: 'demo-source.ci.base2.services', description: '')
+    string(name: 'AWS_REGION', defaultValue: 'ap-southeast-2', description: '')
   }
   stages {
     stage('prepare') {
@@ -27,19 +27,19 @@ Outputs:
     Value:
       Ref: MyEFS
 Resources:
-  MyEFS: 
+  MyEFS:
     Type: "AWS::EFS::FileSystem"
 """
           writeFile file: template, text: templateContent
           //upload to s3
           s3(file: template,
-                  bucket: env.SOURCE_BUCKET,
+                  bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: env.AWS_REGION
+                  region: params.AWS_REGION
           )
 
           //store template location to be used in subsequent stages
-          def templateLocation = "https://${env.SOURCE_BUCKET}.s3.amazonaws.com/pipeline_tests/${template}"
+          def templateLocation = "https://${params.SOURCE_BUCKET}.s3.amazonaws.com/pipeline_tests/${template}"
           writeFile file: 'template_location.txt', text: templateLocation
           stash name: 'template_location', include: 'template_location.txt'
         }
@@ -52,7 +52,7 @@ Resources:
           unstash 'template_location'
           def templateLocation = readFile file: 'template_location.txt'
           cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   action: 'create',
                   stackName: 'cloudormation-pipeline-test',
                   templateUrl: templateLocation,
@@ -67,13 +67,13 @@ Resources:
         script {
           // query created cloudformation stack for output and element info
           def outValue = cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   stackName: 'cloudormation-pipeline-test',
                   queryType: 'output',
                   query: 'out1'
           )
           def efsInfo = cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   stackName: 'cloudormation-pipeline-test',
                   queryType: 'element',
                   query: 'MyEFS'
@@ -96,13 +96,13 @@ Resources:
           // test equality between the two
           def paramValue = new Random().nextInt().toString()
           cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   action: 'update',
                   stackName: 'cloudormation-pipeline-test',
                   parameters: [ param1: paramValue ]
           )
           def outValue = cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   stackName: 'cloudormation-pipeline-test',
                   queryType: 'output',
                   query: 'out1'
@@ -120,7 +120,7 @@ Resources:
           // testing stack action and query in same step
           def paramValue = new Random().nextInt().toString()
           def outValue = cloudformation(
-                  region: env.AWS_REGION,
+                  region: params.AWS_REGION,
                   action: 'update',
                   stackName: 'cloudormation-pipeline-test',
                   parameters: [ param1: paramValue ],
@@ -137,7 +137,7 @@ Resources:
   post {
     always {
       cloudformation(
-              region: env.AWS_REGION,
+              region: params.AWS_REGION,
               action: 'delete',
               stackName: 'cloudormation-pipeline-test'
       )
