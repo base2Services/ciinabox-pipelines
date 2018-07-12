@@ -2,7 +2,7 @@
  ecr DSL
  Creates ECR repository
  example usage
- ecr
+ ecr(
    accountId: '1234567890',
    region: 'ap-southeast-2',
    image: 'myrepo/image',
@@ -10,6 +10,8 @@
    taggedCleanup: ['master','develop']
  )
  ************************************/
+
+@Grab(group='com.amazonaws', module='aws-java-sdk-ecr', version='1.11.359')
 
 import com.amazonaws.services.ecr.*
 import com.amazonaws.services.ecr.model.*
@@ -39,7 +41,7 @@ def call(body) {
   ]
 
   if (config.taggedCleanup) {
-    rules =+ [
+    rules << [
       rulePriority: 200,
       description: "Keep last 10 ${config.taggedCleanup.join(" ")} builds",
       selection: [
