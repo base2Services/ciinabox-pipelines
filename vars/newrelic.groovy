@@ -35,13 +35,15 @@ def parseJsonToMap(String json) {
 def call(body) {
   def config = body
   def shortCommit = shellOut("git log -n 1 --pretty=format:'%h'")
-  def applicionIDjson = shellOut("curl -X GET 'https://api.newrelic.com/v2/applications.json' \
+  def applicationIDjson = shellOut("curl -X GET 'https://api.newrelic.com/v2/applications.json' \
       -H 'X-Api-Key:${config.apiKey}' \
       -G -d 'filter[name]=${config.application}'")
-  def applicionIDmap = parseJsonToMap(applicionIDjson)
-  def applicionID = applicionIDmap.applications[0].id
-  sh "curl -X POST 'https://api.newrelic.com/v2/applications/${applicionID}/deployments.json' \
-    -H 'X-Api-Key:${config.apiKey}' \
-    -H 'Content-Type: application/json' \
-    -d '{\"deployment\": {\"revision\": \"${shortCommit}\", \"user\": \"${config.user}\"}}'"
+  def applicationIDmap = parseJsonToMap(applicationIDjson)
+  if (applicationIDmap.applications.size() == 1) {
+    def applicationID = applicationIDmap.applications[0].id
+    sh "curl -X POST 'https://api.newrelic.com/v2/applications/${applicationID}/deployments.json' \
+      -H 'X-Api-Key:${config.apiKey}' \
+      -H 'Content-Type: application/json' \
+      -d '{\"deployment\": {\"revision\": \"${shortCommit}\", \"user\": \"${config.user}\"}}'"
+  }
 }
