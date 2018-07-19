@@ -15,14 +15,20 @@ import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 
 def call(awsAccountId, region, roleName, body) {
-  def stsCredentials = assumeRole(awsAccountId, region, roleName)
-  env['AWS_ACCESS_KEY_ID'] = stsCredentials.getAccessKeyId()
-  env['AWS_SECRET_ACCESS_KEY'] = stsCredentials.getSecretAccessKey()
-  env['AWS_SESSION_TOKEN'] = stsCredentials.getSessionToken()
-  body()
-  env.AWS_ACCESS_KEY_ID = null
-  env.AWS_SECRET_ACCESS_KEY = null
-  env.AWS_SESSION_TOKEN = null
+  def accessKeyId = env['AWS_ACCESS_KEY_ID']
+  def secretAccessKey = env['AWS_SECRET_ACCESS_KEY']
+  def sessionToken = env['AWS_SESSION_TOKEN']
+  try {
+    def stsCredentials = assumeRole(awsAccountId, region, roleName)
+    env['AWS_ACCESS_KEY_ID'] = stsCredentials.getAccessKeyId()
+    env['AWS_SECRET_ACCESS_KEY'] = stsCredentials.getSecretAccessKey()
+    env['AWS_SESSION_TOKEN'] = stsCredentials.getSessionToken()
+    body()
+  } finally {
+    env.AWS_ACCESS_KEY_ID = accessKeyId
+    env.AWS_SECRET_ACCESS_KEY = secretAccessKey
+    env.AWS_SESSION_TOKEN = sessionToken
+  }
 }
 
 @NonCPS
