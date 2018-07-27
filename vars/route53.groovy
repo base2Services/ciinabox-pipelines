@@ -20,9 +20,9 @@
  )
  ************************************/
 
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-route53', version = '1.11.359')
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-iam', version = '1.11.359')
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-sts', version = '1.11.359')
+//@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-route53', version = '1.11.359')
+//@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-iam', version = '1.11.359')
+//@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-sts', version = '1.11.359')
 
 
 import com.amazonaws.services.securitytoken.*
