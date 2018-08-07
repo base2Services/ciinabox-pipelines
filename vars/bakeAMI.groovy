@@ -43,6 +43,7 @@ def call(body) {
   bakeEnv << "SOURCE_BUCKET=${config.sourceBucket}"
   bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
   bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
+  bakeEnv << "LOCAL_COOKBOOKS=${config.get('localCookbooks',true)}"
 
   def role = config.get('role').toUpperCase()
 
@@ -56,9 +57,13 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      unstash 'cookbook'
+      if(env.LOCAL_COOKBOOKS) {
+        unstash 'cookbook'
+        sh 'tar xvfz cookbooks.tar.gz'
+      } else {
+        sh 'mkdir -p cookbooks'
+      }
       sh '''
-      tar xvfz cookbooks.tar.gz
       mkdir -p data_bags
       mkdir -p environments
       mkdir -p encrypted_data_bag_secret
