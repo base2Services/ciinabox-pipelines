@@ -57,7 +57,7 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      if(env.LOCAL_COOKBOOKS) {
+      if(config.get('localCookbooks',true)) {
         unstash 'cookbook'
         sh 'tar xvfz cookbooks.tar.gz'
       } else {
