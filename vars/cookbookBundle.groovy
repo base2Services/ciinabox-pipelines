@@ -42,8 +42,8 @@ def call(body) {
         echo "==================================================="
       '''
     }
-    stash(name: 'chefbundle', includes: 'chef-bundle.tar.gz')
   }
+  stash(name: 'chefbundle', includes: 'chef-bundle.tar.gz')
   if(config.get('source_bucket')) {
     s3(
       path: '.',
