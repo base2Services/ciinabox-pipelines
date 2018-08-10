@@ -7,7 +7,8 @@ example usage
 cookbookBundle(
   cookbook: 'mycookbook',
   source_bucket: 'source.mybucket',
-  region: 'ap-southeast-2'
+  region: 'ap-southeast-2',
+  version: 'overrides-the-default-version'
 )
 
 ************************************/
@@ -15,7 +16,7 @@ cookbookBundle(
 def call(body) {
   def config = body
   versionFile = "${config.cookbook}/VERSION"
-  def cookbookVersion = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}-${readFile(versionFile).replaceAll("\n","")}"
+  def cookbookVersion = config.get('version',"${env.BRANCH_NAME}-${env.BUILD_NUMBER}-${readFile(versionFile).replaceAll("\n","")}")
   env['COOKBOOK_VERSION'] = cookbookVersion
 
   cookbookPublish(config.cookbook)
