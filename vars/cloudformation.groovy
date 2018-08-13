@@ -243,8 +243,17 @@ def wait(cf, stackName, successStatus)   {
           echo "We seem to be timing out ${ex}...ignoring"
       }
     }
-    println "Stack: ${stackName} success - ${successStatus}"
-    return true
+    // confirm that end state equals requested state,
+    // as sdk waiters will exit not only on success, but also on failure
+    // states. e.g. UPDATE_ROLLBACK_COMPLETE for UPDATE_COMPLETE
+    DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
+    currentState = result.getStacks().get(0).getStackStatus()
+    def success = currentState.toString().equals(successStatus.toString())
+    println "Stack ${stackName} end state: ${currentState}"
+    println "Stack ${stackName} required state: ${successStatus}"
+    println ">>>> ${success ? 'SUCCESS' : 'FAILURE'}"
+
+    return success
    } catch(Exception e) {
      println "Stack: ${stackName} failed - ${e}"
      return false
