@@ -1,10 +1,13 @@
-@Library('github.com/toshke/ciinabox-pipelines@feature/cloudformation-query') _
+@Library('ciinabox_tests') _
 
 pipeline {
   agent any
   parameters {
     string(name: 'SOURCE_BUCKET', defaultValue: 'demo-source.ci.base2.services', description: '')
     string(name: 'AWS_REGION', defaultValue: 'ap-southeast-2', description: '')
+    string(name: 'TEST_FOR_FAILURE',
+      defaultValue: 'false',
+      description: 'Set to true to test cloudformation update step failure')
   }
   stages {
     stage('prepare') {
@@ -130,6 +133,56 @@ Resources:
           if (!"${outValue}".equals("${paramValue}")) {
             throw new GroovyRuntimeException("Stack output = ${outValue} does not match ${paramValue}")
           }
+        }
+      }
+    }
+
+    stage('stack-update-failure-test'){
+      when { expression { params.TEST_FOR_FAILURE == 'true' } }
+      steps {
+        script {
+          // upload invalid cloudformation template and expect a failure
+          def rand = new Random().nextInt().toString(),
+              template = "testCloudFormationTemplate${rand}.yaml",
+              templateContent = """
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Parameters:
+  param1:
+    Type: String
+Outputs:
+  out1:
+    Value:
+      Ref: param1
+  efs:
+    Value:
+      Ref: MyEFS
+Resources:
+  MyEFS:
+    Type: "AWS::EFS::FileSystem"
+  Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      KeyName: idontexistsoiwillrollbackstack
+        """
+          writeFile file: template, text: templateContent
+
+          //upload to s3
+          s3(file: template,
+                  bucket: params.SOURCE_BUCKET,
+                  prefix: 'pipeline_tests',
+                  region: params.AWS_REGION
+          )
+
+          //store template location to be used in subsequent stages
+          def templateLocation = "https://${params.SOURCE_BUCKET}.s3.amazonaws.com/pipeline_tests/${template}"
+
+          cloudformation(
+                  region: params.AWS_REGION,
+                  action: 'update',
+                  stackName: 'cloudormation-pipeline-test',
+                  templateUrl: templateLocation
+          )
         }
       }
     }
