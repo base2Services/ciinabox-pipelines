@@ -47,13 +47,20 @@ def lookupAMI(config) {
     }
   }
 
+  if(config.amiBranch) {
+    filters << new Filter("tag:BranchName").withValues("${config.amiBranch}","master")
+  }
+
   def imagesList = ec2.describeImages(new DescribeImagesRequest()
     .withOwners([config.owner])
     .withFilters(filters)
   )
   if(imagesList.images.size () > 0) {
     def images = imagesList.images.collect()
-    println "imaage:${images}"
+    println "image:${images}"
+    if(config.amiBranch) {
+      images = filterAMIBranch(images, config.amiBranch)
+    }
     return images.get(findNewestImage(images))
   }
   return null
@@ -72,6 +79,22 @@ def findNewestImage(images) {
     index++
   }
   return found
+}
+
+def filterAMIBranch(images, amiBranch) {
+  branchImages = []
+  images.each { image ->
+    image.tags.each { tag ->
+      if(tag.key == 'BranchName' && tag.value == amiBranch) {
+        branchImages << image
+      }
+    }
+  }
+  if(branchImages.size() == 0) {
+    return images
+  } else {
+    return branchImages
+  }
 }
 
 def lookupAccountId() {

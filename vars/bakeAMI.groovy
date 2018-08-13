@@ -37,6 +37,7 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
   config.amiName = config.get('baseAMI')
+  config.amiBranch = config.get('baseAMIBranch')
 
   // Windows chef env vars
   bakeEnv << "CHEF_PATH=${config.chefPath}"
