@@ -32,6 +32,7 @@ def call(body) {
   bakeEnv << "CIINABOX_NAME=${config.get('ciinabox', 'ciinabox')}"
   bakeEnv << "AMI_USERS=${config.get('shareAmiWith')}"
   bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
+  bakeEnv << "DEVICE_NAME=${config.get('deviceName', '')}"
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
   shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   bakeEnv << "GIT_COMMIT=${shortCommit}"
