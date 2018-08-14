@@ -44,6 +44,7 @@ def call(body) {
   bakeEnv << "SOURCE_BUCKET=${config.sourceBucket}"
   bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
   bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
+  def skipCookbooks = config.get('skipCookbookUpload',false)
 
   def role = config.get('role').toUpperCase()
 
@@ -57,9 +58,15 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      unstash 'cookbook'
+      
+      if(skipCookbookUpload) {
+        sh 'mkdir -p cookbooks'
+      } else
+        unstash 'cookbook'
+        sh 'tar xvfz cookbooks.tar.gz'
+      }
+
       sh '''
-      tar xvfz cookbooks.tar.gz
       mkdir -p data_bags
       mkdir -p environments
       mkdir -p encrypted_data_bag_secret
