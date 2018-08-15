@@ -62,7 +62,7 @@ def call(body) {
       
       if(skipCookbookUpload) {
         sh 'mkdir -p cookbooks'
-      } else
+      } else {
         unstash 'cookbook'
         sh 'tar xvfz cookbooks.tar.gz'
       }
