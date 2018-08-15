@@ -48,7 +48,8 @@ def lookupAMI(config) {
   }
 
   if(config.amiBranch) {
-    filters << new Filter("tag:BranchName").withValues("${config.amiBranch}","master")
+    def amiBranch = config.amiBranch.replaceAll("/", "-")
+    filters << new Filter("tag:BranchName").withValues("${amiBranch}","master")
   }
 
   def imagesList = ec2.describeImages(new DescribeImagesRequest()
