@@ -60,7 +60,7 @@ def lookupAMI(config) {
     def images = imagesList.images.collect()
     println "image:${images}"
     if(config.amiBranch) {
-      images = filterAMIBranch(images, config.amiBranch)
+      images = filterAMIBranch(images, config.amiBranch.replaceAll("/", "-"))
     }
     return images.get(findNewestImage(images))
   }
