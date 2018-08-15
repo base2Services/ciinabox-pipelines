@@ -45,7 +45,7 @@ def call(body) {
   bakeEnv << "SOURCE_BUCKET=${config.sourceBucket}"
   bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
   bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
-  def skipCookbooks = config.get('skipCookbookUpload',false)
+  def skipCookbookUpload = config.get('skipCookbookUpload',false)
 
   def role = config.get('role').toUpperCase()
 
