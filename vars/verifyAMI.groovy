@@ -49,7 +49,7 @@ cat <<EOT > userdata.sh
 EOT
 gem install kitchen-ec2 --no-rdoc
 kitchen destroy
-kitchen test
+kitchen test -l debug
       '''
       }
     }

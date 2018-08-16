@@ -78,7 +78,7 @@ def call(body) {
       AMI_BUILD_ID=${BRANCH}-${AMI_BUILD_NUMBER}
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
-      exho "AMI Build NO: ${AMI_BUILD_ID}"
+      echo "AMI Build NO: ${AMI_BUILD_ID}"
       echo "==================================================="
       ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_ID $SOURCE_AMI $AMI_BUILD_ID $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
       if [ $? != 0 ]; then
@@ -87,7 +87,7 @@ def call(body) {
       fi
       echo "==================================================="
       echo "completed baking AMI for : ${ROLE}"
-      exho "AMI Build NO: ${AMI_BUILD_ID}"
+      echo "AMI Build NO: ${AMI_BUILD_ID}"
       echo "==================================================="
       '''
       bakedAMI = shellOut('''#!/bin/bash
