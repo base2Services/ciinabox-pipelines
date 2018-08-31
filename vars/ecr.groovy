@@ -75,7 +75,7 @@ def setRepositoryPolicy(ecr,config) {
     "Version": "2008-10-17",
     "Statement": []
   ]
-  config.otherAccountIds.collect { accountId ->
+  config.otherAccountIds.each { accountId ->
     document.Statement << [
       "Sid": "AllowPull",
       "Effect": "Allow",
