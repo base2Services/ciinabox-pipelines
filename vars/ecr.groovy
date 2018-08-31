@@ -71,29 +71,30 @@ def createRepo(ecr,repo) {
 }
 
 def setRepositoryPolicy(ecr,config) {
-  def document = new groovy.json.JsonBuilder()
-  document {
-    Version("2008-10-17")
-    Statement( config.otherAccountIds.collect { accountId ->
-      [
-        Sid: "AllowPull",
-        Effect: "Allow",
-        Principal: ({
-          'AWS'(["arn:aws:iam::${accountId}:root"])
-        }),
-        Action:([
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:BatchCheckLayerAvailability"
-        ])
+  def document = [
+    "Version": "2008-10-17",
+    "Statement": []
+  ]
+  config.otherAccountIds.each { accountId ->
+    document.Statement << [
+      "Sid": "AllowPull",
+      "Effect": "Allow",
+      "Principal": [
+        "AWS": "arn:aws:iam::${accountId}:root"
+      ],
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability"
       ]
-    })
+    ]
   }
-  println "Applying ECR access policy\n${document.toPrettyString()}"
+  def builder = new groovy.json.JsonBuilder(document)
+  println "Applying ECR access policy\n${builder.toPrettyString()}"
   ecr.setRepositoryPolicy(new SetRepositoryPolicyRequest()
     .withRepositoryName(config.image)
     .withRegistryId(config.accountId)
-    .withPolicyText(document.toString())
+    .withPolicyText(builder.toString())
   )
 }
 
