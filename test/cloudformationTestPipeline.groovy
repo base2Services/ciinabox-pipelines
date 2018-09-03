@@ -6,8 +6,8 @@ pipeline {
     string(name: 'SOURCE_BUCKET', defaultValue: 'demo-source.ci.base2.services', description: '')
     string(name: 'AWS_REGION', defaultValue: 'ap-southeast-2', description: '')
     string(name: 'TEST_FOR_FAILURE',
-      defaultValue: 'false',
-      description: 'Set to true to test cloudformation update step failure')
+            defaultValue: 'false',
+            description: 'Set to true to test cloudformation update step failure')
   }
   stages {
     stage('prepare') {
@@ -117,6 +117,178 @@ Resources:
       }
     }
 
+    stage('stack-update-remove-parameter') {
+      steps {
+        script {
+          def rand = new Random().nextInt().toString(),
+              template = "testCloudFormationTemplate${rand}.yaml",
+          // rename param1 as param2
+              templateContent = """
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Parameters:
+  param2:
+    Type: String
+Outputs:
+  out2:
+    Value:
+      Ref: param2
+  efs:
+    Value:
+      Ref: MyEFS
+Resources:
+  MyEFS:
+    Type: "AWS::EFS::FileSystem"
+"""
+          writeFile file: template, text: templateContent
+          s3(file: template,
+                  bucket: params.SOURCE_BUCKET,
+                  prefix: 'pipeline_tests',
+                  region: params.AWS_REGION
+          )
+          // update stack parameter, and query output
+          // test equality between the two
+          def paramValue = new Random().nextInt().toString()
+          cloudformation(
+                  region: params.AWS_REGION,
+                  action: 'update',
+                  stackName: 'cloudormation-pipeline-test',
+                  // testing format s3.amazonaws.com/bucket/key
+                  templateUrl: "https://s3.amazonaws.com/${params.SOURCE_BUCKET}/pipeline_tests/${template}",
+                  parameters: [ param2: paramValue ]
+          )
+          def outValue = cloudformation(
+                  region: params.AWS_REGION,
+                  stackName: 'cloudormation-pipeline-test',
+                  queryType: 'output',
+                  query: 'out2'
+          )
+          if (!"${outValue}".equals("${paramValue}")) {
+            throw new GroovyRuntimeException("Stack output = ${outValue} does not match ${paramValue}")
+          }
+        }
+      }
+    }
+    stage('stack-update-another-s3-format-test') {
+      steps {
+        script {
+          def rand = new Random().nextInt().toString(),
+              template = "testCloudFormationTemplate${rand}.yaml",
+          // rename param1 as param2
+              templateContent = """
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Parameters:
+  param2:
+    Type: String
+Outputs:
+  out2:
+    Value:
+      Ref: param2
+  addAnotherOut:
+    Value:
+      Ref: param2
+  efs:
+    Value:
+      Ref: MyEFS
+Resources:
+  MyEFS:
+    Type: "AWS::EFS::FileSystem"
+"""
+          writeFile file: template, text: templateContent
+          s3(file: template,
+                  bucket: params.SOURCE_BUCKET,
+                  prefix: 'pipeline_tests',
+                  region: params.AWS_REGION
+          )
+          // update stack parameter, and query output
+          // test equality between the two
+          def paramValue = new Random().nextInt().toString()
+          cloudformation(
+                  region: params.AWS_REGION,
+                  action: 'update',
+                  stackName: 'cloudormation-pipeline-test',
+                  // testing format s3-region.amazonaws.com/bucket/key
+                  templateUrl: "https://s3-${params.AWS_REGION}.amazonaws.com/${params.SOURCE_BUCKET}/pipeline_tests/${template}",
+                  parameters: [ param2: paramValue ]
+          )
+          def outValue = cloudformation(
+                  region: params.AWS_REGION,
+                  stackName: 'cloudormation-pipeline-test',
+                  queryType: 'output',
+                  query: 'out2'
+          )
+          if (!"${outValue}".equals("${paramValue}")) {
+            throw new GroovyRuntimeException("Stack output = ${outValue} does not match ${paramValue}")
+          }
+        }
+      }
+    }
+
+    stage('stack-update-remove-parameter-json') {
+      steps {
+        script {
+          def rand = new Random().nextInt().toString(),
+              template = "testCloudFormationTemplate${rand}.json",
+          // rename param1 as param2
+              templateContent = """
+{
+  "AWSTemplateFormatVersion": "2010-09-09", 
+  "Outputs": {
+    "out3": {
+      "Value": {
+        "Ref": "param3"
+      }
+    }, 
+    "efs": {
+      "Value": {
+        "Ref": "MyEFS"
+      }
+    }
+  }, 
+  "Parameters": {
+    "param3": {
+      "Type": "String"
+    }
+  }, 
+  "Description": "A sample template", 
+  "Resources": {
+    "MyEFS": {
+      "Type": "AWS::EFS::FileSystem"
+    }
+  }
+}
+"""
+          writeFile file: template, text: templateContent
+          s3(file: template,
+                  bucket: params.SOURCE_BUCKET,
+                  prefix: 'pipeline_tests',
+                  region: params.AWS_REGION
+          )
+          // update stack parameter, and query output
+          // test equality between the two
+          def paramValue = new Random().nextInt().toString()
+          cloudformation(
+                  region: params.AWS_REGION,
+                  action: 'update',
+                  stackName: 'cloudormation-pipeline-test',
+                  //testing format https://bucket.s3-region.amazonaws.com/key
+                  templateUrl: "https://${params.SOURCE_BUCKET}.s3-${params.AWS_REGION}.amazonaws.com/pipeline_tests/${template}",
+                  parameters: [ param3: paramValue ]
+          )
+          def outValue = cloudformation(
+                  region: params.AWS_REGION,
+                  stackName: 'cloudormation-pipeline-test',
+                  queryType: 'output',
+                  query: 'out3'
+          )
+          if (!"${outValue}".equals("${paramValue}")) {
+            throw new GroovyRuntimeException("Stack output = ${outValue} does not match ${paramValue}")
+          }
+        }
+      }
+    }
+
     stage('stack-update-query') {
       steps {
         script {
@@ -126,9 +298,9 @@ Resources:
                   region: params.AWS_REGION,
                   action: 'update',
                   stackName: 'cloudormation-pipeline-test',
-                  parameters: [ param1: paramValue ],
+                  parameters: [ param3: paramValue ],
                   queryType: 'output',
-                  query: 'out1'
+                  query: 'out3'
           )
           if (!"${outValue}".equals("${paramValue}")) {
             throw new GroovyRuntimeException("Stack output = ${outValue} does not match ${paramValue}")
@@ -148,10 +320,10 @@ Resources:
 AWSTemplateFormatVersion: "2010-09-09"
 Description: A sample template
 Parameters:
-  param1:
+  param3:
     Type: String
 Outputs:
-  out1:
+  out3:
     Value:
       Ref: param1
   efs:
@@ -174,16 +346,29 @@ Resources:
                   region: params.AWS_REGION
           )
 
-          //store template location to be used in subsequent stages
+          //testing format bucket.s3.amazonaws.com/key
           def templateLocation = "https://${params.SOURCE_BUCKET}.s3.amazonaws.com/pipeline_tests/${template}"
+          try {
+            cloudformation(
+                    region: params.AWS_REGION,
+                    action: 'update',
+                    stackName: 'cloudormation-pipeline-test',
+                    templateUrl: templateLocation)
+            error 'Stack did not update'
+          } catch (java.lang.Exception ex) {
+            println "Update failed, as expected"
+          }
 
-          cloudformation(
-                  region: params.AWS_REGION,
-                  action: 'update',
-                  stackName: 'cloudormation-pipeline-test',
-                  templateUrl: templateLocation
-          )
         }
+      }
+    }
+    stage('test-delete'){
+      steps {
+        cloudformation(
+                region: params.AWS_REGION,
+                action: 'delete',
+                stackName: 'cloudormation-pipeline-test'
+        )
       }
     }
   }

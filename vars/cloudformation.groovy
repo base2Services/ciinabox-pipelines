@@ -24,20 +24,26 @@ If you omit the templateUrl then for updates it will use the existing template
 @Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-s3', version='1.11.359')
+@Grab(group='org.yaml', module='snakeyaml', version='1.23')
 
 import com.amazonaws.auth.*
 import com.amazonaws.regions.*
 import com.amazonaws.services.cloudformation.*
 import com.amazonaws.services.cloudformation.model.*
+import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.model.*
 import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.waiters.*
-
+import org.yaml.snakeyaml.Yaml
+import groovy.json.JsonSlurperClassic
 import java.util.concurrent.*
+import java.io.InputStreamReader
 
 def call(body) {
   def config = body
-  def cf = setupClient(config.region, config['accountId'], config['role'])
+  def cf = setupCfClient(config.region, config.accountId, config.role)
 
   if(!(config.action || config.queryType)){
     throw new GroovyRuntimeException("Either action or queryType (or both) must be specified")
@@ -179,7 +185,7 @@ def update(cf, config) {
     waitUntilComplete(cf, config.stackName)
     def request = new UpdateStackRequest()
       .withStackName(config.stackName)
-      .withParameters(getStackParams(cf, config.stackName, config.parameters))
+      .withParameters(getStackParams(cf, config))
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
     if(config['templateUrl']) {
       request.withTemplateURL(config.templateUrl)
@@ -200,12 +206,28 @@ def update(cf, config) {
   }
 }
 
+
 @NonCPS
-def getStackParams(cf, stackName, overrideParams) {
+def getStackParams(cf, config) {
+  def stackName = config.stackName
+  def overrideParams = config.parameters
   def stackParams = [:]
+  def newTemplateParams = []
   def stacks = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
+  if(config.templateUrl != null){
+    newTemplateParams = getTemplateParameterNames(config)
+  }
   if (!stacks.isEmpty()) {
     for(Parameter param: stacks.get(0).getParameters()) {
+      // if new template is part of stack update, we need to check for any
+      // removed parameters in new template
+      if(config.templateUrl != null){
+        if(!newTemplateParams.contains(param.getParameterKey())){
+          println "Stack parameter ${param.getParameterKey()} not present in template ${config.templateUrl}, thus" +
+                  "removing it from stack update operation"
+          continue
+        }
+      }
       stackParams.put(param.getParameterKey(), new Parameter().withParameterKey(param.getParameterKey()).withUsePreviousValue(true))
     }
     overrideParams.each {
@@ -287,8 +309,18 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupClient(region, awsAccountId = null, role =  null) {
+def setupCfClient(region, awsAccountId = null, role =  null) {
   def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
+  def creds = getCredentials(awsAccountId, region, role)
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
+  return cb.build()
+}
+
+@NonCPS
+def setupS3Client(region, awsAccountId = null, role =  null) {
+  def cb = AmazonS3ClientBuilder.standard().withRegion(region)
   def creds = getCredentials(awsAccountId, region, role)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
@@ -347,4 +379,59 @@ def waitUntilComplete(cf, stackName) {
   }
   print "waiting for stack ${stackName} to finish - ${currentState}"
   wait(cf, stackName, waitStatus)
+}
+
+@NonCPS
+def getTemplateParameterNames(config){
+  def newTemplateParams = [],
+    s3location = s3bucketKeyFromUrl(config.templateUrl),
+    s3 = setupS3Client(config.region, config.accountId, config.role),
+    templateBody = s3.getObject(new GetObjectRequest(s3location.bucket, s3location.key)).getObjectContent()
+
+  if(s3location.key.endsWith('yaml') || s3location.key.endsWith('yml')){
+    newTemplate = new Yaml().load(templateBody)
+  } else {
+    //fallback on json
+    newTemplate = parseJsonToMap(templateBody)
+  }
+  if(newTemplate.Parameters){
+    newTemplate.Parameters.each { cfParamName, cfParamDef ->
+      newTemplateParams << cfParamName
+    }
+  }
+  return newTemplateParams
+}
+
+@NonCPS
+def parseJsonToMap(s3inputStream) {
+  final slurper = new JsonSlurperClassic()
+  return new HashMap<>(slurper.parse(new InputStreamReader(s3inputStream)))
+}
+
+@NonCPS
+def s3bucketKeyFromUrl(String s3url) {
+  def parts = s3url.split("/"),
+      domain = parts[2],
+      domainParts = domain.split('\\.')
+
+  //format https://$bucket.s3.amazonaws.com/key (http://bucket.s3.amazonaws.com)
+  if (domain.endsWith('.s3.amazonaws.com')) {
+    return [
+            bucket: domain.replace('.s3.amazonaws.com', ''),
+            key   : parts[3..parts.size() - 1].join("/")
+    ]
+    //format https://bucket.s3-$region.amazonaws.com/key
+  } else if (domain.endsWith('.amazonaws.com') && domainParts.size() > 3 && domainParts[domainParts.size()-3].startsWith('s3-')) {
+    return [
+            bucket: domainParts[0..domainParts.size()-4].join('.'),
+            key   : parts[3..parts.size() - 1].join("/")
+    ]
+    //format https://s3-$region.amazonaws.com/$bucket/$key
+    //format https://s3.amazonaws.com/$bucket/$key
+  }else if ((domain.endsWith('.amazonaws.com') && domain.startsWith('s3-')) || (domain == 's3.amazonaws.com')) {
+    return [
+            bucket: parts[3],
+            key   : parts[4..parts.size() - 1].join("/")
+    ]
+  }
 }
