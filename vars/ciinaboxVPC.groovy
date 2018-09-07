@@ -20,8 +20,8 @@ import com.amazonaws.services.cloudformation.model.*
 def call(body) {
   def config = body
   
-  az = config.get('availabilityZone', 'a').toUpperCase()
-  ciinaboxName = config.get('ciinabox', 'ciinabox')
+  def az = config.get('availabilityZone', 'a').toUpperCase()
+  def ciinaboxName = config.get('ciinabox', 'ciinabox')
   def ciinabox = ciinaboxStack(ciinaboxName, config.region)
   if(ciinabox) {
     def outputs = [:]
