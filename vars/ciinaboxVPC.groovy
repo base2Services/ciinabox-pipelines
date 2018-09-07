@@ -7,8 +7,10 @@
  example usage
  ciinaboxVPC(
    ciinabox: 'ciinabox',
-   region: env.REGION
+   region: env.REGION,
+   availabilityZone: 'a'
  )
+ the optional az attribute allows you to override which availability zone is returned
  ************************************/
  @Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.359')
 
@@ -18,7 +20,9 @@ import com.amazonaws.services.cloudformation.model.*
 def call(body) {
   def config = body
   
-  def ciinabox = ciinaboxStack(config.get('ciinabox', 'ciinabox'), config.region)
+  az = config.get('availabilityZone', 'a').toUpperCase()
+  ciinaboxName = config.get('ciinabox', 'ciinabox')
+  def ciinabox = ciinaboxStack(ciinaboxName, config.region)
   if(ciinabox) {
     def outputs = [:]
     ciinabox.outputs.each { output ->
@@ -30,7 +34,7 @@ def call(body) {
     if(exist) {
       new File(paramsFile).delete()
     }
-    writeFile file: paramsFile, text: toJson(outputs)
+    writeFile file: paramsFile, text: toJson(outputs, az)
   } else {
     throw new RuntimeException("no ciinabox stack ${ciinabox} found")
   }
@@ -38,7 +42,7 @@ def call(body) {
 }
 
 @NonCPS
-def ciinaboxStack(stackName, region) {
+def ciinaboxStack(stackName, region, az) {
   try {
     def cf = setupClient(region)
     DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
@@ -53,11 +57,12 @@ def ciinaboxStack(stackName, region) {
 }
 
 @NonCPS
-def toJson(outputs) {
+def toJson(outputs, az) {
+  subnet = "ECSPrivateSubnet${az}"
   def json_text = """{
     "region": "${outputs['Region']}",
     "vpc_id": "${outputs['VPCId']}",
-    "subnet_id": "${outputs['ECSPrivateSubnetA']}",
+    "subnet_id": "${outputs[subnet]}",
     "security_group": "${outputs['SecurityGroup']}",
     "packer_role": "${outputs['ECSRole']}",
     "packer_instance_profile": "${outputs['ECSInstanceProfile']}"
