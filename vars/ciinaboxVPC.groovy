@@ -42,7 +42,7 @@ def call(body) {
 }
 
 @NonCPS
-def ciinaboxStack(stackName, region, az) {
+def ciinaboxStack(stackName, region) {
   try {
     def cf = setupClient(region)
     DescribeStacksResult result = cf.describeStacks(new DescribeStacksRequest().withStackName(stackName))
