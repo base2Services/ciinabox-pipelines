@@ -34,7 +34,14 @@ def call(body) {
   bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
   bakeEnv << "DEVICE_NAME=${config.get('deviceName', '')}"
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
-  shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+  if (fileExists('.git/config')) {
+    shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+  } else if(env.containsKey('GIT_COMMIT')) {
+      shortCommit = env.GIT_COMMIT.substring(0,7)
+    } else {
+      shortCommit = ''
+    }
+  }
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
   config.amiName = config.get('baseAMI')
