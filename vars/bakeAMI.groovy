@@ -39,7 +39,7 @@ def call(body) {
   } else if(env.GIT_COMMIT != null) {
     shortCommit = env.GIT_COMMIT.substring(0,7)
   } else {
-    shortCommit = ''
+    shortCommit = 'unknown'
   }
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
