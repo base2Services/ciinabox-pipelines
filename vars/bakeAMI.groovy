@@ -36,8 +36,8 @@ def call(body) {
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
   if (fileExists('.git/config')) {
     shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-  } else if(env.containsKey('GIT_COMMIT')) {
-      shortCommit = env.GIT_COMMIT.substring(0,7)
+  } else if(env.GIT_COMMIT != null) {
+    shortCommit = env.GIT_COMMIT.substring(0,7)
   } else {
     shortCommit = ''
   }
