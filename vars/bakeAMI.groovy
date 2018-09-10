@@ -38,9 +38,8 @@ def call(body) {
     shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   } else if(env.containsKey('GIT_COMMIT')) {
       shortCommit = env.GIT_COMMIT.substring(0,7)
-    } else {
-      shortCommit = ''
-    }
+  } else {
+    shortCommit = ''
   }
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
