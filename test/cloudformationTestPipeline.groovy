@@ -39,7 +39,7 @@ Resources:
           s3(file: template,
                   bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: params.AWS_REGION
+                  region: params.SOURCE_BUCKET_REGION
           )
 
           //store template location to be used in subsequent stages
@@ -145,7 +145,7 @@ Resources:
           s3(file: template,
                   bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: params.AWS_REGION
+                  region: params.SOURCE_BUCKET_REGION
           )
           // update stack parameter, and query output
           // test equality between the two
@@ -200,7 +200,7 @@ Resources:
           s3(file: template,
                   bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: params.AWS_REGION
+                  region: params.SOURCE_BUCKET_REGION
           )
           // update stack parameter, and query output
           // test equality between the two
@@ -264,7 +264,7 @@ Resources:
           s3(file: template,
                   bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: params.AWS_REGION
+                  region: params.SOURCE_BUCKET_REGION
           )
           // update stack parameter, and query output
           // test equality between the two
@@ -344,7 +344,7 @@ Resources:
           s3(file: template,
                   bucket: params.SOURCE_BUCKET,
                   prefix: 'pipeline_tests',
-                  region: params.AWS_REGION
+                  region: params.SOURCE_BUCKET_REGION
           )
 
           //testing format bucket.s3.amazonaws.com/key
