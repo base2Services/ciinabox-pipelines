@@ -385,7 +385,7 @@ def waitUntilComplete(cf, stackName) {
 def getTemplateParameterNames(config){
   def newTemplateParams = [],
     s3location = s3bucketKeyFromUrl(config.templateUrl),
-    s3headClient = setupS3Client(config.region, config.accountId, config.role),
+    s3headClient = setupS3Client(config.region),
     newTemplate = null
 
     def headBucketRegion = s3headClient.getBucketLocation(s3location.bucket)
