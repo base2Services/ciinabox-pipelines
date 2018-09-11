@@ -223,7 +223,7 @@ def getStackParams(cf, config) {
       // removed parameters in new template
       if(config.templateUrl != null){
         if(!newTemplateParams.contains(param.getParameterKey())){
-          println "Stack parameter ${param.getParameterKey()} not present in template ${config.templateUrl}, thus" +
+          println "Stack parameter ${param.getParameterKey()} not present in template ${config.templateUrl}, thus " +
                   "removing it from stack update operation"
           continue
         }
@@ -385,8 +385,19 @@ def waitUntilComplete(cf, stackName) {
 def getTemplateParameterNames(config){
   def newTemplateParams = [],
     s3location = s3bucketKeyFromUrl(config.templateUrl),
-    s3 = setupS3Client(config.region, config.accountId, config.role),
-    templateBody = s3.getObject(new GetObjectRequest(s3location.bucket, s3location.key)).getObjectContent()
+    s3headClient = setupS3Client(config.region, config.accountId, config.role),
+    newTemplate = null
+
+    def headBucketRegion = s3headClient.getBucketLocation(s3location.bucket)
+    if(headBucketRegion == ''){
+      headBucketRegion = 'us-east-1'
+    } else if(headBucketRegion == 'EU'){
+      headBucketRegion = 'eu-west-1'
+    }
+
+    println "Using region ${headBucketRegion} to grab template ${config.templateUrl}"
+    def s3getClient = setupS3Client(headBucketRegion, config.accountId, config.role),
+    templateBody = s3getClient.getObject(new GetObjectRequest(s3location.bucket, s3location.key)).getObjectContent()
 
   if(s3location.key.endsWith('yaml') || s3location.key.endsWith('yml')){
     newTemplate = new Yaml().load(templateBody)

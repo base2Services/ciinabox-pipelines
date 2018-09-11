@@ -3,8 +3,9 @@
 pipeline {
   agent any
   parameters {
-    string(name: 'SOURCE_BUCKET', defaultValue: 'demo-source.ci.base2.services', description: '')
+    string(name: 'SOURCE_BUCKET', defaultValue: 'demo-source-ap-southeast-1.ci.base2.services', description: '')
     string(name: 'AWS_REGION', defaultValue: 'ap-southeast-2', description: '')
+    string(name: 'SOURCE_BUCKET_REGION', defaultValue: 'ap-southeast-1', description: '')
     string(name: 'TEST_FOR_FAILURE',
             defaultValue: 'false',
             description: 'Set to true to test cloudformation update step failure')
@@ -209,7 +210,7 @@ Resources:
                   action: 'update',
                   stackName: 'cloudormation-pipeline-test',
                   // testing format s3-region.amazonaws.com/bucket/key
-                  templateUrl: "https://s3-${params.AWS_REGION}.amazonaws.com/${params.SOURCE_BUCKET}/pipeline_tests/${template}",
+                  templateUrl: "https://s3-${params.SOURCE_BUCKET_REGION}.amazonaws.com/${params.SOURCE_BUCKET}/pipeline_tests/${template}",
                   parameters: [ param2: paramValue ]
           )
           def outValue = cloudformation(
@@ -273,7 +274,7 @@ Resources:
                   action: 'update',
                   stackName: 'cloudormation-pipeline-test',
                   //testing format https://bucket.s3-region.amazonaws.com/key
-                  templateUrl: "https://${params.SOURCE_BUCKET}.s3-${params.AWS_REGION}.amazonaws.com/pipeline_tests/${template}",
+                  templateUrl: "https://${params.SOURCE_BUCKET}.s3-${params.SOURCE_BUCKET_REGION}.amazonaws.com/pipeline_tests/${template}",
                   parameters: [ param3: paramValue ]
           )
           def outValue = cloudformation(
