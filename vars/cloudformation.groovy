@@ -389,7 +389,7 @@ def getTemplateParameterNames(config){
     newTemplate = null
 
     def headBucketRegion = s3headClient.getBucketLocation(s3location.bucket)
-    if(headBucketRegion == ''){
+    if(headBucketRegion == '' || headBucketRegion == 'US'){
       headBucketRegion = 'us-east-1'
     } else if(headBucketRegion == 'EU'){
       headBucketRegion = 'eu-west-1'
