@@ -64,6 +64,16 @@ def handleActionRequest(cf, config){
   def success = false
 
   switch(config.action) {
+    case 'exists':
+      if(doesStackExist(cf,config.stackName)) {
+        println "Environment ${config.stackName} already exists"
+        env["${config.stackName}_exists"] = 'true'
+      } else {
+        env["${config.stackName}_exists"] = 'false'
+        println "Environment ${config.stackName} does not exist"
+      }
+      success = true
+      break
     case 'create':
       if(!doesStackExist(cf,config.stackName)) {
         create(cf, config)
