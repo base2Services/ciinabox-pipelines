@@ -7,10 +7,11 @@ ecsService (
   taskDefinition: 'example-task-definition',
   cluster: 'example-cluster',
   desiredCount: '1',
-  forceNewDeployment: true | false,   # force an update of the service?
+  forceNewDeployment: true,           # force an update of the service?
   region: 'us-east-1',
   accountId: '12345678',
-  role: 'ciinabox'
+  role: 'ciinabox',
+  wait: true                          # wait for the tasks to reach a state?
 )
 ************************************/
 
@@ -33,8 +34,7 @@ def call(body) {
   def config = body
   def client = setupECSClient(config.region, config.accountId, config.role)
 
-  // TODO: validate parameters
-  config.desiredCount = config.desiredCount.toInteger()
+  config.wait = config.get('wait', false)
 
   handleActionRequest(client, config)
 }
@@ -46,7 +46,7 @@ def handleActionRequest(client, config) {
   switch(config.action) {
     case 'update':
       if (updateService(client, config)) {
-        if (config.desiredCount > 0) {
+        if (config.wait && config.desiredCount && config.desiredCount.toInteger() > 0) {
           success = wait(client, config)
         }
       }
@@ -64,16 +64,24 @@ def updateService(client, config) {
   def request = new UpdateServiceRequest()
     .withCluster(config.cluster)
     .withService(config.service)
-    .withDesiredCount(config.desiredCount)
     .withTaskDefinition(config.taskDefinition)
-    .withForceNewDeployment(config.forceNewDeployment)
+
+  if (config.desiredCount) {
+    request.withDesiredCount(config.desiredCount.toInteger())
+  }
+
+  if (config.forceNewDeployment) {
+    request.withForceNewDeployment(config.forceNewDeployment)
+  }
 
   try {
+    println "Updating service '${config.service}' in cluster '${config.cluster}'..."
     UpdateServiceResult result = client.updateService(request)
-    println "Updated service '${config.service}' in cluster '${config.cluster}'."
+    println "Successfully updated service."
     return true
   } catch(AmazonECSException ex) {
-    throw ex
+    println "ERROR: service failed to update - ${ex}"
+    return false
   }
   return false
 }
@@ -81,7 +89,7 @@ def updateService(client, config) {
 @NonCPS
 def wait(client, config) {
   def waiter = client.waiters().tasksRunning()
-  def desiredState = 'RUNNING'
+  def desiredState = 'RUNNING'      // TODO: support desiredState = 'STOPPED'
   def timeout = 0
   def seconds = 5
 
@@ -102,6 +110,7 @@ def wait(client, config) {
       new NoOpWaiterHandler()
     )
 
+    println "Getting list of tasks in the service..."
     while(!future.isDone()) {
       try {
         DescribeTasksResult tasks = client.describeTasks(new DescribeTasksRequest().withCluster(config.cluster).withTasks(taskList.getTaskArns()))
@@ -112,17 +121,17 @@ def wait(client, config) {
             println "Container: ${container.getName()}, Status: ${container.getLastStatus()}"
           }
         }
-        println "Waiting for task to become ${desiredState}. Sleeping for ${seconds} seconds..."
+        println "Waiting for tasks to become ${desiredState}. Sleeping for ${seconds} seconds..."
         Thread.sleep(seconds * 1000)
       } catch(InterruptedException ex) {
-
       }
     }
   } catch(Exception e) {
-     println "Task failed to become ${desiredState} - ${e}"
+     println "ERROR: task failed to become ${desiredState} - ${e}"
      return false
-   }
-   return true
+  }
+  println "Tasks successfully became ${desiredState}."
+  return true
 }
 
 @NonCPS
