@@ -52,6 +52,7 @@ def call(body) {
   bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
   bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
   def skipCookbookUpload = config.get('skipCookbookUpload',false)
+  def cookbookBundle = config.get('cookbookBundle',false)
 
   def role = config.get('role').toUpperCase()
 
@@ -65,9 +66,12 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       ciinaboxVPC config
-      
+
       if(skipCookbookUpload) {
         sh 'mkdir -p cookbooks'
+      } else if(cookbookBundle) {
+        unstash 'chefbundle'
+        sh 'tar xvfz chef-bundle.tar.gz'
       } else {
         unstash 'cookbook'
         sh 'tar xvfz cookbooks.tar.gz'
