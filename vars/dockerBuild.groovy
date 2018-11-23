@@ -32,6 +32,7 @@ def call(body) {
   def cleanup = config.get('cleanup', false)
   def forceTag = config.get('forcetag','')
   def noCache = config.get('noCache', false)
+  def target = config.get('target', false)
   def buildArgs = ""
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
@@ -44,6 +45,11 @@ def call(body) {
   if(noCache) {
     cliOpts += " --no-cache "
   }
+
+  if(target) {
+    cliOpts += " --target ${target} "
+  }
+
   cliOpts += " ${buildArgs} ${buildDir} "
 
   sh "docker build ${cliOpts}"
