@@ -5,7 +5,7 @@ shareAMI DSL
 copyAMI(
   region: 'ap-southeast-2'
   ami: 'ami-1234abcd',
-  targetRegions: ['us-west-2','us-east-1']
+  copyRegion: 'us-west-2'
 )
 ************************************/
 
@@ -14,15 +14,13 @@ import com.amazonaws.services.ec2.model.*
 import com.amazonaws.regions.*
 
 def call(body) {
+  def config = body
   AmazonEC2 sourceClient = setupClient(config.region)
-
-  config.targetRegions.each { region ->
-    AmazonEC2 targetClient = setupClient(region)
-    copyImageId = copyAMI(targetClient,config)
-    println "copied ${config.ami} from ${config.region} to ${region} with Id ${copyImageId}"
-    copyTags(sourceClient,targetClient,
-      config.ami,copyImageId)
-  }
+  AmazonEC2 targetClient = setupClient(config.copyRegion)
+  copyImageId = copyAMI(targetClient,config)
+  println "copied ${config.ami} from ${config.region} to ${config.copyRegion} with Id ${copyImageId}"
+  copyTags(sourceClient,targetClient,config.ami,copyImageId)
+  return copyImageId
 }
 
 def copyAMI(client,config) {
