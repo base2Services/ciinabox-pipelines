@@ -12,6 +12,7 @@
     priority: 'critical|warning|task|info', // defaults to info
     application: 'myApp',
     environment: 'dev',
+    type: 'deployment|build', // defaults to deployment
     details: [ // provide any custom key:value keys to pass to opsgenie
       deploymentType: 'cloudformation',
       stackName: 'dev'
@@ -39,11 +40,19 @@ def call(body) {
     priority = 'P5'
   }
 
-  def close   = config.get('close',false)
+  def type = config.get('type','deployment')
+  def close = config.get('close',false)
   def jobName = env.JOB_NAME.replace("/", " ")
-  def alias   = "Deployment nofication for ${config.environment} environment by ${jobName} build ${env.BUILD_NUMBER}"
 
-  raiseAlert(config,alias,priority)
+  def alias = "${type} nofication for ${config.environment} environment by ${jobName} build ${env.BUILD_NUMBER}"
+  def message = "${type} for ${config.application} in ${config.environment} environment by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+
+  if (type != 'deployment') {
+    alias = "${type} nofication by ${jobName} build ${env.BUILD_NUMBER}"
+    message = "${type} nofication for ${config.application} by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+  }
+
+  raiseAlert(config,alias,type,message,priority)
 
   if (close) {
     closeAlert(config,alias)
@@ -52,15 +61,14 @@ def call(body) {
 }
 
 @NonCPS
-def raiseAlert(config,alias,priority) {
-
-  def message = "Deployment for ${config.application} for ${config.environment} environment by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+def raiseAlert(config,alias,type,message,priority) {
 
   def payload = [
     message: message,
     alias: alias,
     description: message,
     details: [
+      type: type,
       application: config.application,
       environment: config.environment,
       jobName: env.JOB_NAME,
