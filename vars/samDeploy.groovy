@@ -42,7 +42,7 @@ def call(body) {
 
   println("deploying ${compiled_template} to environment ${config.environment}")
 
-  withIAMRole(config.accountId,config.region,config.role) {
+  withAWS(roleAccount: config.accountId, region: config.region, role: config.role) {
     sh "aws cloudformation deploy ${options}"
   }
 }
