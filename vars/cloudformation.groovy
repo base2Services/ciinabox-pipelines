@@ -96,6 +96,7 @@ def handleActionRequest(cf, config){
     break
   }
   if(!success) {
+    printFailedStackEvents(cf, config.stackName)
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
   }
 }
@@ -454,5 +455,66 @@ def s3bucketKeyFromUrl(String s3url) {
             bucket: parts[3],
             key   : parts[4..parts.size() - 1].join("/")
     ]
+  }
+}
+
+@NonCPS
+def getStackEvents(cf, stackName) {
+
+   final DescribeStackEventsRequest request = new DescribeStackEventsRequest().withStackName(stackName)
+
+   try {
+    final DescribeStackEventsResult result = cf.describeStackEvents(request)
+    return result.getStackEvents()
+  } catch (AmazonCloudFormationException ex) {
+    if(ex.message.contains("does not exist")) {
+      return false
+    } else {
+      throw ex
+    }
+  }
+
+   return Collections.emptyList();
+
+ }
+
+@NonCPS
+def printStackEvent(StackEvent event, stackName) {
+  final StringBuilder text = new StringBuilder(128)
+
+  def reason = event.getResourceStatusReason()
+  if (reason) {
+    if (!reason.matches("User Initiated")) {
+      text.append("\nTIME: ${event.getTimestamp()}")
+      text.append("\nTYPE: ${event.getResourceType()}")
+      text.append("\nSTACK: ${stackName}")
+      text.append("\nSTATUS: ${event.getResourceStatus()}")
+      text.append("\nERROR: ${event.getResourceStatusReason()}")
+    }
+  }
+  println text
+}
+
+@NonCPS
+def printFailedStackEvents(cf, stackName) {
+  def events = getStackEvents(cf,stackName)
+
+   events.each { event ->
+    def eventStatus = event.getResourceStatus()
+    if (eventStatus.matches("CREATE_FAILED|ROLLBACK_IN_PROGRESS|UPDATE_FAILED|DELETE_FAILED")) {
+
+       if (event.getResourceType() == "AWS::CloudFormation::Stack") {
+        def nestStackName = event.getPhysicalResourceId()
+        def nestedEvents = getStackEvents(cf,nestStackName)
+        nestedEvents.each { nestedEvent ->
+          def nestedEventStatus = nestedEvent.getResourceStatus()
+          if (nestedEventStatus.matches("CREATE_FAILED|ROLLBACK_IN_PROGRESS|UPDATE_FAILED|DELETE_FAILED")) {
+            printStackEvent(nestedEvent,nestStackName)
+          }
+        }
+      } else {
+        printStackEvent(event,stackName)
+      }
+    }
   }
 }
