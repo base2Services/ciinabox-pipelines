@@ -25,6 +25,8 @@ If you omit the templateUrl then for updates it will use the existing template
 @Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-s3', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-ssm', version='1.11.359')
+
 @Grab(group='org.yaml', module='snakeyaml', version='1.23')
 
 import com.amazonaws.auth.*
@@ -35,6 +37,8 @@ import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
+import com.amazonaws.services.simplesystemsmanagement.*
+import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.waiters.*
 import org.yaml.snakeyaml.Yaml
 import groovy.json.JsonSlurperClassic
@@ -166,6 +170,10 @@ def queryStackOutput(cf, config){
 @NonCPS
 def create(cf, config) {
   println "Creating stack ${config.stackName}"
+  if(config.stackState) {
+    config.stackState = config.stackState.endsWith('/') ? config.stackState[0..-2] : config.stackState
+    restoreStackState(cf, config)
+  }
   def params = []
   config.parameters.each {
     params << new Parameter().withParameterKey(it.key).withParameterValue(it.value)
@@ -181,6 +189,10 @@ def create(cf, config) {
 def delete(cf, config) {
   if(doesStackExist(cf, config.stackName)) {
     waitUntilComplete(cf, config.stackName)
+    if(config.stackState) {
+      config.stackState = config.stackState.endsWith('/') ? config.stackState[0..-2] : config.stackState
+      saveStackState(cf,config)
+    }
     cf.deleteStack(new DeleteStackRequest()
       .withStackName(config.stackName)
     )
@@ -339,6 +351,16 @@ def setupS3Client(region, awsAccountId = null, role =  null) {
 }
 
 @NonCPS
+def setupSSMClient(region, awsAccountId = null, role =  null) {
+  def cb = AWSSimpleSystemsManagementClientBuilder.standard().withRegion(region)
+  def creds = getCredentials(awsAccountId, region, role)
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
+  return cb.build()
+}
+
+@NonCPS
 def getCredentials(awsAccountId, region, roleName) {
   if(env['AWS_SESSION_TOKEN'] != null) {
     return new BasicSessionCredentials(
@@ -381,6 +403,7 @@ def waitUntilComplete(cf, stackName) {
   switch(currentState) {
     case 'CREATE_COMPLETE':
     case 'UPDATE_COMPLETE':
+    case 'DELETE_FAILED':
       return
     break
     case 'CREATE_IN_PROGRESS':
@@ -421,6 +444,125 @@ def getTemplateParameterNames(config){
     }
   }
   return newTemplateParams
+}
+
+@NonCPS
+def restoreStackState(cf, config) {
+  def ssm = setupSSMClient(config.region, config.accountId, config.role)
+
+  //no parameters passed in
+  if(!config.parameters) {
+    config.parameters = [:]
+  }
+
+  //set the config.templateUrl config
+  setCfTemplateUrl(ssm, config, "${config.stackState}/${config.stackName}/")
+
+  println "using template url: ${config.templateUrl}"
+
+  //adds config.parameters unless they are passed in
+  setStackParams(ssm, config, "${config.stackState}/${config.stackName}/parameters/")
+
+  message = "Creating stack ${config.stackName} from ${config.templateUrl} using ssm params\n"
+  config.parameters.each {
+    message += "${it.key}=${it.value}\n"
+  }
+  println message
+}
+
+@NonCPS
+def getSSMParams(ssm, path) {
+  def ssmParams = []
+  def result = ssm.getParametersByPath(new GetParametersByPathRequest()
+    .withPath(path)
+    .withRecursive(false)
+    .withWithDecryption(true)
+    .withMaxResults(10)
+  )
+  ssmParams += result.parameters
+  while(result.nextToken != null) {
+    result = ssm.getParametersByPath(new GetParametersByPathRequest()
+        .withPath(path)
+        .withRecursive(false)
+        .withWithDecryption(true)
+        .withMaxResults(10)
+        .withNextToken(result.nextToken)
+    )
+    ssmParams += result.parameters
+  }
+  return ssmParams
+}
+
+@NonCPS
+def setStackParams(ssm, config, basePath) {
+  def ssmParams = getSSMParams(ssm, basePath)
+  ssmParams.each { param ->
+    paramName = param.name.split('/').last()
+    if(!config.parameters[paramName]) {
+      config.parameters[paramName] = param.value
+    }
+  }
+  //set any parameters that weren't defined at the stack level
+  if(basePath != "${config.stackState}/parameters") {
+    setStackParams(ssm, config, "${config.stackState}/parameters")
+  }
+}
+
+@NonCPS
+def setCfTemplateUrl(ssm, config, basePath) {
+  // the templateUrl is being passed in as part of the create stack action
+  if(config.templateUrl) {
+    return
+  }
+
+  def ssmParams = getSSMParams(ssm, basePath)
+  ssmParams.each { param ->
+    paramName = param.name.split('/').last()
+    if(paramName == 'CfTemplateUrl') {
+      config.templateUrl = param.value
+    }
+  }
+
+  //try at the stack default level
+  if(basePath != "${config.stackState}/") {
+    setCfTemplateUrl(ssm, config, "${config.stackState}/")
+  }
+  if(!config.templateUrl) {
+    throw new GroovyRuntimeException("Unable to load CfTemplateUrl ssm param for stack ${config.stackName} from ssm path ${basePath}")
+  }
+}
+ 
+@NonCPS
+def saveStackState(cf, config) {
+  def stacks = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName)).getStacks()
+  def basePath = "${config.stackState}/${config.stackName}"
+  def out = 'saving params:\n'
+  if (!stacks.isEmpty()) {
+    def ssm = setupSSMClient(config.region, config.accountId, config.role)
+    for(Parameter param: stacks.get(0).getParameters()) {
+      if(param.getParameterValue() != null && param.getParameterValue() != '') {
+        def result = ssm.putParameter(new PutParameterRequest()
+          .withName("${basePath}/parameters/${param.getParameterKey()}")
+          .withType('String')
+          .withValue(param.getParameterValue())
+          .withOverwrite(true)
+        )
+        out += "${basePath}/${param.getParameterKey()}=${param.getParameterValue()}\n"
+      }
+    }
+    for(Output output : stacks.get(0).getOutputs()) {
+      if(output.outputKey.startsWith('CfTemplate')) {
+        def result = ssm.putParameter(new PutParameterRequest()
+          .withName("${basePath}/${output.outputKey}")
+          .withType('String')
+          .withValue(output.outputValue)
+          .withOverwrite(true)
+        )        
+      }
+      out += "${basePath}/${output.outputKey}=${output.outputValue}\n"
+    }
+    println out
+  }
 }
 
 @NonCPS
