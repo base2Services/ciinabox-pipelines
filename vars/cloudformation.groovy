@@ -96,7 +96,7 @@ def handleActionRequest(cf, config){
     break
   }
   if(!success) {
-    printFailedStackEvents(cf, config.stackName)
+    printFailedStackEvents(cf, config.stackName, config.region)
     throw new Exception("Stack ${config.stackName} failed to ${config.action}")
   }
 }
@@ -479,7 +479,7 @@ def getStackEvents(cf, stackName) {
  }
 
 @NonCPS
-def printStackEvent(StackEvent event, stackName) {
+def printStackEvent(StackEvent event, stackName, region) {
   final StringBuilder text = new StringBuilder(128)
 
   def reason = event.getResourceStatusReason()
@@ -490,31 +490,41 @@ def printStackEvent(StackEvent event, stackName) {
       text.append("\nSTACK: ${stackName}")
       text.append("\nSTATUS: ${event.getResourceStatus()}")
       text.append("\nERROR: ${event.getResourceStatusReason()}")
+      text.append("\nEVENT: ${getEventUrl(region,event.getStackId())}")
     }
   }
   println text
 }
 
+// Grabs all events for a stack and prints details of each failed resource
+// including error message and link to event in web console
 @NonCPS
-def printFailedStackEvents(cf, stackName) {
+def printFailedStackEvents(cf, stackName, region) {
+  // grab all events
   def events = getStackEvents(cf,stackName)
-
-   events.each { event ->
+  events.each { event ->
     def eventStatus = event.getResourceStatus()
     if (eventStatus.matches("CREATE_FAILED|ROLLBACK_IN_PROGRESS|UPDATE_FAILED|DELETE_FAILED")) {
-
-       if (event.getResourceType() == "AWS::CloudFormation::Stack") {
+      // If resource is a nested stack look through nested stack
+      if (event.getResourceType() == "AWS::CloudFormation::Stack") {
         def nestStackName = event.getPhysicalResourceId()
         def nestedEvents = getStackEvents(cf,nestStackName)
         nestedEvents.each { nestedEvent ->
           def nestedEventStatus = nestedEvent.getResourceStatus()
           if (nestedEventStatus.matches("CREATE_FAILED|ROLLBACK_IN_PROGRESS|UPDATE_FAILED|DELETE_FAILED")) {
-            printStackEvent(nestedEvent,nestStackName)
+            printStackEvent(nestedEvent,nestStackName,region)
           }
         }
       } else {
-        printStackEvent(event,stackName)
+        printStackEvent(event,stackName,region)
       }
     }
   }
+}
+
+// Generates the event url for the event in the cloudformation dashboard
+@NonCPS
+def getEventUrl(region,stackId) {
+  def encodedStackId = java.net.URLEncoder.encode(stackId, "UTF-8")
+  return "https://${region}.console.aws.amazon.com/cloudformation/home?region=${region}#/stacks/${encodedStackId}/events"
 }
