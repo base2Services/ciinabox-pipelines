@@ -47,9 +47,12 @@ def call(body) {
       createRecordsInParentZone(config)
       return true
       break
-    case 'add':
-      echo "add record"
-      createRecord(config)
+    case 'upsert':
+      manageRecord(config, ChangeAction.UPSERT)
+      return true
+      break
+    case 'delete':
+      manageRecord(config, ChangeAction.DELETE)
       return true
       break
     default:
@@ -60,7 +63,7 @@ def call(body) {
 }
 
 @NonCPS 
-def createRecord(config) {
+def manageRecord(config, action) {
   def dstCredentials = awsCredsProvider(accountId: config?.dstZoneAccount,
           region: config?.dstRegion,
           role: config?.dstZoneRole,
@@ -79,12 +82,12 @@ def createRecord(config) {
     .withChangeBatch(
       new ChangeBatch().withChanges(
         new Change()
-          .withAction(ChangeAction.UPSERT)
+          .withAction(action)
           .withResourceRecordSet(
             new ResourceRecordSet()
               .withName(config.dstRecord)
               .withType(config.dstRecordType)
-              .withTTL(60L)
+              .withTTL(config?.TTL != null ? config.TTL : 60L)
               .withResourceRecords(new ResourceRecord().withValue(config.dstTargetRecord))
           )
       )
