@@ -47,11 +47,52 @@ def call(body) {
       createRecordsInParentZone(config)
       return true
       break
+    case 'upsert':
+      manageRecord(config, ChangeAction.UPSERT)
+      return true
+      break
+    case 'delete':
+      manageRecord(config, ChangeAction.DELETE)
+      return true
+      break
     default:
       error "Route53 step does not support action '${action}'"
       return false
   }
   return false
+}
+
+@NonCPS 
+def manageRecord(config, action) {
+  def dstCredentials = awsCredsProvider(accountId: config?.dstZoneAccount,
+          region: config?.dstRegion,
+          role: config?.dstZoneRole,
+          externalId: config?.dstZoneRoleExternalId
+  )
+  def dstClientBuilder = AmazonRoute53ClientBuilder.standard().withRegion(config?.dstRegion)
+  if (dstCredentials != null) dstClientBuilder = dstClientBuilder.withCredentials(dstCredentials)
+  def dstClient = dstClientBuilder.build()
+  def dstZone = getZoneByName(dstClient, config.dstZone)
+  if (dstZone == null) {
+      error "Couldn't find destination hosted zone ${config.dstZone}"
+  }
+
+  def request = new ChangeResourceRecordSetsRequest()
+    .withHostedZoneId(dstZone.id.replace('/hostedzone/',''))
+    .withChangeBatch(
+      new ChangeBatch().withChanges(
+        new Change()
+          .withAction(action)
+          .withResourceRecordSet(
+            new ResourceRecordSet()
+              .withName(config.dstRecord)
+              .withType(config.dstRecordType)
+              .withTTL(config?.TTL != null ? config.TTL : 60L)
+              .withResourceRecords(new ResourceRecord().withValue(config.dstTargetRecord))
+          )
+      )
+    );
+  dstClient.changeResourceRecordSets(request)
 }
 
 @NonCPS
