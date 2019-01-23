@@ -3,6 +3,7 @@ shareAMI DSL
 
 # example usage
 copyAMI(
+  name: 'bastion',
   region: 'ap-southeast-2'
   ami: 'ami-1234abcd',
   copyRegion: 'us-west-2'
@@ -18,6 +19,11 @@ def call(body) {
   AmazonEC2 sourceClient = setupClient(config.region)
   AmazonEC2 targetClient = setupClient(config.copyRegion)
   copyImageId = copyAMI(targetClient,config)
+
+  if (config.name) {
+    env[config.name.toUpperCase() + '_COPIED_AMI'] = copyImageId
+  }
+
   println "copied ${config.ami} from ${config.region} to ${config.copyRegion} with Id ${copyImageId}"
   copyTags(sourceClient,targetClient,config.ami,copyImageId)
   return copyImageId
