@@ -1,9 +1,18 @@
 /***********************************
 ssmParameter DSL
 
-puts an ssm parameter
+puts or gets an ssm parameter
 
 example usage
+
+ssmParameter(
+  action: 'get'            # get | put,
+  parameter: 'db_user',
+  type: 'String',          # String | StringList | SecureString (default: String)
+  region: 'us-east-1',
+  accountId: '12345678',
+  role: 'ciinabox'
+)
 
 
 ************************************/
@@ -26,7 +35,7 @@ def call(body) {
 
   if(!(config.action)){
     throw new GroovyRuntimeException("action get/put must be specified")
-  }  
+  }
 
   if(!(config.parameter)){
     throw new GroovyRuntimeException("parameter must be specified")
