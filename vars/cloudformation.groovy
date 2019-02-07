@@ -336,6 +336,7 @@ def setupCfClient(region, awsAccountId = null, role =  null) {
   def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
   def creds = getCredentials(awsAccountId, region, role)
   if(creds != null) {
+    echo "${cb} : ${cb.getClass()}"
     cb.setCredentials(new AWSStaticCredentialsProvider(creds))
   }
   return cb.build()
