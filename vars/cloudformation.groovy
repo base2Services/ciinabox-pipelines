@@ -282,7 +282,7 @@ def wait(cf, stackName, successStatus)   {
     )
     while(!future.isDone()) {
       try {
-        echo "waitng for stack operation to complete"
+        echo "waiting for stack operation to complete"
         Thread.sleep(10000)
       } catch(InterruptedException ex) {
           echo "We seem to be timing out ${ex}...ignoring"
