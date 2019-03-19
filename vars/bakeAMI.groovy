@@ -13,7 +13,8 @@
    shareAmiWith: env.SHARE_AMI_WITH,
    packerTemplate: env.PACKER_TEMPLATE,
    amiBuildNumber: env.AMI_BUILD_NUMBER,
-   sshUsername: env.SSH_USERNAME
+   sshUsername: env.SSH_USERNAME,
+   chefVersion: '14.10.9'
  )
  ************************************/
 
@@ -43,6 +44,7 @@ def call(body) {
   }
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
+  bakeEnv << "CHEF_VERSION=${config.get('chefVersion', '')}"
   config.amiName = config.get('baseAMI')
   config.amiBranch = config.get('baseAMIBranch')
 
@@ -65,7 +67,7 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      
+
       if(skipCookbookUpload) {
         sh 'mkdir -p cookbooks'
       } else {
