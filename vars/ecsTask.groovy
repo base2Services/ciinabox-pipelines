@@ -15,9 +15,12 @@ ecsTask (
 @Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicSessionCredentials
 import com.amazonaws.services.ecs.*
 import com.amazonaws.services.ecs.model.DescribeTasksRequest
 import com.amazonaws.services.ecs.model.RunTaskRequest
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 
 import java.util.concurrent.*
 
@@ -38,7 +41,7 @@ def handleActionRequest(client, config) {
       def startedTasks = startTask(client, config)
       success = waitForTask(client, config, startedTasks)
       break
-    case default:
+    default:
       throw new GroovyRuntimeException("The specified action '${config.action}' is not implemented.")
   }
 }
