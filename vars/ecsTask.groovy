@@ -1,6 +1,6 @@
 
 /************************************
-ecsService (
+ecsTask (
   action: 'runAndWait',
   taskDefinition: 'example-task-definition',
   cluster: 'example-cluster',
@@ -50,6 +50,7 @@ def startTask(client, config) {
   taskRequest.launchType = config.launchType ?: "EC2"
   taskRequest.taskDefinition = config.taskDefinition
 
+  println "Starting task ${config.taskDefinition} in cluster ${config.cluster}"
   return client.runTask(taskRequest)
 }
 
@@ -63,8 +64,10 @@ def waitForTask(client, config, startedTasks) {
     sleep 1000
     def taskDescriptions = client.describeTasks(describeTasksRequest)
     if (taskDescriptions.tasks.size() != 1) {
+      println "Couldn't find launched task"
       return false
     }
+    println "Task in state: ${taskDescriptions.tasks.first().lastStatus}"
     if (taskDescriptions.tasks.first().lastStatus == 'STOPPED') {
       return true
     }
