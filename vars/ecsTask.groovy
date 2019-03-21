@@ -44,6 +44,10 @@ def handleActionRequest(client, config) {
     default:
       throw new GroovyRuntimeException("The specified action '${config.action}' is not implemented.")
   }
+
+  if(!success) {
+    throw new Exception("Task ${config.taskDefinition} failed to run.")
+  }
 }
 
 @NonCPS
