@@ -74,6 +74,12 @@ def waitForTask(client, config, startedTasks) {
     }
     println "Task in state: ${taskDescriptions.tasks.first().lastStatus}"
     if (taskDescriptions.tasks.first().lastStatus == 'STOPPED') {
+      for (container in taskDescriptions.tasks.first().containers) {
+        if (container.exitCode != 0) {
+          println "Non zero exit code in container: ${container}"
+          return false
+        }
+      }
       return true
     }
   }
