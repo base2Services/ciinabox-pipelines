@@ -13,7 +13,8 @@
    shareAmiWith: env.SHARE_AMI_WITH,
    packerTemplate: env.PACKER_TEMPLATE,
    amiBuildNumber: env.AMI_BUILD_NUMBER,
-   sshUsername: env.SSH_USERNAME
+   sshUsername: env.SSH_USERNAME,
+   debug: 'true|false'
  )
  ************************************/
 
@@ -34,6 +35,7 @@ def call(body) {
   bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
   bakeEnv << "DEVICE_NAME=${config.get('deviceName', '')}"
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
+  bakeEnv << "DEBUG=${config.get('debug', 'false')}"
   if (fileExists('.git/config')) {
     shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   } else if(env.GIT_COMMIT != null) {
@@ -65,7 +67,7 @@ def call(body) {
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
       sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      
+
       if(skipCookbookUpload) {
         sh 'mkdir -p cookbooks'
       } else {
