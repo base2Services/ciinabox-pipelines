@@ -1,7 +1,7 @@
 /***********************************
- Docker Build Step DSL
+ Docker Push Step DSL
 
- builds a docker image
+ pushes a docker image to a repote repository
 
 example usage
 dockerBuild {
