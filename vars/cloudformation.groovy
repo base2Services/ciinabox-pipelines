@@ -21,11 +21,6 @@ cloudformation
 If you omit the templateUrl then for updates it will use the existing template
 
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-cloudformation', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-s3', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-ssm', version='1.11.359')
 
 @Grab(group='org.yaml', module='snakeyaml', version='1.23')
 
@@ -532,7 +527,7 @@ def setCfTemplateUrl(ssm, config, basePath) {
     throw new GroovyRuntimeException("Unable to load CfTemplateUrl ssm param for stack ${config.stackName} from ssm path ${basePath}")
   }
 }
- 
+
 @NonCPS
 def saveStackState(cf, config) {
   def stacks = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName)).getStacks()
@@ -558,7 +553,7 @@ def saveStackState(cf, config) {
           .withType('String')
           .withValue(output.outputValue)
           .withOverwrite(true)
-        )        
+        )
       }
       out += "${basePath}/${output.outputKey}=${output.outputValue}\n"
     }

@@ -16,10 +16,6 @@ example usage
   )
 
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-ssm', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-redshift', version='1.11.466')
 
 import com.amazonaws.auth.*
 import com.amazonaws.regions.*
@@ -106,7 +102,7 @@ def handleRedshift(config) {
 
   if(config.snapshotType) {
     request.setSnapshotType(config.snapshotType)
-  } 
+  }
   def snapshots = redshift.describeClusterSnapshots(request)
   if(snapshot.toLowerCase() == 'latest') {
     if(snapshots.getSnapshots().size() > 0) {

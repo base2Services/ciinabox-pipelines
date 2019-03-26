@@ -8,8 +8,6 @@ withIAMRole(1234567890,region,roleName) {
   sh 'aws s3 ls'
 }
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.226')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.226')
 
 import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*

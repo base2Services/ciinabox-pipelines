@@ -20,11 +20,6 @@
  )
  ************************************/
 
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-route53', version = '1.11.359')
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-iam', version = '1.11.359')
-@Grab(group = 'com.amazonaws', module = 'aws-java-sdk-sts', version = '1.11.359')
-
-
 import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.auth.*
@@ -62,7 +57,7 @@ def call(body) {
   return false
 }
 
-@NonCPS 
+@NonCPS
 def manageRecord(config, action) {
   def dstCredentials = awsCredsProvider(accountId: config?.dstZoneAccount,
           region: config?.dstRegion,
@@ -226,4 +221,3 @@ def assumeRole(awsAccountId, region, roleName, roleExternalId) {
   def assumeRoleResult = sts.assumeRole(assumeRoleRequest)
   return assumeRoleResult.getCredentials()
 }
-

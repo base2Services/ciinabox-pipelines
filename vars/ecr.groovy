@@ -7,11 +7,10 @@
    region: 'ap-southeast-2',
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
-   taggedCleanup: ['master','develop']
+   taggedCleanup: ['master','develop'],
+   tags: [ key: value ] # key value hash of tags
  )
  ************************************/
-
-@Grab(group='com.amazonaws', module='aws-java-sdk-ecr', version='1.11.359')
 
 import com.amazonaws.services.ecr.*
 import com.amazonaws.services.ecr.model.*
@@ -60,9 +59,13 @@ def call(body) {
 }
 
 def createRepo(ecr,repo) {
+  List<Tag> tags = new ArrayList<Tag>()
+  tags.add(new Tag("Name", repo))
+  tags.add(new Tag("CreatedBy", "ciinabox-pipelines"))
   try{
     ecr.createRepository(new CreateRepositoryRequest()
       .withRepositoryName(repo)
+      .withTags(tags)
     )
     println "Created repo ${repo}"
   } catch (RepositoryAlreadyExistsException e) {
