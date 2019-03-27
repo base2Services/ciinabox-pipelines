@@ -4,7 +4,7 @@
  tags a docker image
 
 example usage
-dockerBuild {
+dockerTag {
   repo = 'myrepo'
   image = 'myimage'
   baseTag = 'latest'

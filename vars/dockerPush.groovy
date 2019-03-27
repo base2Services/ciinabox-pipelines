@@ -4,7 +4,7 @@
  pushes a docker image to a repote repository
 
 example usage
-dockerBuild {
+dockerPush {
   repo = 'myrepo'
   image = 'myimage'
   tags = [
