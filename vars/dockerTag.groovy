@@ -41,5 +41,5 @@ def call(body) {
     }
   }
 
-  dockerPush(repo: config.repo, image: config.image, tags: tags, cleanup: cleanup)
+  dockerPush(repo: config.repo, image: config.newImage, tags: tags, cleanup: cleanup)
 }
