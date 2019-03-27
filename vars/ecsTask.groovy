@@ -21,6 +21,8 @@ import com.amazonaws.services.ecs.model.DescribeTasksRequest
 import com.amazonaws.services.ecs.model.RunTaskRequest
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
+import com.amazonaws.waiters.NoOpWaiterHandler
+import com.amazonaws.waiters.WaiterParameterst
 
 import java.util.concurrent.*
 
@@ -69,7 +71,7 @@ def wait(client, config, startedTasks) {
 
   def describeTasksRequest = new DescribeTasksRequest()
   describeTasksRequest.withCluster(config.cluster)
-  describeTasksRequest.withTasks(startedTasks.tasks.first().taskArn)
+  describeTasksRequest.withTasks(startedTasks.tasks.collectMany { [it.taskArn] })
 
   Thread.sleep(5 * 1000)  // Allow the tasks to start
   try {
@@ -77,12 +79,12 @@ def wait(client, config, startedTasks) {
       new WaiterParameters<>(describeTasksRequest),
       new NoOpWaiterHandler()
     )
-    while(!future.isDone) {
+    while(!future.isDone()) {
       try {
-        echo "waiting for task to complete"
+        println "waiting for task to complete"
         Thread.sleep(5 * 1000)
       } catch(InterruptedException ex) {
-          echo "We seem to be timing out ${ex}...ignoring"
+        println "We seem to be timing out ${ex}...ignoring"
       }
     }
 
@@ -91,13 +93,18 @@ def wait(client, config, startedTasks) {
       println "Couldn't find launched task"
       return false
     }
-    for (container in taskDescriptions.tasks.first().containers) {
-      if (container.exitCode != 0) {
-        println "Non zero exit code in container: ${container}"
-        return false
+    for (task in taskDescriptions.tasks) {
+      for (container in task.containers) {
+        if (container.exitCode != 0) {
+          println "Non zero exit code in container: ${container} of task ${task}"
+          return false
+        }
       }
     }
     return true
+  } catch(Exception e) {
+      println "Waiting for task failed. - ${e}"
+      return false
   }
 }
 
