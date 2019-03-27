@@ -39,7 +39,7 @@ def handleActionRequest(client, config) {
   switch (config.action) {
     case 'runAndWait':
       def startedTasks = startTask(client, config)
-      success = waitForTask(client, config, startedTasks)
+      success = wait(client, config, startedTasks)
       break
     default:
       throw new GroovyRuntimeException("The specified action '${config.action}' is not implemented.")
@@ -64,28 +64,40 @@ def startTask(client, config) {
 }
 
 @NonCPS
-def waitForTask(client, config, startedTasks) {
+def wait(client, config, startedTasks) {
+  def waiter = client.waiters().tasksStopped()
+
   def describeTasksRequest = new DescribeTasksRequest()
   describeTasksRequest.withCluster(config.cluster)
   describeTasksRequest.withTasks(startedTasks.tasks.first().taskArn)
 
-  while(true) {
-    Thread.sleep(1000)
+  Thread.sleep(5 * 1000)  // Allow the tasks to start
+  try {
+    Future future = waiter.runAsync(
+      new WaiterParameters<>(describeTasksRequest),
+      new NoOpWaiterHandler()
+    )
+    while(!future.isDone) {
+      try {
+        echo "waiting for task to complete"
+        Thread.sleep(5 * 1000)
+      } catch(InterruptedException ex) {
+          echo "We seem to be timing out ${ex}...ignoring"
+      }
+    }
+
     def taskDescriptions = client.describeTasks(describeTasksRequest)
     if (taskDescriptions.tasks.size() != 1) {
       println "Couldn't find launched task"
       return false
     }
-    println "Task in state: ${taskDescriptions.tasks.first().lastStatus}"
-    if (taskDescriptions.tasks.first().lastStatus == 'STOPPED') {
-      for (container in taskDescriptions.tasks.first().containers) {
-        if (container.exitCode != 0) {
-          println "Non zero exit code in container: ${container}"
-          return false
-        }
+    for (container in taskDescriptions.tasks.first().containers) {
+      if (container.exitCode != 0) {
+        println "Non zero exit code in container: ${container}"
+        return false
       }
-      return true
     }
+    return true
   }
 }
 

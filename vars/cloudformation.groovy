@@ -8,7 +8,7 @@ cloudformation
   stackName: 'dev'
   queryType: 'element' | 'output' ,  # either queryType or action should be supplied
   query: 'mysubstack.logicalname1' | 'outputKey', # depending on queryType
-  action: 'create'|'update'|'delete',
+  action: 'create'|'update'|'delete'|'exists',
   region: 'ap-southeast-2',
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
   parameters: [
