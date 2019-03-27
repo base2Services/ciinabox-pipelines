@@ -22,7 +22,7 @@ import com.amazonaws.services.ecs.model.RunTaskRequest
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.amazonaws.waiters.NoOpWaiterHandler
-import com.amazonaws.waiters.WaiterParameterst
+import com.amazonaws.waiters.WaiterParameters
 
 import java.util.concurrent.*
 
