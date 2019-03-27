@@ -7,6 +7,7 @@ example usage
 dockerTag {
   repo = 'myrepo'
   image = 'myimage'
+  newImage = 'newImage'
   baseTag = 'latest'
   tags = [
     '${BUILD_NUMBER}',
@@ -24,9 +25,10 @@ def call(body) {
 
   def baseTag = config.get('baseTag', 'latest')
   def tags = config.get('tags',['latest'])
-  def dockerRepo = "${config.repo}/${config.image}"
+  def image = config.get('image')
+  def newImage = config.get('newImage', image)
   def push = config.get('push', false)
-  def pull = config.get('push', false)
+  def pull = config.get('pull', false)
   def cleanup = config.get('cleanup', false)
 
   if(pull) {
@@ -35,7 +37,7 @@ def call(body) {
 
   if(tags) {
     tags.each { tag ->
-      sh "docker tag ${dockerRepo}:${baseTag} ${dockerRepo}:${tag}"
+      sh "docker tag ${config.repo}/${image}:${baseTag} ${config.repo}/${newImage}:${tag}"
     }
   }
 
