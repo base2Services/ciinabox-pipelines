@@ -52,22 +52,26 @@ def call(body) {
   bakeEnv << "CB_BUILD_NO=${config.cookbookVersion}"
   bakeEnv << "BUCKET_REGION=${config.bucketRegion}"
   def skipCookbookUpload = config.get('skipCookbookUpload',false)
+  def cookbookBundle = config.get('cookbookBundle',false)
 
   def role = config.get('role').toUpperCase()
 
   node {
     println "bake config:${config}"
     deleteDir()
-    git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
+    git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: config.get('ciinaboxBakeryBranch', 'master'))
     def sourceAMI = lookupAMI config
     def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
     bakeEnv << "BRANCH=${branchName}"
     withEnv(bakeEnv) {
-      sh './configure $CIINABOX_NAME $REGION $AMI_USERS'
-      
+      ciinaboxVPC config
+
       if(skipCookbookUpload) {
         sh 'mkdir -p cookbooks'
+      } else if(cookbookBundle) {
+        unstash 'chefbundle'
+        sh 'tar xvfz chef-bundle.tar.gz'
       } else {
         unstash 'cookbook'
         sh 'tar xvfz cookbooks.tar.gz'
@@ -82,6 +86,7 @@ def call(body) {
       '''
       sh '''#!/bin/bash
       AMI_BUILD_ID=${BRANCH}-${AMI_BUILD_NUMBER}
+      export OPT_VARS="-var ami_users=${AMI_USERS}"
       echo "==================================================="
       echo "Baking AMI: ${ROLE}"
       echo "AMI Build NO: ${AMI_BUILD_ID}"

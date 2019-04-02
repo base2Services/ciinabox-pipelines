@@ -12,7 +12,7 @@ def call(body) {
   node {
     deleteDir()
     unstash 'cookbook'
-    withEnv(["REGION=${config.get('region')}", "VERIFY_AMI=${config.get('ami')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}"]) {
+    withEnv(["REGION=${config.get('region')}", "VERIFY_AMI=${config.get('ami')}", "ROLE=${config.get('role')}", "COOKBOOK=${config.get('cookbook')}", "INSTANCE_TYPE=${config.get('instance_type')}"]) {
       withAWSKeyPair(config.get('region')) {
         sh '''#!/bin/bash
 eval "$(/opt/chefdk/bin/chef shell-init bash)"
@@ -27,6 +27,7 @@ cat <<EOT > .kitchen.local.yml
 driver:
   aws_ssh_key_id: ${KEYNAME}
   user_data: userdata.sh
+  instance_type: ${INSTANCE_TYPE}
 
 verifier:
   name: inspec
