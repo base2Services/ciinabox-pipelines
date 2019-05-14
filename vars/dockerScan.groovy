@@ -25,7 +25,7 @@ def call(body) {
   if (body.accountId) {
     def image = "${body.accountId}.dkr.ecr.${body.region}.amazonaws.com"
 
-    withECR(body.region, body.accountId) {
+    withECR(body.accountId, body.region) {
       runKlar(body, image)
     }
   }
