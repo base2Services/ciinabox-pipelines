@@ -17,6 +17,8 @@ ecsTask (
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicSessionCredentials
 import com.amazonaws.services.ecs.*
+import com.amazonaws.services.ecs.model.NetworkConfiguration
+import com.amazonaws.services.ecs.model.AwsVpcConfiguration
 import com.amazonaws.services.ecs.model.DescribeTasksRequest
 import com.amazonaws.services.ecs.model.RunTaskRequest
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
@@ -56,8 +58,15 @@ def handleActionRequest(client, config) {
 def startTask(client, config) {
   def taskRequest = new RunTaskRequest()
   taskRequest.withCluster(config.cluster)
-  taskRequest.launchType = config.launchType ?: "EC2"
+  taskRequest.launchType = config.launchType ? config.launchType : "EC2"
   taskRequest.taskDefinition = config.taskDefinition
+
+  if (taskRequest.launchType == 'FARGATE') {
+    def awsVpcConfiguration = new AwsVpcConfiguration().withSubnets(config.subnets).withSecurityGroups(config.securityGroup)
+    def networkConfiguration = new NetworkConfiguration().withAwsvpcConfiguration(awsVpcConfiguration)
+    taskRequest.withNetworkConfiguration(networkConfiguration)
+  }
+
 
   println "Starting task ${config.taskDefinition} in cluster ${config.cluster}"
   def runResult = client.runTask(taskRequest)
