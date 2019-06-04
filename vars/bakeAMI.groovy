@@ -14,7 +14,9 @@
    packerTemplate: env.PACKER_TEMPLATE,
    amiBuildNumber: env.AMI_BUILD_NUMBER,
    sshUsername: env.SSH_USERNAME,
-   chefVersion: '14.10.9'
+   chefVersion: '14.10.9',
+   disableChefAcceptLicense: 'true|false',
+   debug: 'true|false'
  )
  ************************************/
 
@@ -35,6 +37,7 @@ def call(body) {
   bakeEnv << "BAKE_VOLUME_SIZE=${config.get('bakeVolumeSize', '')}"
   bakeEnv << "DEVICE_NAME=${config.get('deviceName', '')}"
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
+  bakeEnv << "DEBUG=${config.get('debug', 'false')}"
   if (fileExists('.git/config')) {
     shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   } else if(env.GIT_COMMIT != null) {
@@ -45,6 +48,7 @@ def call(body) {
   bakeEnv << "GIT_COMMIT=${shortCommit}"
   bakeEnv << "SSH_USERNAME=${config.get('sshUsername', '')}"
   bakeEnv << "CHEF_VERSION=${config.get('chefVersion', '')}"
+  bakeEnv << "DISABLE_CHEF_ACCEPT_LICENSE=${config.get('disableChefAcceptLicense', 'false')}"
   config.amiName = config.get('baseAMI')
   config.amiBranch = config.get('baseAMIBranch')
 
