@@ -16,7 +16,8 @@
    sshUsername: env.SSH_USERNAME,
    chefVersion: '14.10.9',
    disableChefAcceptLicense: 'true|false',
-   debug: 'true|false'
+   debug: 'true|false',
+   bakeryBranch: 'master'
  )
  ************************************/
 
@@ -60,11 +61,12 @@ def call(body) {
   def skipCookbookUpload = config.get('skipCookbookUpload',false)
 
   def role = config.get('role').toUpperCase()
+  def bakeryBranch = config.get('bakeryBranch', 'master')
 
   node {
     println "bake config:${config}"
     deleteDir()
-    git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: 'master')
+    git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: bakeryBranch)
     def sourceAMI = lookupAMI config
     def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
