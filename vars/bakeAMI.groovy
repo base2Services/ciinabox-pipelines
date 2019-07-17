@@ -94,7 +94,7 @@ def call(body) {
       echo "Baking AMI: ${ROLE}"
       echo "AMI Build NO: ${AMI_BUILD_ID}"
       echo "==================================================="
-      ./bakery $CLIENT $ROLE $PACKER_TEMPLATE $PACKER_DEFAULT_PARAMS $AMI_BUILD_ID $SOURCE_AMI $AMI_BUILD_ID $GIT_COMMIT $CHEF_RUN_LIST $PACKER_INSTANCE_TYPE $BAKE_VOLUME_SIZE
+      ./bakery "${CLIENT}" "${ROLE}" "${PACKER_TEMPLATE}" "${PACKER_DEFAULT_PARAMS}" "${AMI_BUILD_ID}" "${SOURCE_AMI}" "${AMI_BUILD_ID}" "${GIT_COMMIT}" "${CHEF_RUN_LIST}" "${PACKER_INSTANCE_TYPE}" "${BAKE_VOLUME_SIZE}"
       if [ $? != 0 ]; then
         echo "ERROR: Packer Baking failed"
         exit 1
