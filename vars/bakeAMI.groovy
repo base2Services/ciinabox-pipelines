@@ -7,6 +7,7 @@
  bakeAMI(region: env.REGION,
    role: 'MyServer',
    baseAMI: 'amzn-ami-hvm-2017.03.*',
+   baseAMIId: 'ami-123456789',
    bakeChefRunList: 'recipe[mycookbook::default]',
    owner: env.BASE_AMI_OWNER,
    client: env.CLIENT,
@@ -67,7 +68,12 @@ def call(body) {
     println "bake config:${config}"
     deleteDir()
     git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: bakeryBranch)
-    def sourceAMI = lookupAMI config
+    def sourceAMI = config.get('baseAMIId', null)
+
+    if (sourceAMI == null) {
+      sourceAMI = lookupAMI(config)
+    }
+
     def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
     bakeEnv << "BRANCH=${branchName}"
