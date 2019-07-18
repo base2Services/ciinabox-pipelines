@@ -68,12 +68,7 @@ def call(body) {
     println "bake config:${config}"
     deleteDir()
     git(url: 'https://github.com/base2Services/ciinabox-bakery.git', branch: bakeryBranch)
-    def sourceAMI = config.get('baseAMIId', null)
-
-    if (sourceAMI == null) {
-      sourceAMI = lookupAMI(config)
-    }
-
+    def sourceAMI = (config.baseAMIId) ? config.baseAMIId : lookupAMI(config)
     def branchName = env.BRANCH_NAME.replaceAll("/", "-")
     bakeEnv << "SOURCE_AMI=${sourceAMI}"
     bakeEnv << "BRANCH=${branchName}"
