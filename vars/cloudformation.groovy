@@ -15,7 +15,10 @@ cloudformation
     'ENVIRONMENT_NAME' : 'dev',
   ],
   accountId: '1234567890' #the aws account Id you want the stack operation performed in
-  role: 'myrole' # the role to assume from the account the pipeline is running from
+  role: 'myrole' # the role to assume from the account the pipeline is running from,
+  tags: [
+    'Environment': 'dev'
+  ]
 )
 
 If you omit the templateUrl then for updates it will use the existing template
