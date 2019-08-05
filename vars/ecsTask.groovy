@@ -7,6 +7,9 @@ ecsTask (
   region: 'us-east-1',
   accountId: '12345678',
   role: 'ciinabox',
+  launchType: 'FARGATE',
+  subnets: ['subnet-12345'],
+  securityGroup: ['sg-12345']
 )
 ************************************/
 
