@@ -26,7 +26,7 @@ def call(body) {
   sh "/bin/start-clair.sh"
   if (body.accountId && body.region) {
     body.image = "${body.repo}/${body.image}"
-    body.password = sh (script: "aws ecr get-login --region ap-southeast-2 --no-include-email", returnStdout: true).split()[5]
+    body.password = sh (script: "aws ecr get-login --region ${body.region} --no-include-email", returnStdout: true).split()[5]
   }
 
   runKlar(body)
