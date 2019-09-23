@@ -6,13 +6,16 @@ Scan a Docker image in a remote registry for security vulnerabilities using Clai
 example usage
 
 dockerScan(
-  threshold: 'Critical',
-  accountId: '214044641124',
-  image: 'my_repo/nginx:latest',
-  action: 'Ignore',          // Fail | Ignore
-  region: 'ap-southeast-2',
-  //whiteList: 's3://...'
+  threshold: params.CLAIR_THRESHOLD,
+  accountId: env.OPS_ACCOUNT_ID,
+  image: "frontend:latest",
+  repo: env.ECR_REPO,
+  action: params.CLAIR_RESULT,
+  region: env.REGION
 )
+
+Available actions:
+  Ignore | Fail
 
 Available thresholds:
   Unknown | Negligible | Low | Medium | High | Critical | Defcon1
@@ -21,23 +24,20 @@ Available thresholds:
 
 def call(body) {
   sh "/bin/start-clair.sh"
-
-  if (body.accountId) {
-    def image = "${body.accountId}.dkr.ecr.${body.region}.amazonaws.com"
-
-    withECR(body.accountId, body.region) {
-      runKlar(body, image)
-    }
+  if (body.accountId && body.region) {
+    body.image = "${body.repo}/${body.image}"
+    body.password = sh (script: "aws ecr get-login --region ap-southeast-2 --no-include-email", returnStdout: true).split()[5]
   }
-  else {
-    runKlar(body, body.image)
-  }
+
+  runKlar(body)
 }
 
-def runKlar(body, image) {
-  if (body.action && body.action.toLowerCase() == 'ignore') {
-    sh "CLAIR_OUTPUT=${body.get('threshold', 'Critical')} /bin/klar ${image} || true"
+def runKlar(body) {
+  def threshold = body.get('threshold', 'Critical')
+
+  if (body.action.toLowerCase() == 'ignore') {
+    sh "DOCKER_USER=AWS DOCKER_PASSWORD=${body.password} CLAIR_OUTPUT=${threshold} /bin/klar ${body.image} || true"
   } else {
-    sh "CLAIR_OUTPUT=${body.get('threshold', 'Critical')} /bin/klar ${image}"
+    sh "DOCKER_USER=AWS DOCKER_PASSWORD=${body.password} CLAIR_OUTPUT=${threshold} /bin/klar ${body.image}"
   }
 }
