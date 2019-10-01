@@ -1,10 +1,10 @@
 /***********************************
-getDesiredCount Function
+getEcsServiceDesiredCount Function
 
 Takes in an ecs cluster and service name and returns the current desired task count for the service.
 
 example usage
-  getDesiredCount (
+  getEcsServiceDesiredCount (
     cluster: my-dev-cluster,
     region: env.AWS_REGION,
     accountId: env.DEV_ACCOUNT_ID,
