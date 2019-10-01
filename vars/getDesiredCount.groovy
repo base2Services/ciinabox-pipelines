@@ -8,21 +8,31 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicSessionCredentials
 import com.amazonaws.services.ecs.*
 import com.amazonaws.services.ecs.model.DescribeServicesResult
-import groovy.json.JsonSlurper
-import groovy.json.JsonSlurperClassic
+import com.amazonaws.services.ecs.model.DescribeServicesRequest
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 
 import java.util.concurrent.*
 
 def call(body) {
     def config = body
     def client = setupECSClient(config.region, config.accountId, config.role)
+    getDesiredCount(client, config)
+}
+
+
+@NonCPS
+def getDesiredCount(client, config) {
     def request = new DescribeServicesRequest()
     request.withCluster(config.cluster)
     request.withServices(config.service)
-    def serviceResult = client.DescribeServices(request)
-    println serviceResult
-    return serviceResult
-    // def services = serviceResult.getServices()
+    def serviceResult = client.describeServices(request)
+    def services = serviceResult.getServices()
+    if (services.isEmpty()) {
+        throw new GroovyRuntimeException("Nothing found for cluster: ${config.cluster} and service: ${config.service}")
+    } else {
+        return services.first().getDesiredCount() // currently assuming we are only searching for one service, therefore one result back
+    }
 }
 
 
