@@ -1,4 +1,18 @@
+/***********************************
+getDesiredCount Function
 
+Takes in an ecs cluster and service name and returns the current desired task count for the service.
+
+example usage
+  getDesiredCount (
+    cluster: my-dev-cluster,
+    region: env.AWS_REGION,
+    accountId: env.DEV_ACCOUNT_ID,
+    service: my-api-service,
+    role: 'ciinabox'
+  )
+
+************************************/
 
 @Grab(group='com.amazonaws', module='aws-java-sdk-ecs', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
