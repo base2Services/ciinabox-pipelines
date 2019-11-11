@@ -7,11 +7,16 @@
    region: 'ap-southeast-2',
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
-   taggedCleanup: ['master','develop']
+   taggedCleanup: ['master','develop'],
+   imutableTags: true | false,
+   scanOnPush: true | false,
+   repoTags: [
+     'Key': 'Value'
+   ]
  )
  ************************************/
 
-@Grab(group='com.amazonaws', module='aws-java-sdk-ecr', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-ecr', version='1.11.661')
 
 import com.amazonaws.services.ecr.*
 import com.amazonaws.services.ecr.model.*
@@ -55,10 +60,14 @@ def call(body) {
       ]
     ]
   }
-
+  
+  setRepoTags(ecr,config)
   setLifcyclePolicy(ecr,rules,config)
+  setImutableTags(ecr,config)
+  setScanningConfig(ecr,config)
 }
 
+@NonCPS
 def createRepo(ecr,repo) {
   try{
     ecr.createRepository(new CreateRepositoryRequest()
@@ -70,6 +79,7 @@ def createRepo(ecr,repo) {
   }
 }
 
+@NonCPS
 def setRepositoryPolicy(ecr,config) {
   def document = [
     "Version": "2008-10-17",
@@ -98,6 +108,7 @@ def setRepositoryPolicy(ecr,config) {
   )
 }
 
+@NonCPS
 def setLifcyclePolicy(ecr,rules,config) {
   def policy = [ rules: rules ]
   def builder = new groovy.json.JsonBuilder(policy)
@@ -109,6 +120,44 @@ def setLifcyclePolicy(ecr,rules,config) {
   )
 }
 
+@NonCPS
+def setImutableTags(ecr,config) {
+  def imutableTags = config.get('imutableTags', false)
+  def imutableTagsString = ((imutableTags) ? 'IMMUTABLE' : 'MUTABLE')
+  def request = new PutImageTagMutabilityRequest()
+    .withRepositoryName(config.image)
+    .withRegistryId(config.accountId)
+    .withImageTagMutability(imutableTagsString)
+  println "Setting image tags on repo ${config.image} to ${imutableTagsString}"
+  ecr.putImageTagMutability(request)
+}
+
+@NonCPS
+def setScanningConfig(ecr,config) {
+  def scanOnPush = new ImageScanningConfiguration().withScanOnPush(config.scanOnPush)
+  def request = new PutImageScanningConfigurationRequest()
+    .withRepositoryName(config.image)
+    .withRegistryId(config.accountId)
+    .withImageScanningConfiguration(scanOnPush)
+  println "Setting image scan on repo ${config.image} to ${config.scanOnPush}"
+  ecr.putImageScanningConfiguration(request)
+}
+
+@NonCPS
+def setRepoTags(ecr,config) {
+  List<Tag> tags = new ArrayList<Tag>()
+  tags.add(new Tag().withKey('Name').withValue(config.image))
+  tags.add(new Tag().withKey('CreatedBy').withValue('ciinabox-pipelines'))
+  if (config.containsKey('repoTags')) {
+    config.tags.each { k,v -> tags.add(new Tag().withKey(k).withValue(v)) }
+  }
+  ecr.tagResource(new TagResourceRequest()
+    .withResourceArn("arn:aws:ecr:${config.region}:${config.accountId}:repository/${config.image}")
+    .withTags(tags)
+  )
+}
+
+@NonCPS
 def setupClient(region) {
   return AmazonECRClientBuilder.standard()
     .withRegion(region)
