@@ -88,13 +88,14 @@ def waitForEcrScanResults(ecr,config) {
   def status = getScanResults(ecr,config)
     .getImageScanStatus().getStatus()
   while(status == 'IN_PROGRESS') {
-    println 'waiting for image scan to complete'
-    Thread.sleep(5000)
     status = getScanResults(ecr,config)
       .getImageScanStatus().getStatus()
     if (status == 'COMPLETE') {
       println 'image scan completed'
       break
+    } else if (status == 'IN_PROGRESS') {
+      println 'waiting for image scan to complete'
+      Thread.sleep(5000)
     } else {
       error("image scan failed to complete. ${status}")
     }
