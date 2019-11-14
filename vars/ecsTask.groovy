@@ -100,7 +100,7 @@ def extended_wait(client, config, startedTasks, descRequest) {
   }
 
   def taskCurrentState = client.describeTasks(descRequest)
-  for task in taskCurrentState.tasks {
+  for(task in taskCurrentState.tasks) {
     if(task.lastStatus == "RUNNING") {
       return false
     } else { return true }
