@@ -101,6 +101,7 @@ def wait(client, config, startedTasks) {
     }
 
     def taskDescriptions = client.describeTasks(describeTasksRequest)
+    println taskDescriptions
     if (taskDescriptions.tasks.size() != 1) {
       println "Couldn't find launched task"
       return false
