@@ -79,7 +79,7 @@ def startTask(client, config) {
 
 
 @NonCPS
-def extended_wait(client, config, startedTasks, descRequest) {
+def extendedWait(client, config, startedTasks, descRequest) {
 
   def waiter = client.waiters().tasksStopped()
 
@@ -118,7 +118,7 @@ def wait(client, config, startedTasks) {
 
   try {
     while(!taskComplete) {
-      taskComplete = extended_wait(client, config, startedTasks, describeTasksRequest)
+      taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
     }
 
     def taskDescriptions = client.describeTasks(describeTasksRequest)
