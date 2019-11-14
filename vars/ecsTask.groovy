@@ -77,27 +77,48 @@ def startTask(client, config) {
   return runResult
 }
 
+
 @NonCPS
-def wait(client, config, startedTasks) {
+def extended_wait(client, config, startedTasks, descRequest) {
+
   def waiter = client.waiters().tasksStopped()
 
+  descRequest.withCluster(config.cluster)
+  descRequest.withTasks(startedTasks.tasks.collectMany { [it.taskArn] })
+
+  Future future = waiter.runAsync(
+    new WaiterParameters<>(descRequest),
+    new NoOpWaiterHandler()
+  )
+  while(!future.isDone()) {
+    try {
+      println "waiting for task to complete"
+      Thread.sleep(5 * 1000)
+    } catch(InterruptedException ex) {
+      println "We seem to be timing out ${ex}...ignoring"
+    }
+  }
+
+  def taskCurrentState = client.describeTasks(descRequest)
+  for task in taskCurrentState.tasks {
+    if(task.lastStatus == "RUNNING") {
+      return false
+    } else { return true }
+  }
+
+}
+
+@NonCPS
+def wait(client, config, startedTasks) {
+
   def describeTasksRequest = new DescribeTasksRequest()
-  describeTasksRequest.withCluster(config.cluster)
-  describeTasksRequest.withTasks(startedTasks.tasks.collectMany { [it.taskArn] })
+  def taskComplete = false
 
   Thread.sleep(5 * 1000)  // Allow the tasks to start
+
   try {
-    Future future = waiter.runAsync(
-      new WaiterParameters<>(describeTasksRequest),
-      new NoOpWaiterHandler()
-    )
-    while(!future.isDone()) {
-      try {
-        println "waiting for task to complete"
-        Thread.sleep(5 * 1000)
-      } catch(InterruptedException ex) {
-        println "We seem to be timing out ${ex}...ignoring"
-      }
+    while(!taskComplete) {
+      taskComplete = extended_wait(client, config, startedTasks, describeTasksRequest)
     }
 
     def taskDescriptions = client.describeTasks(describeTasksRequest)
