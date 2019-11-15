@@ -49,6 +49,7 @@ def handleActionRequest(client, config) {
   switch (config.action) {
     case 'runAndWait':
       def startedTasks = startTask(client, config)
+      Thread.sleep(5 * 1000)
       success = wait(client, config, startedTasks)
       break
     default:
@@ -116,8 +117,6 @@ def wait(client, config, startedTasks) {
 
   def describeTasksRequest = new DescribeTasksRequest()
   def taskComplete = false
-
-  Thread.sleep(5 * 1000)  // Allow the tasks to start
 
   try {
 
