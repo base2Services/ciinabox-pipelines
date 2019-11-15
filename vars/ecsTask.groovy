@@ -120,7 +120,11 @@ def wait(client, config, startedTasks) {
 
   try {
     while(!taskComplete) {
-      taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
+      try {
+        taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
+      } catch(ExpiredTokenException ex) {
+        client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
+      }
     }
 
     def taskDescriptions = client.describeTasks(describeTasksRequest)
