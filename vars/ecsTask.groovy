@@ -29,6 +29,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.amazonaws.waiters.NoOpWaiterHandler
 import com.amazonaws.waiters.WaiterParameters
+import com.amazonaws.services.securitytoken.model.ExpiredTokenException
 
 import java.util.concurrent.*
 
