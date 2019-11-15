@@ -33,11 +33,12 @@ import com.amazonaws.waiters.WaiterParameters
 import java.util.concurrent.*
 
 def call(body) {
+  
   def config = body
-  def client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
-
   config.wait = config.get('wait', false)
+  config.credsDuration = config.get('credsDuration', 3600)
 
+  def client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
   handleActionRequest(client, config)
 }
 
@@ -144,7 +145,7 @@ def wait(client, config, startedTasks) {
 }
 
 @NonCPS
-def setupECSClient(region, awsAccountId = null, role = null, credsDuration = 3600) {
+def setupECSClient(region, awsAccountId = null, role = null) {
   def cb = AmazonECSClientBuilder.standard().withRegion(region)
   def creds = getCredentials(awsAccountId, region, role, credsDuration)
   if(creds != null) {
