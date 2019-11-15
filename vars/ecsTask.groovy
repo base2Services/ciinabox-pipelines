@@ -9,7 +9,8 @@ ecsTask (
   role: 'ciinabox',
   launchType: 'FARGATE',
   subnets: ['subnet-12345'],
-  securityGroup: ['sg-12345']
+  securityGroup: ['sg-12345'],
+  credsDuration: '3600'
 )
 ************************************/
 
@@ -33,7 +34,7 @@ import java.util.concurrent.*
 
 def call(body) {
   def config = body
-  def client = setupECSClient(config.region, config.accountId, config.role)
+  def client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
 
   config.wait = config.get('wait', false)
 
@@ -143,9 +144,9 @@ def wait(client, config, startedTasks) {
 }
 
 @NonCPS
-def setupECSClient(region, awsAccountId = null, role = null) {
+def setupECSClient(region, awsAccountId = null, role = null, credsDuration = 3600) {
   def cb = AmazonECSClientBuilder.standard().withRegion(region)
-  def creds = getCredentials(awsAccountId, region, role)
+  def creds = getCredentials(awsAccountId, region, role, credsDuration)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
   }
@@ -153,7 +154,7 @@ def setupECSClient(region, awsAccountId = null, role = null) {
 }
 
 @NonCPS
-def getCredentials(awsAccountId, region, roleName) {
+def getCredentials(awsAccountId, region, roleName, credsDuration) {
   def env = System.getenv()
   if(env['AWS_SESSION_TOKEN'] != null) {
     return new BasicSessionCredentials(
@@ -162,7 +163,7 @@ def getCredentials(awsAccountId, region, roleName) {
       env['AWS_SESSION_TOKEN']
     )
   } else if(awsAccountId != null && roleName != null) {
-    def stsCreds = assumeRole(awsAccountId, region, roleName)
+    def stsCreds = assumeRole(awsAccountId, region, roleName, credsDuration), 
     return new BasicSessionCredentials(
       stsCreds.getAccessKeyId(),
       stsCreds.getSecretAccessKey(),
@@ -174,16 +175,16 @@ def getCredentials(awsAccountId, region, roleName) {
 }
 
 @NonCPS
-def assumeRole(awsAccountId, region, roleName) {
+def assumeRole(awsAccountId, region, roleName, credsDuration) {
   def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
   def roleSessionName = "sts-session-" + awsAccountId
-  println "assuming IAM role ${roleArn}"
+  println "assuming IAM role ${roleArn}, expiring in ${credsDuration} seconds."
   def sts = new AWSSecurityTokenServiceClient()
   if (!region.equals("us-east-1")) {
       sts.setEndpoint("sts." + region + ".amazonaws.com")
   }
   def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-            .withRoleArn(roleArn).withDurationSeconds(3600)
+            .withRoleArn(roleArn).withDurationSeconds(credsDuration)
             .withRoleSessionName(roleSessionName))
   return assumeRoleResult.getCredentials()
 }
