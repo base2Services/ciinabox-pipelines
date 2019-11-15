@@ -140,13 +140,16 @@ def wait(client, config, startedTasks) {
       }
     }
     return true
-  } catch(ExpiredTokenException ex) {
-      println "Credentials have expired, reinitialising client..."
-      client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
-      wait(client, config, startedTasks) 
   } catch(Exception e) {
-      println "Waiting for task failed. - ${e}"
-      return false
+      if(e.getErrorCode() == "ExpiredTokenException") {
+        println "Credentials have expired, reinitialising client..."
+        client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
+        wait(client, config, startedTasks) 
+      }
+      else {
+        println "Waiting for task failed. - ${e}"
+        return false
+      }
   }
 }
 
