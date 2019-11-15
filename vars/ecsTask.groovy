@@ -120,13 +120,9 @@ def wait(client, config, startedTasks) {
   Thread.sleep(5 * 1000)  // Allow the tasks to start
 
   try {
+
     while(!taskComplete) {
-      try {
-        taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
-      } catch(ExpiredTokenException ex) {
-        println "Credentials have expired, reinitialising client..."
-        client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
-      }
+      taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
     }
 
     def taskDescriptions = client.describeTasks(describeTasksRequest)
@@ -144,6 +140,10 @@ def wait(client, config, startedTasks) {
       }
     }
     return true
+  } catch(ExpiredTokenException ex) {
+      println "Credentials have expired, reinitialising client..."
+      client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
+      wait(client, config, startedTasks) 
   } catch(Exception e) {
       println "Waiting for task failed. - ${e}"
       return false
