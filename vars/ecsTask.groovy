@@ -145,7 +145,7 @@ def wait(client, config, startedTasks) {
 }
 
 @NonCPS
-def setupECSClient(region, awsAccountId = null, role = null) {
+def setupECSClient(region, awsAccountId = null, role = null, credsDuration) {
   def cb = AmazonECSClientBuilder.standard().withRegion(region)
   def creds = getCredentials(awsAccountId, region, role, credsDuration)
   if(creds != null) {
