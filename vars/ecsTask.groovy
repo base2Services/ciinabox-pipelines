@@ -124,6 +124,7 @@ def wait(client, config, startedTasks) {
       try {
         taskComplete = extendedWait(client, config, startedTasks, describeTasksRequest)
       } catch(ExpiredTokenException ex) {
+        println "Credentials have expired, reinitialising client..."
         client = setupECSClient(config.region, config.accountId, config.role, config.credsDuration)
       }
     }
