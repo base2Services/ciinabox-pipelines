@@ -4,8 +4,8 @@ cloudformation DSL
 performs cloudformation operations
 
 example usage
-cloudformation
-  stackName: 'dev'
+cloudformation(
+  stackName: 'dev',
   queryType: 'element' | 'output' ,  # either queryType or action should be supplied
   query: 'mysubstack.logicalname1' | 'outputKey', # depending on queryType
   action: 'create'|'update'|'delete'|'exists',
@@ -14,10 +14,13 @@ cloudformation
   parameters: [
     'ENVIRONMENT_NAME' : 'dev',
   ],
-  accountId: '1234567890' #the aws account Id you want the stack operation performed in
-  role: 'myrole' # the role to assume from the account the pipeline is running from,
+  accountId: '1234567890', #the aws account Id you want the stack operation performed in
+  role: 'myrole', # the role to assume from the account the pipeline is running from,
   tags: [
     'Environment': 'dev'
+  ],
+  snsTopics: [
+    'arn:aws:sns:us-east-2:000000000000:notifications'
   ]
 )
 
@@ -195,6 +198,11 @@ def create(cf, config) {
   if (tags.size() > 0) {
     request.withTags(tags)
   }
+  
+  if (config.snsTopics) {
+    request.withNotificationARNs(config.snsTopics)
+  }
+  
   cf.createStack(request)
 }
 
@@ -222,6 +230,7 @@ def update(cf, config) {
       .withStackName(config.stackName)
       .withParameters(getStackParams(cf, config))
       .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
+      
     if(config['templateUrl']) {
       request.withTemplateURL(config.templateUrl)
     } else {
@@ -234,6 +243,10 @@ def update(cf, config) {
     }
     if (tags.size() > 0) {
       request.withTags(tags)
+    }
+    
+    if (config.snsTopics) {
+      request.withNotificationARNs(config.snsTopics)
     }
 
     try {
