@@ -49,6 +49,8 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.waiters.*
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.retry.RetryPolicy
+import com.amazonaws.retry.PredefinedRetryPolicies.SDKDefaultRetryCondition
+import com.amazonaws.retry.PredefinedBackoffStrategies.SDKDefaultBackoffStrategy
 import org.yaml.snakeyaml.Yaml
 import groovy.json.JsonSlurperClassic
 import java.util.concurrent.*
@@ -369,9 +371,10 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry = 10) {
+def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry=10) {
   ClientConfiguration clientConfiguration = new ClientConfiguration()
-  clientConfiguration.withRetryPolicy(new RetryPolicy(null, null, maxErrorRetry, true))
+  maxErrorRetry = (maxErrorRetry == null)? 10 : maxErrorRetry
+  clientConfiguration.withRetryPolicy(new RetryPolicy(new SDKDefaultRetryCondition(), new SDKDefaultBackoffStrategy(), maxErrorRetry, true))
   
   def cb = AmazonCloudFormationClientBuilder.standard()
     .withRegion(region)
