@@ -369,12 +369,9 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry = DEFAULT_MAX_ERROR_RETRY) {
+def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry = 10) {
   ClientConfiguration clientConfiguration = new ClientConfiguration()
-  configuration.withRetryPolicy(new RetryPolicy(new CustomRetryCondition(),
-            DEFAULT_BACKOFF_STRATEGY,
-            maxErrorRetry,
-            false))
+  configuration.withRetryPolicy(new RetryPolicy(null, null, maxErrorRetry, true))
   
   def cb = AmazonCloudFormationClientBuilder.standard()
     .withRegion(region)
