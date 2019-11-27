@@ -371,11 +371,11 @@ def doesStackExist(cf, stackName) {
 @NonCPS
 def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry = 10) {
   ClientConfiguration clientConfiguration = new ClientConfiguration()
-  configuration.withRetryPolicy(new RetryPolicy(null, null, maxErrorRetry, true))
+  clientConfiguration.withRetryPolicy(new RetryPolicy(null, null, maxErrorRetry, true))
   
   def cb = AmazonCloudFormationClientBuilder.standard()
     .withRegion(region)
-    .withClientConfiguration(configuration)
+    .withClientConfiguration(clientConfiguration)
   def creds = getCredentials(awsAccountId, region, role)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
