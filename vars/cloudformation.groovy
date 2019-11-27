@@ -21,7 +21,8 @@ cloudformation(
   ],
   snsTopics: [
     'arn:aws:sns:us-east-2:000000000000:notifications'
-  ]
+  ],
+  maxErrorRetry: 3
 )
 
 If you omit the templateUrl then for updates it will use the existing template
@@ -46,6 +47,8 @@ import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.services.simplesystemsmanagement.*
 import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.waiters.*
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.retry.RetryPolicy
 import org.yaml.snakeyaml.Yaml
 import groovy.json.JsonSlurperClassic
 import java.util.concurrent.*
@@ -53,7 +56,7 @@ import java.io.InputStreamReader
 
 def call(body) {
   def config = body
-  def cf = setupCfClient(config.region, config.accountId, config.role)
+  def cf = setupCfClient(config.region, config.accountId, config.role, config.maxErrorRetry)
 
   if(!(config.action || config.queryType)){
     throw new GroovyRuntimeException("Either action or queryType (or both) must be specified")
@@ -366,8 +369,16 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupCfClient(region, awsAccountId = null, role =  null) {
-  def cb = AmazonCloudFormationClientBuilder.standard().withRegion(region)
+def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry = DEFAULT_MAX_ERROR_RETRY) {
+  ClientConfiguration clientConfiguration = new ClientConfiguration()
+  configuration.withRetryPolicy(new RetryPolicy(new CustomRetryCondition(),
+            DEFAULT_BACKOFF_STRATEGY,
+            maxErrorRetry,
+            false))
+  
+  def cb = AmazonCloudFormationClientBuilder.standard()
+    .withRegion(region)
+    .withClientConfiguration(configuration)
   def creds = getCredentials(awsAccountId, region, role)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
