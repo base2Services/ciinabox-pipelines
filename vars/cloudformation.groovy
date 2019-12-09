@@ -6,7 +6,7 @@ performs cloudformation operations
 example usage
 cloudformation(
   stackName: 'dev',
-  queryType: 'element' | 'output' ,  # either queryType or action should be supplied
+  queryType: 'element' | 'output' | 'status',  # either queryType or action should be supplied
   query: 'mysubstack.logicalname1' | 'outputKey', # depending on queryType
   action: 'create'|'update'|'delete'|'exists',
   region: 'ap-southeast-2',
@@ -22,7 +22,8 @@ cloudformation(
   snsTopics: [
     'arn:aws:sns:us-east-2:000000000000:notifications'
   ],
-  maxErrorRetry: 3
+  maxErrorRetry: 3,
+  waitUntilComplete: true
 )
 
 If you omit the templateUrl then for updates it will use the existing template
@@ -92,7 +93,12 @@ def handleActionRequest(cf, config){
     case 'create':
       if(!doesStackExist(cf,config.stackName)) {
         create(cf, config)
-        success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
+        if(config.waitUntilComplete != false) {
+          success = wait(cf, config.stackName, StackStatus.CREATE_COMPLETE)
+        } else {
+          println "Not waiting for stack ${config.stackName} to Create"
+          success = true
+        }
       } else {
         println "Environment ${config.stackName} already Exists"
         success = true
@@ -100,11 +106,21 @@ def handleActionRequest(cf, config){
       break
     case 'delete':
       delete(cf, config)
-      success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
+      if(config.waitUntilComplete != false) {
+        success = wait(cf, config.stackName, StackStatus.DELETE_COMPLETE)
+      } else {
+        println "Not waiting for stack ${config.stackName} to Delete"
+        success = true
+      }
       break
     case 'update':
       if(update(cf, config)) {
-        success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+        if(config.waitUntilComplete != false) {
+          success = wait(cf, config.stackName, StackStatus.UPDATE_COMPLETE)
+        } else {
+          println "Not waiting for stack ${config.stackName} to Update"
+          success = true
+        }
       } else {
         success = true
       }
@@ -126,6 +142,8 @@ def handleQueryRequest(cf, config){
       return queryStackElement(cf, config)
     case 'output':
       return queryStackOutput(cf, config)
+    case 'status':
+      return queryStackStatus(cf, config)
     default:
       throw new GroovyRuntimeException("Unknown queryType '${config.queryType}'. Valid types are: element,output")
   }
@@ -178,6 +196,33 @@ def queryStackOutput(cf, config){
   }
 }
 
+
+@NonCPS
+def queryStackStatus(cf, config){
+  try {
+    def result = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName))
+    def currentState = result.getStacks().get(0).getStackStatus().toString()
+
+    if(config.waitUntilComplete != true) {
+      return currentState
+    }
+    
+    statePrefix = currentState.tokenize("_")[0]
+    
+    if (statePrefix in ["CREATE", "DELETE", "UPDATE"]) {
+      successStatus = StackStatus.valueOf(statePrefix + "_COMPLETE")
+      success = wait(cf, config.stackName, successStatus)
+      if(!success) {
+        printFailedStackEvents(cf, config.stackName, config.region)
+        throw new Exception("Stack ${config.stackName} failed to reach state ${successStatus}")
+      }
+    } else {
+      throw new Exception("Stack ${config.stackName} with status ${currentState} cannot be waited for")
+    }
+  } catch (AmazonCloudFormationException ex) {
+    throw new GroovyRuntimeException("Couldn't describe stack ${config.stackName}", ex)
+  }
+}
 
 @NonCPS
 def create(cf, config) {
@@ -663,7 +708,7 @@ def getStackEvents(cf, stackName) {
 
    return Collections.emptyList();
 
- }
+}
 
 @NonCPS
 def printStackEvent(StackEvent event, stackName, region) {
