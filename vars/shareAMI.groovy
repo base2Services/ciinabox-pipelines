@@ -34,6 +34,12 @@ def shareAmi(client,config) {
   }
   LaunchPermissionModifications launchPermissionModifications = new LaunchPermissionModifications()
     .withAdd(launchPermission)
+  def status = client.describeImages(new DescribeImagesRequest().withImageIds(config.ami)).getImages().get(0).getState()
+  while (status.toLowerCase() != 'available') {
+    println "Ami status: ${status}, waiting for available"
+    Thread.sleep(10000)
+    status = client.describeImages(new DescribeImagesRequest().withImageIds(config.ami)).getImages().get(0).getState()
+  }
   println "Sharing ${config.ami} with ${launchPermission}"
   client.modifyImageAttribute(new ModifyImageAttributeRequest()
     .withImageId(config.ami)
