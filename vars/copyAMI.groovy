@@ -21,8 +21,8 @@ import java.util.concurrent.Future
 
 def call(body) {
   def config = body
-  AmazonEC2 sourceClient = setupClient(config.region)
-  AmazonEC2 targetClient = setupClient(config.copyRegion)
+  def sourceClient = setupClient(config.region)
+  def targetClient = setupClient(config.copyRegion)
   copyImageId = copyAMI(targetClient,config)
 
   if (config.name) {

@@ -14,8 +14,6 @@ copyAndShareAMI(
 )
 ************************************/
 
-@Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.359')
-
 import com.amazonaws.services.ec2.*
 import com.amazonaws.services.ec2.model.*
 import com.amazonaws.regions.*
@@ -51,7 +49,7 @@ def call(body) {
       copyRegion: copyRegion
     )
 
-    AmazonEC2 client = setupClient(copyRegion)
+    def client = setupClient(copyRegion)
     def copied = wait(client, copyRegion, copiedAMI)
 
     if (copied) {

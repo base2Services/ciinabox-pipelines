@@ -15,7 +15,7 @@ import com.amazonaws.regions.*
 
 def call(body) {
   def config = body
-  AmazonEC2 client = setupClient(config.region)
+  def client = setupClient(config.region)
   //Share Ami
   shareAmi(client,config)
   //Share ebs volume if ebs backed ami
