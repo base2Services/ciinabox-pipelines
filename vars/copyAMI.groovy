@@ -23,7 +23,7 @@ def call(body) {
   def config = body
   def sourceClient = setupClient(config.region)
   def targetClient = setupClient(config.copyRegion)
-  copyImageId = copyAMI(targetClient,config)
+  def copyImageId = copyAMI(targetClient,config)
 
   if (config.name) {
     env[config.name.toUpperCase() + '_COPIED_AMI'] = copyImageId
