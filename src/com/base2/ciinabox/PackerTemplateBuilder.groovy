@@ -33,7 +33,7 @@ class PackerTemplateBuilder implements Serializable {
     ]
   }
   
-  public void addCommunicator(String username = 'ec2-user') {
+  public void addCommunicator(String username) {
     if (this.type.startsWith('windows')) {
       this.builder.communicator = 'winrm'
       this.builder.winrm_username = 'Administrator'
@@ -42,8 +42,8 @@ class PackerTemplateBuilder implements Serializable {
     } else {
       this.builder.communicator = 'ssh'
       this.builder.ssh_username = username
-      this.builders.ssh_pty = true
-      this.builders.ssh_timeout = '5m'
+      this.builder.ssh_pty = true
+      this.builder.ssh_timeout = '5m'
     }
   }
 
