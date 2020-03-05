@@ -6,8 +6,8 @@ performs cloudformation operations
 example usage
 cloudformation(
   stackName: 'dev',
-  queryType: 'element' | 'output' | 'status',  # either queryType or action should be supplied
-  query: 'mysubstack.logicalname1' | 'outputKey', # depending on queryType
+  queryType: 'element' | 'output' | 'status' | 'parameter', # either queryType or action should be supplied
+  query: 'mysubstack.logicalname1' | 'outputKey' | 'parameterKey', # depending on queryType
   action: 'create'|'update'|'delete'|'exists',
   region: 'ap-southeast-2',
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
@@ -144,6 +144,8 @@ def handleQueryRequest(cf, config){
       return queryStackOutput(cf, config)
     case 'status':
       return queryStackStatus(cf, config)
+    case 'parameter':
+      return queryStackParams(cf, config)
     default:
       throw new GroovyRuntimeException("Unknown queryType '${config.queryType}'. Valid types are: element,output")
   }
@@ -219,6 +221,24 @@ def queryStackStatus(cf, config){
     } else {
       throw new Exception("Stack ${config.stackName} with status ${currentState} cannot be waited for")
     }
+  } catch (AmazonCloudFormationException ex) {
+    throw new GroovyRuntimeException("Couldn't describe stack ${config.stackName}", ex)
+  }
+}
+
+@NonCPS
+def queryStackParams(cf, config){
+  try {
+    def result = cf.describeStacks(new DescribeStacksRequest().withStackName(config.stackName))
+    def stackInfo = result.getStacks().get(0),
+        parameter = stackInfo.getParameters().find { it.getParameterKey().equals(config.query) }
+
+    if (parameter == null){
+      throw new GroovyRuntimeException("Stack ${config.stackName} does not have param named '${config.query}'")
+    }
+
+    return parameter.getParameterValue()
+
   } catch (AmazonCloudFormationException ex) {
     throw new GroovyRuntimeException("Couldn't describe stack ${config.stackName}", ex)
   }
