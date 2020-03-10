@@ -17,6 +17,7 @@ def call(body) {
       echo "=========================================="
       cd $WORKSPACE/$COOKBOOK
       gem install version
+      gem install rspec_junit_formatter
       berks install
       if [ $? -ne 0 ]; then
         echo "Berkshelf install Failed!"
