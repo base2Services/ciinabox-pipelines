@@ -1,6 +1,6 @@
 /************************************
 stepFunction (
-  action: 'start',
+  action: 'start|wait|startAndWait',
   stateMachine: 'my-state-machine',
   region: 'us-east-1',
   accountId: '12345678',

@@ -32,7 +32,7 @@ def call(body) {
   def cleanup = config.get('cleanup', false)
 
   if(pull) {
-    sh "docker pull ${dockerRepo}:${baseTag}"
+    sh "docker pull ${config.repo}/${image}:${baseTag}"
   }
 
   if(tags) {
