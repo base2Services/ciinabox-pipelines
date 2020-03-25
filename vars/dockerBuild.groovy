@@ -17,6 +17,7 @@ dockerBuild {
   ]
   push = true
   cleanup = true
+  pull = true
 }
 ************************************/
 
@@ -33,6 +34,7 @@ def call(body) {
   def forceTag = config.get('forcetag','')
   def noCache = config.get('noCache', false)
   def target = config.get('target', false)
+  def pull = config.get('pull', false)
   def buildArgs = ""
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
@@ -48,6 +50,10 @@ def call(body) {
 
   if(target) {
     cliOpts += " --target ${target} "
+  }
+ 
+  if(pull) {
+    cliOpts += " --pull "
   }
 
   cliOpts += " ${buildArgs} ${buildDir} "
