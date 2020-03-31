@@ -257,7 +257,7 @@ def create(cf, config) {
   }
   def request = new CreateStackRequest()
     .withStackName(config.stackName)
-    .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
+    .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND')
     .withParameters(params)
     .withTemplateURL(config.templateUrl)
 
@@ -299,7 +299,7 @@ def update(cf, config) {
     def request = new UpdateStackRequest()
       .withStackName(config.stackName)
       .withParameters(getStackParams(cf, config))
-      .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM')
+      .withCapabilities('CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND')
       
     if(config['templateUrl']) {
       request.withTemplateURL(config.templateUrl)
