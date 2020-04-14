@@ -23,7 +23,8 @@ cloudformation(
     'arn:aws:sns:us-east-2:000000000000:notifications'
   ],
   maxErrorRetry: 3,
-  waitUntilComplete: true
+  waitUntilComplete: true,
+  roleArn: 'arn:aws:iam::<accountid>:role/deploy' // (optional, specify cloudformation service role)
 )
 
 If you omit the templateUrl then for updates it will use the existing template
@@ -273,6 +274,10 @@ def create(cf, config) {
     request.withNotificationARNs(config.snsTopics)
   }
   
+  if (config.roleArn) {
+    request.withRoleARN(config.roleArn)
+  }
+  
   cf.createStack(request)
 }
 
@@ -317,6 +322,10 @@ def update(cf, config) {
     
     if (config.snsTopics) {
       request.withNotificationARNs(config.snsTopics)
+    }
+    
+    if (config.roleArn) {
+      request.withRoleARN(config.roleArn)
     }
 
     try {
