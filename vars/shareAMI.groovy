@@ -16,7 +16,7 @@ import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
   def config = body
-  config.accountId = config.get('awsAccountId', null)
+  config.accountId = config.get('accountId', null)
   config.role = config.get('role', null)
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
