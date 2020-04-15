@@ -18,11 +18,26 @@ import com.amazonaws.services.ec2.model.*
 import com.amazonaws.regions.*
 import com.amazonaws.waiters.*
 import java.util.concurrent.Future
+import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
   def config = body
-  AmazonEC2 sourceClient = setupClient(config.region)
-  AmazonEC2 targetClient = setupClient(config.copyRegion)
+  config.accountId = config.get('accountId', null)
+  config.role = config.get('role', null)
+
+  def sourceClientBuilder = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.accountId,
+    role: config.role
+  ])
+  def targetClientBuilder = new AwsClientBuilder([
+    region: config.copyRegion,
+    awsAccountId: config.accountId,
+    role: config.role
+  ])
+
+  AmazonEC2 sourceClient = sourceClientBuilder.ec2()
+  AmazonEC2 targetClient = targetClientBuilder.ec2()
   copyImageId = copyAMI(targetClient,config)
 
   if (config.name) {
@@ -67,12 +82,6 @@ def copyTags(sourceClient,targetClient,sourceImageId,copyImageId) {
 		targetClient.createTags(new CreateTagsRequest().withResources(
 				copyImageId).withTags(tag))
 	}
-}
-
-def setupClient(region) {
-  return AmazonEC2ClientBuilder.standard()
-    .withRegion(region)
-    .build()
 }
 
 def wait(client, region, ami)   {
