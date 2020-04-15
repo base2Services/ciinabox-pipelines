@@ -12,10 +12,18 @@ shareAMI(
 import com.amazonaws.services.ec2.*
 import com.amazonaws.services.ec2.model.*
 import com.amazonaws.regions.*
+import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
   def config = body
-  AmazonEC2 client = setupClient(config.region)
+  config.accountId = config.get('accountId', null)
+  config.role = config.get('role', null)
+  def clientBuilder = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.accountId,
+    role: config.role
+  ])
+  AmazonEC2 client = clientBuilder.ec2()
   //Share Ami
   shareAmi(client,config)
   //Share ebs volume if ebs backed ami
@@ -70,10 +78,4 @@ def getEbsSnapshot(client,config) {
     }
   }
   return ebsSnaphots
-}
-
-def setupClient(region) {
-  return AmazonEC2ClientBuilder.standard()
-    .withRegion(region)
-    .build()
 }

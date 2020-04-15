@@ -13,6 +13,7 @@ import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 
 class AwsClientBuilder implements Serializable {
   
@@ -28,6 +29,19 @@ class AwsClientBuilder implements Serializable {
     this.role = config.get('role', null)
     this.maxErrorRetry = config.get('maxErrorRetry', 3)
     this.env = config.get('env', [:])
+  }
+
+  def ec2() {
+    def cb = new AmazonEC2ClientBuilder().standard()
+      .withRegion(region)
+      .withClientConfiguration(config())
+
+    def creds = getCredentials()
+    if(creds != null) {
+      cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
+
+    return cb.build()
   }
 
   def s3() {
