@@ -68,7 +68,7 @@ class AwsClientBuilder implements Serializable {
   }
 
   private def assumeRole() {
-    def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
+    def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + role
     def roleSessionName = "sts-session-" + awsAccountId
     def sts = new AWSSecurityTokenServiceClient()
     if (!region.equals("us-east-1")) {
@@ -87,7 +87,7 @@ class AwsClientBuilder implements Serializable {
         env['AWS_SECRET_ACCESS_KEY'],
         env['AWS_SESSION_TOKEN']
       )
-    } else if(awsAccountId != null && roleName != null) {
+    } else if(awsAccountId != null && role != null) {
       def stsCreds = assumeRole()
       return new BasicSessionCredentials(
         stsCreds.getAccessKeyId(),
