@@ -75,7 +75,7 @@ def call(body) {
       ]
     ],
     provisioner: [
-      client_rb: [
+      solo_rb: [
         chef_license: 'accept'
       ],
       name: 'chef_solo',
@@ -90,7 +90,7 @@ def call(body) {
     ],
     platforms: [
       [
-        name: 'amazon',
+        name: 'amazon',a
         driver: [
           image_id: config.ami
         ]
