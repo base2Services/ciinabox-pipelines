@@ -10,6 +10,7 @@ verifyAMIv2(
   cookbook: 'mycookbook', // (required)
   ami: 'ami-123456789098', // (required)
   suite: 'InspecTestSuite' // (optional, defaults to role name)
+  run_list: ['myrecipe'] // (optional, list of recipe to execute when running the test)
   region: 'ap-southeast-2', // (optional, will use jenkins region)
   az: 'a', // (optional, will use jenkins az)
   subnet: 'subnet-1234', // (optional, will lookup)
@@ -96,12 +97,16 @@ def call(body) {
       connection_timeout: 10,
       connection_retries: 5
     ],
-    suites: [
-      [
-        name: suite
-      ]
-    ]
+    suites: []
   ]
+  
+  def inspec_suite =[name: suite]
+  
+  if (config.runlist) {
+    inspec_suite.runlist = config.runlist
+  }
+  
+  kitchenYaml.suites << inspec_suite
   
   switch(config.type) {
     case 'amzn-linux':
