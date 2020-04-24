@@ -90,7 +90,7 @@ def call(body) {
     ],
     platforms: [
       [
-        name: 'amazon',a
+        name: 'amazon',
         driver: [
           image_id: config.ami
         ]
