@@ -10,7 +10,7 @@ verifyAMIv2(
   cookbook: 'mycookbook', // (required)
   ami: 'ami-123456789098', // (required)
   suite: 'InspecTestSuite' // (optional, defaults to role name)
-  run_list: ['myrecipe'] // (optional, list of recipe to execute when running the test)
+  runlist: ['myrecipe'] // (optional, list of recipe to execute when running the test)
   region: 'ap-southeast-2', // (optional, will use jenkins region)
   az: 'a', // (optional, will use jenkins az)
   subnet: 'subnet-1234', // (optional, will lookup)
@@ -106,7 +106,7 @@ def call(body) {
   def inspec_suite =[name: suite]
   
   if (config.runlist) {
-    inspec_suite.runlist = config.runlist
+    inspec_suite.run_list = config.runlist
     kitchenYaml.provisioner.always_update_cookbooks = true
   }
   
