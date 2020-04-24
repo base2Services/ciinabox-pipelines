@@ -75,6 +75,9 @@ def call(body) {
       ]
     ],
     provisioner: [
+      client_rb: [
+        chef_license: 'accept'
+      ],
       name: 'chef_solo',
       always_update_cookbooks: false
     ],
@@ -104,6 +107,7 @@ def call(body) {
   
   if (config.runlist) {
     inspec_suite.runlist = config.runlist
+    kitchenYaml.provisioner.always_update_cookbooks = true
   }
   
   kitchenYaml.suites << inspec_suite
