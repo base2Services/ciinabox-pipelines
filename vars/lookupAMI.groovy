@@ -24,10 +24,10 @@ def call(body) {
   def imageId = null
   
   if(!config.region) {
-    config.region = AwsHelper.getRegion()
+    config.region = getRegion()
   }
   if(!config.owner) {
-    config.owner = AwsHelper.getAccountId()
+    config.owner = getAccountId()
   }
   
   if (config.ssm) {
