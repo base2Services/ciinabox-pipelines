@@ -8,7 +8,10 @@ verifyAMIv2(
   type: 'amzn-linux|centos|ubuntu' // (optional, defaults to linux)
   role: 'MyRole', // (required)
   cookbook: 'mycookbook', // (required)
-  ami: 'ami-123456789098', // (required)
+  ami: 'ami-123456789098', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
+  amiLookup: 'amzn-ami-hvm-2017.03.*', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
+  amiLookupFilterTags: ['key':'value'], // (optional, filter amis when using amiLookup by specifying tags)
+  amiLookupSSM: '/aws/path', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
   suite: 'InspecTestSuite' // (optional, defaults to role name)
   runlist: ['myrecipe'] // (optional, list of recipe to execute when running the test)
   region: 'ap-southeast-2', // (optional, will use jenkins region)
@@ -30,12 +33,24 @@ def call(body) {
     error("(role: 'MyRole') option must be provided")
   }
   
-  if (!config.ami) {
-    error("(ami: 'ami-123456789098') option must be provided")
-  }
-  
   if (!config.cookbook) {
     error("(cookbook: 'mycookbook') option must be provided")
+  }
+  
+  def sourceAMI = null
+  
+  if (config.ami) {
+    sourceAMI = config.ami
+  } else if (config.amiLookup) {
+    sourceAMI = lookupAMI(region: region, name: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
+  } else if (config.amiLookupSSM) {
+    sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
+  } else {
+    error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
+  }
+  
+  if (!sourceAMI) {
+    error("Unable to find AMI")
   }
   
   def suite = config.get('suite', config.role)
@@ -92,7 +107,7 @@ def call(body) {
       [
         name: 'amazon',
         driver: [
-          image_id: config.ami
+          image_id: sourceAMI
         ]
       ]
     ],
@@ -106,7 +121,9 @@ def call(body) {
   def inspec_suite =[name: suite]
   
   if (config.runlist) {
-    inspec_suite.run_list = config.runlist
+    config.runlist.each { -> recipe
+      inspec_suite.run_list << "recipe[${config.cookbook}::${recipe}]"
+    }
     kitchenYaml.provisioner.always_update_cookbooks = true
   }
   
