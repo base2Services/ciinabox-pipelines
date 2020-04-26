@@ -84,11 +84,7 @@ def call(body) {
   } else if (config.amiLookup) {
     sourceAMI = lookupAMI(region: region, name: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
   } else if (config.amiLookupSSM) {
-    def param = config.amiLookupSSM
-    def path = param - param.substring(param.lastIndexOf("/"))
-    def params = ssmParameter(action: 'get', parameter: path, region: region)
-    def resp = params.find {it.name.equals(param)}
-    if (resp) { sourceAMI = resp.value }
+    sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
     error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
