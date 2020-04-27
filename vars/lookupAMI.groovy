@@ -33,7 +33,7 @@ def call(body) {
   if (config.ssm) {
     def parameter = config.ssm
     echo "looking up ami id from ssm parameter ${parameter} in the ${config.region} region"
-    def path = parameter - parameter.substring(param.lastIndexOf("/"))
+    def path = parameter - parameter.substring(parameter.lastIndexOf("/"))
     def params = ssmParameter(action: 'get', parameter: path, region: config.region)
     def resp = params.find {it.name.equals(parameter)}
     if (resp) { imageId = resp.value }
