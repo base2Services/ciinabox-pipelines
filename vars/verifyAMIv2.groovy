@@ -121,7 +121,7 @@ def call(body) {
   def inspec_suite =[name: suite]
   
   if (config.runlist) {
-    config.runlist.each { -> recipe
+    config.runlist.each { recipe ->
       inspec_suite.run_list << "recipe[${config.cookbook}::${recipe}]"
     }
     kitchenYaml.provisioner.always_update_cookbooks = true
