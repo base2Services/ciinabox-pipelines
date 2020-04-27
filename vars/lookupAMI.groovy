@@ -14,7 +14,7 @@
 )
  ************************************/
 
-import com.base2.ciinabox.AwsHelper
+import com.base2.ciinabox.aws.Util
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.Filter
@@ -24,10 +24,10 @@ def call(body) {
   def imageId = null
   
   if(!config.region) {
-    config.region = getRegion()
+    config.region = Util.getRegion()
   }
   if(!config.owner) {
-    config.owner = getAccountId()
+    config.owner = Util.getAccountId()
   }
   
   if (config.ssm) {
