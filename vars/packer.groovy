@@ -166,6 +166,8 @@ ${packerTemplate}
   def data = new JsonSlurperClassic().parseText(manifest)
   def build = data['builds'].first()
   env["${config.role.toUpperCase()}_BAKED_AMI"] = build['artifact_id'].split(':').last()
+  env["${config.role.toUpperCase()}_BAKED_NAME"] = ptb.builder.ami_name
+  env["${config.role.toUpperCase()}_BAKED_ID"] = ptb.id
 }
 
 def writeScript(path) {
