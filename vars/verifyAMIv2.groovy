@@ -121,6 +121,7 @@ def call(body) {
   def inspec_suite =[name: suite]
   
   if (config.runlist) {
+    inspec_suite.run_list = []
     config.runlist.each { recipe ->
       inspec_suite.run_list << "recipe[${config.cookbook}::${recipe}]"
     }
