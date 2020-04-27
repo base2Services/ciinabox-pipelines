@@ -153,6 +153,7 @@ def call(body) {
       sh 'kitchen diagnose'
       sh 'kitchen destroy'
       sh 'kitchen test'
+      sh 'kitchen destroy'
     }
   }
   
