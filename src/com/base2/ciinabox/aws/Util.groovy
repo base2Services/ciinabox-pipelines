@@ -15,7 +15,7 @@ class Util implements Serializable {
     if (region == null) {
       region = Region.getRegion(Regions.AP_SOUTHEAST_2)
     }
-    return region
+    return region.getName()
   }
 
   /**
