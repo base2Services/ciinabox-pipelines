@@ -20,7 +20,7 @@
     instanceType: 't3.small', // (optional, default to m5.large)
     ebsVolumeSize: "8", // (optional)
     ebsDeviceName: "/dev/xvda", // (optional, defaults to /dev/xvda)
-    sshUsername: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
+    username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
     runList: ['cookbook::recipe'] // (required, list of recipes)
