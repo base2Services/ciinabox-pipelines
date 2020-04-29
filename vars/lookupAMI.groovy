@@ -6,7 +6,7 @@
  example usage
  lookupAMI(
   region: 'ap-southeast-2', // (optional, if not set will retrieve the current region)
-  name: 'ami-name-*', // (conditional, ami name to search for. accepts wildcards. either name or ssm must be set)
+  amiName: 'ami-name-*', // (conditional, ami name to search for. accepts wildcards. either name or ssm must be set)
   owner: '12345678912', // (optional, account id that owns the ami. defaults to the current aws account)
   tags: ['status':'verifed'], // (optional, filter ami name lookup by tags)
   ssm: '/ssm/path/ami', // (conditional, retrive ami from ssm parameter. either name or ssm must be set)
@@ -37,7 +37,7 @@ def call(body) {
     def params = ssmParameter(action: 'get', parameter: path, region: config.region)
     def resp = params.find {it.name.equals(parameter)}
     if (resp) { imageId = resp.value }
-  } else if (config.name) {
+  } else if (config.amiName) {
     echo "looking up ami id by name ${config.name} in the ${config.region} region"
     def resp = lookupAMI(config)
     imageId = resp.imageId
