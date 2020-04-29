@@ -20,7 +20,7 @@
     instanceType: 't3.small', // (optional, default to m5.large)
     ebsVolumeSize: "8", // (optional)
     ebsDeviceName: "/dev/xvda", // (optional, defaults to /dev/xvda)
-    sshUsername: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
+    username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
     runList: ['cookbook::recipe'] // (required, list of recipes)
@@ -84,11 +84,7 @@ def call(body) {
   } else if (config.amiLookup) {
     sourceAMI = lookupAMI(region: region, name: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
   } else if (config.amiLookupSSM) {
-    def param = config.amiLookupSSM
-    def path = param - param.substring(param.lastIndexOf("/"))
-    def params = ssmParameter(action: 'get', parameter: path, region: region)
-    def resp = params.find {it.name.equals(param)}
-    if (resp) { sourceAMI = resp.value }
+    sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
     error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
@@ -170,6 +166,8 @@ ${packerTemplate}
   def data = new JsonSlurperClassic().parseText(manifest)
   def build = data['builds'].first()
   env["${config.role.toUpperCase()}_BAKED_AMI"] = build['artifact_id'].split(':').last()
+  env["${config.role.toUpperCase()}_BAKED_NAME"] = ptb.builder.ami_name
+  env["${config.role.toUpperCase()}_BAKED_ID"] = ptb.id
 }
 
 def writeScript(path) {

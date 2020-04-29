@@ -1,39 +1,68 @@
 /***********************************
  lookupAMI DSL
 
- Looks up an AMI to
+ Looks up an AMI id by name or from a ssm parameter
 
  example usage
- lookupAMI region: 'ap-southeast-2',  name: 'xyz', tags: ['status':'verifed']
+ lookupAMI(
+  region: 'ap-southeast-2', // (optional, if not set will retrieve the current region)
+  name: 'ami-name-*', // (conditional, ami name to search for. accepts wildcards. either name or ssm must be set)
+  owner: '12345678912', // (optional, account id that owns the ami. defaults to the current aws account)
+  tags: ['status':'verifed'], // (optional, filter ami name lookup by tags)
+  ssm: '/ssm/path/ami', // (conditional, retrive ami from ssm parameter. either name or ssm must be set)
+  env: 'MY_AMI' // (optional, environment variable name. defaults to env["SOURCE_AMI"])
+)
  ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.198')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.198')
 
-import com.amazonaws.services.ec2.*
-import com.amazonaws.services.ec2.model.*
-import com.amazonaws.regions.*
-import com.amazonaws.services.securitytoken.*
-import com.amazonaws.services.securitytoken.model.*
+import com.base2.ciinabox.aws.Util
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
+import com.amazonaws.services.ec2.model.DescribeImagesRequest
+import com.amazonaws.services.ec2.model.Filter
 
 def call(body) {
   def config = body
-
-  if(!config['owner']) {
-    config.owner = lookupAccountId()
+  def imageId = null
+  
+  if(!config.region) {
+    config.region = Util.getRegion()
   }
-  println "lookup config:${config}"
-  def image = lookupAMI(config)
-  if(image) {
-    println "image:${image}"
-    env["SOURCE_AMI"]=image.imageId
-    return image.imageId
+  if(!config.owner) {
+    config.owner = Util.getAccountId()
+  }
+  
+  if (config.ssm) {
+    def parameter = config.ssm
+    echo "looking up ami id from ssm parameter ${parameter} in the ${config.region} region"
+    def path = parameter - parameter.substring(parameter.lastIndexOf("/"))
+    def params = ssmParameter(action: 'get', parameter: path, region: config.region)
+    def resp = params.find {it.name.equals(parameter)}
+    if (resp) { imageId = resp.value }
+  } else if (config.name) {
+    echo "looking up ami id by name ${config.name} in the ${config.region} region"
+    def resp = lookupAMI(config)
+    imageId = resp.imageId
   } else {
-    println "ami not found for ${config}"
-    return null
+    error("one of 'name' or 'ssm' parameters must be supplied")
+  }
+  
+  if (!imageId) {
+    error("unable to find ami from config: ${config}")
+  }
+  
+  if(imageId) {
+    echo "found AMI: ${imageId}"
+    
+    if (config.env) {
+      env[config.env] = imageId
+    } else {
+      env["SOURCE_AMI"] = imageId
+    }
+    
+    return imageId
   }
 }
 
-def lookupAMI(config) {
+def lookupAMI(config) {  
   def ec2 = AmazonEC2ClientBuilder.standard()
     .withRegion(config.region)
     .build()
@@ -96,11 +125,4 @@ def filterAMIBranch(images, amiBranch) {
   } else {
     return branchImages
   }
-}
-
-def lookupAccountId() {
-  def sts = AWSSecurityTokenServiceClientBuilder.standard()
-    .withRegion(Regions.AP_SOUTHEAST_2)
-    .build()
-  return sts.getCallerIdentity(new GetCallerIdentityRequest()).account
 }
