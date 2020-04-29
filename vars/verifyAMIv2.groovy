@@ -42,7 +42,7 @@ def call(body) {
   if (config.ami) {
     sourceAMI = config.ami
   } else if (config.amiLookup) {
-    sourceAMI = lookupAMI(region: region, name: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
+    sourceAMI = lookupAMI(region: region, amiName: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
   } else if (config.amiLookupSSM) {
     sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
