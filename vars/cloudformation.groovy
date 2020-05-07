@@ -246,7 +246,7 @@ def queryStackParams(cf, config){
 }
 
 @NonCPS
-def create(cf, config) {
+def create(cf, config, credsDuration=3600) {
   println "Creating stack ${config.stackName}"
   if(config.stackState) {
     config.stackState = config.stackState.endsWith('/') ? config.stackState[0..-2] : config.stackState
@@ -445,7 +445,7 @@ def doesStackExist(cf, stackName) {
 }
 
 @NonCPS
-def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry=10) {
+def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry=10, credsDuration=3600) {
   ClientConfiguration clientConfiguration = new ClientConfiguration()
   maxErrorRetry = (maxErrorRetry == null)? 10 : maxErrorRetry
   clientConfiguration.withRetryPolicy(new RetryPolicy(new SDKDefaultRetryCondition(), new SDKDefaultBackoffStrategy(), maxErrorRetry, true))
@@ -453,7 +453,7 @@ def setupCfClient(region, awsAccountId = null, role =  null, maxErrorRetry=10) {
   def cb = AmazonCloudFormationClientBuilder.standard()
     .withRegion(region)
     .withClientConfiguration(clientConfiguration)
-  def creds = getCredentials(awsAccountId, region, role)
+  def creds = getCredentials(awsAccountId, region, role, credsDuration)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
   }
@@ -481,7 +481,7 @@ def setupSSMClient(region, awsAccountId = null, role =  null) {
 }
 
 @NonCPS
-def getCredentials(awsAccountId, region, roleName) {
+def getCredentials(awsAccountId, region, roleName, credsDuration=3600) {
   if(env['AWS_SESSION_TOKEN'] != null) {
     return new BasicSessionCredentials(
       env['AWS_ACCESS_KEY_ID'],
@@ -489,7 +489,7 @@ def getCredentials(awsAccountId, region, roleName) {
       env['AWS_SESSION_TOKEN']
     )
   } else if(awsAccountId != null && roleName != null) {
-    def stsCreds = assumeRole(awsAccountId, region, roleName)
+    def stsCreds = assumeRole(awsAccountId, region, roleName, credsDuration=3600)
     return new BasicSessionCredentials(
       stsCreds.getAccessKeyId(),
       stsCreds.getSecretAccessKey(),
@@ -501,7 +501,7 @@ def getCredentials(awsAccountId, region, roleName) {
 }
 
 @NonCPS
-def assumeRole(awsAccountId, region, roleName) {
+def assumeRole(awsAccountId, region, roleName, credsDuration=3600) {
   def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
   def roleSessionName = "sts-session-" + awsAccountId
   println "assuming IAM role ${roleArn}"
@@ -510,7 +510,7 @@ def assumeRole(awsAccountId, region, roleName) {
       sts.setEndpoint("sts." + region + ".amazonaws.com")
   }
   def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-            .withRoleArn(roleArn).withDurationSeconds(3600)
+            .withRoleArn(roleArn).withDurationSeconds(credsDuration)
             .withRoleSessionName(roleSessionName))
   return assumeRoleResult.getCredentials()
 }
