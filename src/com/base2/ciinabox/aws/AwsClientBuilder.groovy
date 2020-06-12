@@ -14,6 +14,7 @@ import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
+import com.amazonaws.services.ecs.AmazonECSClientBuilder
 
 class AwsClientBuilder implements Serializable {
   
@@ -22,6 +23,7 @@ class AwsClientBuilder implements Serializable {
   def role
   def maxErrorRetry
   def env
+  def duration
   
   AwsClientBuilder(Map config) {
     this.region = config.region
@@ -29,8 +31,22 @@ class AwsClientBuilder implements Serializable {
     this.role = config.get('role', null)
     this.maxErrorRetry = config.get('maxErrorRetry', 3)
     this.env = config.get('env', [:])
+    this.duration = config.get('duration', 3600)
   }
+  
+  def ecs() {
+    def cb = new AmazonECSClientBuilder().standard()
+      .withRegion(region)
+      .withClientConfiguration(config())
 
+    def creds = getCredentials()
+    if(creds != null) {
+      cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
+
+    return cb.build()
+  }
+  
   def ec2() {
     def cb = new AmazonEC2ClientBuilder().standard()
       .withRegion(region)
@@ -89,7 +105,8 @@ class AwsClientBuilder implements Serializable {
         sts.setEndpoint("sts." + region + ".amazonaws.com")
     }
     def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-              .withRoleArn(roleArn).withDurationSeconds(3600)
+              .withRoleArn(roleArn)
+              .withDurationSeconds(duration)
               .withRoleSessionName(roleSessionName))
     return assumeRoleResult.getCredentials()
   }
