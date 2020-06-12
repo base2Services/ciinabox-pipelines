@@ -33,7 +33,9 @@ class CloudformationStack implements Serializable {
       
     try {
       def stacks = client.describeStacks(request).getStacks()
+      println stacks.toString()
       def stack = stacks.find {it.getStackName().equals(stackName)}
+      println stack.toString()
       // if a change set has been created but the stack is not yet created
       if (stack.getStackStatus().equals('REVIEW_IN_PROGRESS')) {
         return 'CREATE'
