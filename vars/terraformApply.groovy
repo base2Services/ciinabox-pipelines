@@ -20,8 +20,7 @@ def call(body) {
   
   sh "terraform workspace select ${config.workspace} -no-color"
   
-  
-  def plan = "tfplan-${config.workspace}"
+  def plan = config.get('plan', "tfplan-${config.workspace}")
   
   unstash name: plan
   
