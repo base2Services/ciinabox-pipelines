@@ -22,7 +22,7 @@ def call(body) {
   }
   
   def vars = ""
-  if (!config.variables && config.length > 0) {
+  if (config.variables) {
     config.variables.each {
       vars += "-var ${it.key}=${it.value} "
     }
