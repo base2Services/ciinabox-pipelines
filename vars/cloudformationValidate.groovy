@@ -48,8 +48,6 @@ def listTemplatesInPath(s3,bucket,prefix) {
   results.removeAll {
     !(it.endsWith('.yaml') || it.endsWith('.yml') || it.endsWith('.json'))
   }
-  println("results: ")
-  println(results)
   return results
 }
 
