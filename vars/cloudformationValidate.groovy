@@ -45,6 +45,9 @@ def listTemplatesInPath(s3,bucket,prefix) {
   list.getObjectSummaries().each {
     results << "https://${it.bucketName}.s3.amazonaws.com/${it.key}"
   }
+  results.removeAll {
+    !(it.endsWith('.yaml') || it.endsWith('.yml') || it.endsWith('.json'))
+  }
   return results
 }
 
