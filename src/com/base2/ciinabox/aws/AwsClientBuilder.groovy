@@ -15,6 +15,8 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ecs.AmazonECSClientBuilder
+import com.amazonaws.services.redshift.AmazonRedshiftClientBuilder
+import com.amazonaws.services.rds.AmazonRDSClientBuilder
 
 class AwsClientBuilder implements Serializable {
   
@@ -32,6 +34,32 @@ class AwsClientBuilder implements Serializable {
     this.maxErrorRetry = config.get('maxErrorRetry', 3)
     this.env = config.get('env', [:])
     this.duration = config.get('duration', 3600)
+  }
+
+  def redshift() {
+    def cb = new AmazonRedshiftClientBuilder().standard()
+      .withRegion(region)
+      .withClientConfiguration(config())
+
+    def creds = getCredentials()
+    if(creds != null) {
+      cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
+
+    return cb.build()
+  }
+
+  def rds() {
+    def cb = new AmazonRDSClientBuilder().standard()
+      .withRegion(region)
+      .withClientConfiguration(config())
+
+    def creds = getCredentials()
+    if(creds != null) {
+      cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
+
+    return cb.build()
   }
   
   def ecs() {
