@@ -1,99 +1,120 @@
 /***********************************
 lookupSnapshot DSL
 
-lookup up RDS/Redshift/ESB snapshots
+lookup up RDS/DBCluster/Redshift snapshots
 
 example usage
   lookupSnapshot(
-    type: 'redshift',
+    type: 'redshift|rds|dbcluster',
     accountId: env.DEV_ACCOUNT,
     region: env.REGION,
     role: env.ROLE,
     resource: 'my-redshift-cluster',
-    snapshotType: 'manual',
+    snapshotType: 'manual|automated|shared',
     snapshot: 'latest',
     envVarName: 'REDSHIFT_SNAPSHOT_ID'
   )
 
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-ssm', version='1.11.466')
-@Grab(group='com.amazonaws', module='aws-java-sdk-redshift', version='1.11.466')
 
-import com.amazonaws.auth.*
-import com.amazonaws.regions.*
-import com.amazonaws.services.securitytoken.*
-import com.amazonaws.services.securitytoken.model.*
-import com.amazonaws.services.redshift.*
-import com.amazonaws.services.redshift.model.*
+import com.amazonaws.services.redshift.model.DescribeClusterSnapshotsRequest
+import com.amazonaws.services.redshift.model.SnapshotSortingEntity
+import com.amazonaws.services.redshift.model.SortByOrder
+import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
 
+import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
+import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
+
+import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
   def config = body
 
   if(!(config.type)){
-    throw new GroovyRuntimeException("type must be specified")
+    error("type must be specified for lookupSnapshot()")
   }
+
+  def clientBuilder = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.get('accountId', null),
+    role: config.get('role', null)
+  ])
 
   if(config.type.toLowerCase() == 'redshift'){
-    handleRedshift(config)
+    handleRedshift(clientBuilder, config)
+  } else if (config.type.toLowerCase() == 'rds') {
+    handleRds(clientBuilder, config)
+  } else if (config.type.toLowerCase() == 'dbcluster') {
+    handleDBCluster(clientBuilder, config)
   } else {
-    throw new GroovyRuntimeException("type ${config.type} currently not supported")
+    error("lookupSnapshot() doesn't support lookup of type ${config.type}")
   }
 
 }
 
-
 @NonCPS
-def setupRedshiftClient(region, awsAccountId = null, role =  null) {
-  def cb = AmazonRedshiftClientBuilder.standard().withRegion(region)
-  def creds = getCredentials(awsAccountId, region, role)
-  if(creds != null) {
-    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
-  }
-  return cb.build()
-}
+def handleDBCluster(AwsClientBuilder clientBuilder, Map config) {
+  def client = clientBuilder.rds()
+  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+  def sortBy = config.get('snapshot', 'latest')
 
-@NonCPS
-def getCredentials(awsAccountId, region, roleName) {
-  if(env['AWS_SESSION_TOKEN'] != null) {
-    return new BasicSessionCredentials(
-      env['AWS_ACCESS_KEY_ID'],
-      env['AWS_SECRET_ACCESS_KEY'],
-      env['AWS_SESSION_TOKEN']
-    )
-  } else if(awsAccountId != null && roleName != null) {
-    def stsCreds = assumeRole(awsAccountId, region, roleName)
-    return new BasicSessionCredentials(
-      stsCreds.getAccessKeyId(),
-      stsCreds.getSecretAccessKey(),
-      stsCreds.getSessionToken()
-    )
+  def request = new DescribeDBClusterSnapshotsRequest()
+    .withDBClusterIdentifier(config.resource)
+
+  def snapshotsResult =  client.describeDBClusterSnapshots(request)
+  def snapshots = snapshotsResult.getDBClusterSnapshots()
+
+  if (config.snapshotType) {
+    request.setSnapshotType(config.snapshotType)
+  } 
+
+  if(snapshots.size() > 0) {
+    if(sortBy.toLowerCase() == 'latest') {
+      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+      env[outputName] = sorted_snaps.get(0).getDBClusterSnapshotIdentifier()
+      env["${outputName}_ARN"] = sorted_snaps.get(0).getSourceDBClusterSnapshotArn()
+      echo("Latest DBCluster snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBClusterSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+    } else {
+      error("currently only snapshot 'latest' is supported")
+    }
   } else {
-    return null
+    error("unable to find DBCluster snapshots for resource ${config.resource}")
   }
 }
 
 @NonCPS
-def assumeRole(awsAccountId, region, roleName) {
-  def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
-  def roleSessionName = "sts-session-" + awsAccountId
-  println "assuming IAM role ${roleArn}"
-  def sts = new AWSSecurityTokenServiceClient()
-  if (!region.equals("us-east-1")) {
-      sts.setEndpoint("sts." + region + ".amazonaws.com")
+def handleRds(AwsClientBuilder clientBuilder, Map config) {
+  def client = clientBuilder.rds()
+  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+  def sortBy = config.get('snapshot', 'latest')
+
+  def request = new DescribeDBSnapshotsRequest()
+    .withDBInstanceIdentifier(config.resource)
+
+  if(config.snapshotType) {
+    request.setSnapshotType(config.snapshotType)
+  } 
+
+  def snapshotsResult = client.describeDBSnapshots(request)
+  def snapshots = snapshotsResult.getDBSnapshots()
+
+  if(snapshots.size() > 0) {
+    if(sortBy.toLowerCase() == 'latest') {
+      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+      env[outputName] = sorted_snaps.get(0).getDBSnapshotIdentifier()
+      env["${outputName}_ARN"] = sorted_snaps.get(0).getDBSnapshotArn()
+      echo("Latest snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+    } else {
+      error("currently only snapshot 'latest' is supported")
+    }
+  } else {
+    error("unable to find RDS snapshots for resource ${config.resource}")
   }
-  def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-            .withRoleArn(roleArn).withDurationSeconds(3600)
-            .withRoleSessionName(roleSessionName))
-  return assumeRoleResult.getCredentials()
 }
 
 @NonCPS
-def handleRedshift(config) {
-  def redshift = setupRedshiftClient(config.region, config.accountId, config.role)
-
+def handleRedshift(AwsClientBuilder clientBuilder, Map config) {
+  def client = clientBuilder.redshift()
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
   def snapshot = config.get('snapshot', 'latest')
 
@@ -107,14 +128,16 @@ def handleRedshift(config) {
   if(config.snapshotType) {
     request.setSnapshotType(config.snapshotType)
   } 
-  def snapshots = redshift.describeClusterSnapshots(request)
+  def snapshots = client.describeClusterSnapshots(request)
   if(snapshot.toLowerCase() == 'latest') {
     if(snapshots.getSnapshots().size() > 0) {
       env[outputName] = snapshots.getSnapshots().get(0).getSnapshotIdentifier()
       env["${outputName}_OWNER"] = snapshots.getSnapshots().get(0).getOwnerAccount()
       env["${outputName}_CLUSTER_ID"] = snapshots.getSnapshots().get(0).getClusterIdentifier()
+    } else {
+      error("unable to find redshift snapshots for resource ${config.resource}")
     }
   } else {
-    throw new GroovyRuntimeException("current only snapshot 'latest' is supported")
+    error("currently only snapshot 'latest' is supported")
   }
 }
