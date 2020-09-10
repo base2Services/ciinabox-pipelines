@@ -40,20 +40,23 @@ def call(body) {
     role: config.get('role', null)
   ])
 
-  if(config.type.toLowerCase() == 'redshift'){
-    handleRedshift(clientBuilder, config)
+  if(config.type.toLowerCase() == 'redshift') {
+    def client = clientBuilder.redshift()
+    handleRedshift(client, config)
   } else if (config.type.toLowerCase() == 'rds') {
-    handleRds(clientBuilder, config)
+    def client = clientBuilder.rds()
+    handleRds(client, config)
   } else if (config.type.toLowerCase() == 'dbcluster') {
-    handleDBCluster(clientBuilder, config)
+    def client = clientBuilder.rds()
+    handleDBCluster(client, config)
   } else {
     error("lookupSnapshot() doesn't support lookup of type ${config.type}")
   }
 
 }
 
-def handleDBCluster(AwsClientBuilder clientBuilder, Map config) {
-  def client = clientBuilder.rds()
+@NonCPS
+def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
   def sortBy = config.get('snapshot', 'latest')
 
@@ -81,8 +84,8 @@ def handleDBCluster(AwsClientBuilder clientBuilder, Map config) {
   }
 }
 
-def handleRds(AwsClientBuilder clientBuilder, Map config) {
-  def client = clientBuilder.rds()
+@NonCPS
+def handleRds(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
   def sortBy = config.get('snapshot', 'latest')
 
@@ -110,8 +113,8 @@ def handleRds(AwsClientBuilder clientBuilder, Map config) {
   }
 }
 
-def handleRedshift(AwsClientBuilder clientBuilder, Map config) {
-  def client = clientBuilder.redshift()
+@NonCPS
+def handleRedshift(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
   def snapshot = config.get('snapshot', 'latest')
 
