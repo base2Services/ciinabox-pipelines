@@ -52,7 +52,6 @@ def call(body) {
 
 }
 
-@NonCPS
 def handleDBCluster(AwsClientBuilder clientBuilder, Map config) {
   def client = clientBuilder.rds()
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
@@ -82,7 +81,6 @@ def handleDBCluster(AwsClientBuilder clientBuilder, Map config) {
   }
 }
 
-@NonCPS
 def handleRds(AwsClientBuilder clientBuilder, Map config) {
   def client = clientBuilder.rds()
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
@@ -112,7 +110,6 @@ def handleRds(AwsClientBuilder clientBuilder, Map config) {
   }
 }
 
-@NonCPS
 def handleRedshift(AwsClientBuilder clientBuilder, Map config) {
   def client = clientBuilder.redshift()
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
