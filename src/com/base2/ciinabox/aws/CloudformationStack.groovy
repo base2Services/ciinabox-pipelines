@@ -1,10 +1,10 @@
 package com.base2.ciinabox.aws
 
 import com.base2.ciinabox.aws.AwsClientBuilder
+import com.base2.ciinabox.aws.IntrinsicsYamlConstructor
 
 import groovy.json.JsonSlurper
 import org.yaml.snakeyaml.Yaml
-// import groovy.yaml.YamlSlurper
 import java.io.InputStreamReader
 
 import com.amazonaws.services.s3.AmazonS3URI
@@ -122,8 +122,8 @@ class CloudformationStack implements Serializable {
     def templateBody = s3Client.getObject(new GetObjectRequest(s3URI.getBucket(), s3URI.getKey())).getObjectContent()
 
     if (s3URI.getKey().endsWith('yaml') || s3URI.getKey().endsWith('yml')) {
-      //template = new YamlSlurper().parse(new InputStreamReader(templateBody))
-      template = new Yaml().load(templateBody)
+      Yaml yaml = new Yaml(new IntrinsicsYamlConstructor())
+      template = yaml.load(templateBody)
     } else {
       //fallback on json
       def jsonSlurper = new JsonSlurper()
