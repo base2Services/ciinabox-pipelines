@@ -57,6 +57,7 @@ import org.yaml.snakeyaml.Yaml
 import groovy.json.JsonSlurperClassic
 import java.util.concurrent.*
 import java.io.InputStreamReader
+import com.base2.ciinabox.aws.IntrinsicsYamlConstructor
 
 def call(body) {
   def config = body
@@ -553,7 +554,8 @@ def getTemplateParameterNames(config){
     templateBody = s3getClient.getObject(new GetObjectRequest(s3location.bucket, s3location.key)).getObjectContent()
 
   if(s3location.key.endsWith('yaml') || s3location.key.endsWith('yml')){
-    newTemplate = new Yaml().load(templateBody)
+    Yaml yaml = new Yaml(new IntrinsicsYamlConstructor())
+    newTemplate = yaml.load(templateBody)
   } else {
     //fallback on json
     newTemplate = parseJsonToMap(templateBody)
