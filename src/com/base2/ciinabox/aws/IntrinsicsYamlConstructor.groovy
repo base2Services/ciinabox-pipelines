@@ -15,6 +15,8 @@ import org.yaml.snakeyaml.nodes.ScalarNode
 import org.yaml.snakeyaml.nodes.SequenceNode
 import org.yaml.snakeyaml.nodes.Tag
 
+import com.cloudbees.groovy.cps.NonCPS
+
 /**
  * Allows snakeyaml to parse YAML templates that contain short forms of
  * CloudFormation intrinsic functions.
@@ -51,6 +53,7 @@ public class IntrinsicsYamlConstructor extends SafeConstructor implements Serial
             this.forceSequenceValue = forceSequenceValue
         }
 
+        @NonCPS
         public Object construct(Node node) {
             String key = node.getTag().getValue().substring(1)
             String prefix = attachFnPrefix ? "Fn::" : ""
@@ -60,6 +63,7 @@ public class IntrinsicsYamlConstructor extends SafeConstructor implements Serial
             return result
         }
         
+        @NonCPS
         protected Object constructIntrinsicValueObject(Node node) {
             if (node instanceof ScalarNode) {
                 Object val = (String) constructScalar((ScalarNode) node)
