@@ -21,6 +21,14 @@ def call(body) {
     error('workspace name must be supplied')
   }
 
+  workspace_status = sh(returnStatus: true, script: "terraform workspace select ${config.workspace} -no-color")
+  
+  if (workspace_status != 0) {
+    sh("terraform workspace new ${config.workspace}")
+  }
+  
+  def plan = "tfplan-${config.workspace}"
+  
   def tfPlanCommand = "terraform plan -out ${plan} -no-color -input=false "
   def vars = ""
   if (config.variables) {
@@ -33,15 +41,6 @@ def call(body) {
   if (config.varsFile) {
     tfPlanCommand += "-var-file=${config.varsFile} "
   }
-  
-  workspace_status = sh(returnStatus: true, script: "terraform workspace select ${config.workspace} -no-color")
-  
-  if (workspace_status != 0) {
-    sh("terraform workspace new ${config.workspace}")
-  }
-  
-  def plan = "tfplan-${config.workspace}"
-  
   
   sh "${tfPlanCommand}"
   
