@@ -39,12 +39,14 @@ def call(body) {
             jobDsl scriptText: libraryResource('seeder.groovy'),
               removedConfigFilesAction: 'DELETE', 
               removedJobAction: 'DELETE', 
-              removedViewAction: 'DELETE'
+              removedViewAction: 'DELETE',
+              ignoreMissingFiles: true
 
             jobDsl targets: 'pipelines/**/*.job',
               removedConfigFilesAction: 'DELETE', 
               removedJobAction: 'DELETE', 
-              removedViewAction: 'DELETE'
+              removedViewAction: 'DELETE',
+              ignoreMissingFiles: true
           }
         }
       }
