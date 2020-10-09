@@ -62,6 +62,10 @@ class AmiHelper implements Serializable {
       copiedAMIs[targetRegion] = copiedAMI
     }
     waitForCopy(copiedAMIs)
+    copiedAMIs.each { region, ami ->
+      log("Sharing AMI ${ami} in ${region} with ${options.accounts}")
+      shareAMI(region, ami, options.accounts)
+    }
     return copiedAMIs
   }
 
@@ -109,9 +113,9 @@ class AmiHelper implements Serializable {
     }
   }
 
-  def shareAMI(region, ami, accounts) {
+  def shareAMI(shareRegion, ami, accounts) {
     def clientBuilder = new AwsClientBuilder([
-      region: region,
+      region: shareRegion,
       awsAccountId: accountId,
       role: iamRole
     ])
@@ -207,6 +211,5 @@ class AmiHelper implements Serializable {
       job.echo(message)
     }
   }
-
 
 }
