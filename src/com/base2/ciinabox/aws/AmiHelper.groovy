@@ -62,9 +62,9 @@ class AmiHelper implements Serializable {
       copiedAMIs[targetRegion] = copiedAMI
     }
     waitForCopy(copiedAMIs)
-    copiedAMIs.each { region, ami ->
-      log("Sharing AMI ${ami} in ${region} with ${options.accounts}")
-      shareAMI(region, ami, options.accounts)
+    copiedAMIs.each { region, imageId ->
+      log("Sharing AMI ${imageId} in ${region} with ${options.accounts}")
+      shareAMI(region, imageId, options.accounts)
     }
     return copiedAMIs
   }
