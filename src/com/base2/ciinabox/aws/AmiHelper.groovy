@@ -127,16 +127,16 @@ class AmiHelper implements Serializable {
     }
     def launchPermissionModifications = new LaunchPermissionModifications().withAdd(launchPermission)
     client.modifyImageAttribute(new ModifyImageAttributeRequest()
-      .withImageId(config.ami)
+      .withImageId(ami)
       .withAttribute('launchPermission')
       .withLaunchPermission(launchPermissionModifications)
     )
 
     //Share ebs volume if ebs backed ami
-    def ebsSnapshots = getEbsSnapshot(client, config)
+    def ebsSnapshots = getEbsSnapshot(client, ami)
     if (!ebsSnapshots?.empty) {
       ebsSnapshots.each { snapshot ->
-        modifySnapshotAttribute(region, snapshot, accounts)
+        modifySnapshotAttribute(shareRegion, snapshot, accounts)
       }
     }
   }
