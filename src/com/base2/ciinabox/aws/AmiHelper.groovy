@@ -158,7 +158,7 @@ class AmiHelper implements Serializable {
   private void modifySnapshotAttribute(client, snapshot, accounts) {
 
     def volumePermission = []
-    config.accounts.each { account ->
+    accounts.each { account ->
       volumePermission << new CreateVolumePermission().withUserId(account)
     }
 
