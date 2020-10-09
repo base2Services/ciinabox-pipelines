@@ -1,5 +1,12 @@
 package com.base2.ciinabox.aws
 
+import com.amazonaws.services.ec2.*
+import com.amazonaws.services.ec2.model.*
+import com.amazonaws.regions.*
+import com.amazonaws.waiters.*
+import java.util.concurrent.Future
+import com.base2.ciinabox.aws.AwsClientBuilder
+
 class AmiHelper implements Serializable {
 
   String accountId
