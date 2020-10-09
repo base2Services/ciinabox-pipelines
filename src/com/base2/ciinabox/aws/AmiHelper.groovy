@@ -21,7 +21,7 @@ class AmiHelper implements Serializable {
     String accountId = null
     String iamRole = null
     String region
-    Object job
+    Object job = null
 
     def accountId(String accountId) {
       this.accountId = accountId
@@ -38,11 +38,17 @@ class AmiHelper implements Serializable {
       return this
     }
 
+    def job(Object job) {
+      this.job = job
+      return this
+    }
+
     def build() {
       return new AmiHelper(
         accountId: accountId,
         iamRole: iamRole,
-        region: region
+        region: region,
+        job: job
       )
     }
   }
@@ -181,17 +187,23 @@ class AmiHelper implements Serializable {
       )
       while(!future.isDone()) {
         try {
-          println "waitng for ami ${ami} in ${region} to finish copying"
+          log("waitng for ami ${ami} in ${region} to finish copying")
           Thread.sleep(10000)
         } catch(InterruptedException ex) {
-            println "We seem to be timing out ${ex}...ignoring"
+            log("We seem to be timing out ${ex}...ignoring")
         }
       }
-      println "AMI: ${ami} in ${region} copy complete"
+      log("AMI: ${ami} in ${region} copy complete")
       return true
     } catch(Exception e) {
-      println "AMI: ${ami} in ${region} copy failed"
+      log("AMI: ${ami} in ${region} copy failed")
       return false
+    }
+  }
+
+  private void log(String message) {
+    if(job) {
+      jobs.echo(message)
     }
   }
 
