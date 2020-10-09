@@ -154,7 +154,7 @@ class AmiHelper implements Serializable {
   }
 
   private void waitForCopy(Map amis) {
-    amis.each { region, ami
+    amis.each { region, ami ->
       this.wait(region, ami)
     }
   }
