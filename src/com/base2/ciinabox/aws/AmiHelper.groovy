@@ -136,7 +136,7 @@ class AmiHelper implements Serializable {
     def ebsSnapshots = getEbsSnapshot(client, ami)
     if (!ebsSnapshots?.empty) {
       ebsSnapshots.each { snapshot ->
-        modifySnapshotAttribute(shareRegion, snapshot, accounts)
+        modifySnapshotAttribute(client, snapshot, accounts)
       }
     }
   }
