@@ -32,9 +32,9 @@ def call(body) {
   }
 
   println "copied ${config.ami} from ${config.region} to ${config.copyRegion} with Id ${copyImageId}"
-  copyTags(config.ami,copyImageId)
+  copyTags(config, config.ami, copyImageId)
   if (config.waitOnCopy) {
-    wait(this, config.copyRegion, copyImageId) 
+    wait(this, config, config.copyRegion, copyImageId) 
   }
   return copyImageId
 }
@@ -64,7 +64,7 @@ def copyAMI(config) {
 }
 
 @NonCPS
-def copyTags(sourceImageId,copyImageId) {
+def copyTags(config, sourceImageId, copyImageId) {
   def sourceClient = new AwsClientBuilder([
     region: config.region,
     awsAccountId: config.accountId,
@@ -86,7 +86,7 @@ def copyTags(sourceImageId,copyImageId) {
 }
 
 @NonCPS
-def wait(steps, region, ami)   {
+def wait(steps, config, region, ami) {
   def client = new AwsClientBuilder([
     region: config.region,
     awsAccountId: config.accountId,
