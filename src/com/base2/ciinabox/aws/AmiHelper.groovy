@@ -174,6 +174,7 @@ class AmiHelper implements Serializable {
   private void waitForCopy(Map amis) {
     amis.each { region, ami ->
       this.wait(region, ami)
+      log("AMI: ${ami} in ${region} copy complete")
     }
   }
 
@@ -192,16 +193,16 @@ class AmiHelper implements Serializable {
       )
       while(!future.isDone()) {
         try {
-          log("waitng for ami ${ami} in ${region} to finish copying")
+          log("waitng for ami ${ami} in ${amiRegion} to finish copying")
           Thread.sleep(10000)
         } catch(InterruptedException ex) {
             log("We seem to be timing out ${ex}...ignoring")
         }
       }
-      log("AMI: ${ami} in ${region} copy complete")
+
       return true
     } catch(Exception e) {
-      log("AMI: ${ami} in ${region} copy failed")
+      log("AMI: ${ami} in ${amiRegion} copy failed")
       return false
     }
   }
