@@ -204,7 +204,7 @@ class AmiHelper implements Serializable {
 
   private void log(String message) {
     if(job) {
-      jobs.echo(message)
+      job.echo(message)
     }
   }
 
