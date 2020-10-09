@@ -51,7 +51,7 @@ class AmiHelper implements Serializable {
     def copiedAMIs = [:]
     targetRegions.each { targetRegion ->
       def copiedAMI = this.copyAMI(ami, targetRegion, options)
-      this.copyTags(sourceAMI, copiedAMI, targetRegion)
+      this.copyTags(ami, copiedAMI, targetRegion)
       copiedAMIs[targetRegion] = copiedAMI
     }
     waitForCopy(copiedAMIs)
