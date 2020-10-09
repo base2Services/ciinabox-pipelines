@@ -47,7 +47,7 @@ class AmiHelper implements Serializable {
     }
   }
 
-  def copyAndShareAMI(String ami, String [] targetRegions=[], Map options=[:]) {
+  def copyAndShareAMI(String ami, List targetRegions=[], Map options=[:]) {
     def copiedAMIs = [:]
     targetRegions.each { targetRegion ->
       def copiedAMI = this.copyAMI(ami, targetRegion, options)
