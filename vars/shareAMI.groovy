@@ -18,6 +18,11 @@ def call(body) {
   def config = body
   config.accountId = config.get('accountId', null)
   config.role = config.get('role', null)
+  share(this, config)
+}
+
+@NonCPS
+def share(steps, config) {
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
     awsAccountId: config.accountId,
@@ -25,24 +30,25 @@ def call(body) {
   ])
   def client = clientBuilder.ec2()
   //Share Ami
-  shareAmi(client,config)
+  shareAmi(steps, client, config)
   //Share ebs volume if ebs backed ami
-  def ebsSnapshots = getEbsSnapshot(client,config)
+  def ebsSnapshots = getEbsSnapshot(steps, client, config)
   if (!ebsSnapshots?.empty) {
     ebsSnapshots.each { snapshot ->
-      modifySnapshotAttribute(client,snapshot,config)
+      modifySnapshotAttribute(steps, client, snapshot, config)
     }
   }
 }
 
-def shareAmi(client,config) {
+@NonCPS
+def shareAmi(steps, client, config) {
   def launchPermission = []
   config.accounts.each { account ->
     launchPermission << new LaunchPermission().withUserId(account)
   }
   def launchPermissionModifications = new LaunchPermissionModifications()
     .withAdd(launchPermission)
-  println "Sharing ${config.ami} with ${launchPermission}"
+  steps.echo "Sharing ${config.ami} with ${launchPermission}"
   client.modifyImageAttribute(new ModifyImageAttributeRequest()
     .withImageId(config.ami)
     .withAttribute('launchPermission')
@@ -50,30 +56,32 @@ def shareAmi(client,config) {
   )
 }
 
-def modifySnapshotAttribute(client,snapshot,config) {
+@NonCPS
+def modifySnapshotAttribute(steps, client, snapshot, config) {
   def volumePermission = []
   config.accounts.each { account ->
     volumePermission << new CreateVolumePermission().withUserId(account)
   }
   def volumePermissionModifications = new CreateVolumePermissionModifications()
     .withAdd(volumePermission)
-  println "Adding create volume permission to ${snapshot}"
+  steps.echo "Adding create volume permission to ${snapshot}"
   client.modifySnapshotAttribute(new ModifySnapshotAttributeRequest()
     .withSnapshotId(snapshot)
     .withCreateVolumePermission(volumePermissionModifications)
   )
 }
 
-def getEbsSnapshot(client,config) {
+@NonCPS
+def getEbsSnapshot(steps, client,config) {
   def result = client.describeImages(new DescribeImagesRequest().withImageIds(config.ami))
   def ebsSnaphots = []
   if (!result.getImages().isEmpty()) {
-    println "Found AMI ${config.ami}"
+    steps.echo "Found AMI ${config.ami}"
     for (BlockDeviceMapping blockingDevice : result.getImages().get(0).getBlockDeviceMappings()) {
       if (blockingDevice.getEbs() != null) {
         def snapshot = blockingDevice.getEbs().getSnapshotId()
         ebsSnaphots << snapshot
-        println "Found snapshot ${snapshot} for ami ${config.ami}"
+        steps.echo "Found snapshot ${snapshot} for ami ${config.ami}"
       }
     }
   }

@@ -27,14 +27,14 @@ def call(body) {
   def sourceAMI = null
 
   if(!(config.amiId) && !(config.amiName)){
-    throw new GroovyRuntimeException("Either `amiName` or `amiId` must be specified for copyAndShareAMI method")
+    error("Either `amiName` or `amiId` must be specified for copyAndShareAMI method")
   }
 
   if(config.amiName) {
     println "Looking up AMI: ${config.amiName}"
     sourceAMI = lookupAMI config
     if(!(sourceAMI)){
-      throw new GroovyRuntimeException("Unable to find AmiId for ${config.amiName} with filter options\ntags: ${config.tags}\nowner: ${config.owner}")
+      error("Unable to find AmiId for ${config.amiName} with filter options\ntags: ${config.tags}\nowner: ${config.owner}")
     }
   }
 
@@ -42,6 +42,11 @@ def call(body) {
     println "Using AMI Id: ${config.amiId}"
     sourceAMI = config.amiId
   }
+  share(this,config, sourceAMI)
+}
+
+@NonCPS
+def share(steps, config, sourceAMI) {
 
   config.copyRegions.each { copyRegion ->
     println "Copying ${sourceAMI} to ${copyRegion}"
@@ -55,7 +60,7 @@ def call(body) {
     def copied = wait(client, copyRegion, copiedAMI)
 
     if (copied) {
-      println "Sharing ${copiedAMI} in ${copyRegion} to account(s) ${config.shareAccounts}"
+      steps.echo "Sharing ${copiedAMI} in ${copyRegion} to account(s) ${config.shareAccounts}"
       shareAMI(
         region: copyRegion,
         ami: copiedAMI,
@@ -64,18 +69,18 @@ def call(body) {
 
       def regionENV = copyRegion.replaceAll('-','_').toUpperCase()
       def roleENV = config.role.toUpperCase()
-      println "Setting environment variable `${roleENV}_${regionENV}` with value ${copiedAMI}"
+      steps.echo "Setting environment variable `${roleENV}_${regionENV}` with value ${copiedAMI}"
       env["${roleENV}_${regionENV}"]=copiedAMI
     } else {
-      throw new GroovyRuntimeException("Failed to copy ${copiedAMI} to ${copyRegion}!")
+      steps.error("Failed to copy ${copiedAMI} to ${copyRegion}!")
     }
 
   }
-
-  println "Copy and share complete for AMI ${sourceAMI} for ${config.copyRegions} region(s) to accounts ${config.shareAccounts}"
+  steps.echo "Copy and share complete for AMI ${sourceAMI} for ${config.copyRegions} region(s) to accounts ${config.shareAccounts}"
 
 }
 
+@NonCPS
 def wait(client, region, ami)   {
   def waiter = client.waiters().imageAvailable()
 

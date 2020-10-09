@@ -25,35 +25,27 @@ def call(body) {
   config.accountId = config.get('accountId', null)
   config.role = config.get('role', null)
 
-  def sourceClientBuilder = new AwsClientBuilder([
-    region: config.region,
-    awsAccountId: config.accountId,
-    role: config.role
-  ])
-  def targetClientBuilder = new AwsClientBuilder([
-    region: config.copyRegion,
-    awsAccountId: config.accountId,
-    role: config.role
-  ])
-
-  def sourceClient = sourceClientBuilder.ec2()
-  def targetClient = targetClientBuilder.ec2()
-  copyImageId = copyAMI(targetClient,config)
+  def copyImageId = copyAMI(config)
 
   if (config.name) {
     env[config.name.toUpperCase() + '_COPIED_AMI'] = copyImageId
   }
 
   println "copied ${config.ami} from ${config.region} to ${config.copyRegion} with Id ${copyImageId}"
-  copyTags(sourceClient,targetClient,config.ami,copyImageId)
+  copyTags(config.ami,copyImageId)
   if (config.waitOnCopy) {
-    wait(targetClient, config.copyRegion, copyImageId) 
+    wait(this, config.copyRegion, copyImageId) 
   }
   return copyImageId
 }
 
 @NonCPS
-def copyAMI(client,config) {
+def copyAMI(config) {
+  def client = new AwsClientBuilder([
+    region: config.copyRegion,
+    awsAccountId: config.accountId,
+    role: config.role
+  ]).ec2()
   def copyImageRequest = new CopyImageRequest()
     .withSourceImageId(config.ami)
     .withSourceRegion(config.region)
@@ -72,21 +64,34 @@ def copyAMI(client,config) {
 }
 
 @NonCPS
-def copyTags(sourceClient,targetClient,sourceImageId,copyImageId) {
-  def describeImagesResult = sourceClient
-				.describeImages(new DescribeImagesRequest()
-						.withImageIds(sourceImageId))
+def copyTags(sourceImageId,copyImageId) {
+  def sourceClient = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.accountId,
+    role: config.role
+  ]).ec2()
+  def targetClient = new AwsClientBuilder([
+    region: config.copyRegion,
+    awsAccountId: config.accountId,
+    role: config.role
+  ]).ec2()
+  def describeImagesResult = sourceClient.describeImages(new DescribeImagesRequest().withImageIds(sourceImageId))
 
   def images = describeImagesResult.getImages()
-	def image = images.get(0)
+  def image = images.get(0)
 
-	for (Tag tag : image.getTags()) {
-		targetClient.createTags(new CreateTagsRequest().withResources(
-				copyImageId).withTags(tag))
-	}
+  for (Tag tag : image.getTags()) {
+    targetClient.createTags(new CreateTagsRequest().withResources(copyImageId).withTags(tag))
+  }
 }
 
-def wait(client, region, ami)   {
+@NonCPS
+def wait(steps, region, ami)   {
+  def client = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.accountId,
+    role: config.role
+  ]).ec2()
   def waiter = client.waiters().imageAvailable()
 
   try {
@@ -96,16 +101,16 @@ def wait(client, region, ami)   {
     )
     while(!future.isDone()) {
       try {
-        echo "waiting for ami ${ami} in ${region} to finish copying"
+        steps.echo "waiting for ami ${ami} in ${region} to finish copying"
         Thread.sleep(10000)
       } catch(InterruptedException ex) {
-          echo "We seem to be timing out ${ex}...ignoring"
+          steps.echo "We seem to be timing out ${ex}...ignoring"
       }
     }
-    println "AMI: ${ami} in ${region} copy complete"
+    steps.echo "AMI: ${ami} in ${region} copy complete"
     return true
    } catch(Exception e) {
-     println "AMI: ${ami} in ${region} copy failed"
+     steps.echo "AMI: ${ami} in ${region} copy failed"
      return false
    }
 }

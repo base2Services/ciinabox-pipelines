@@ -31,7 +31,6 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 
 def call(body) {
   def config = body
-  def ssm = setupSSMClient(config.region, config.accountId, config.role)
 
   if(!(config.action)){
     throw new GroovyRuntimeException("action get/put must be specified")
@@ -41,6 +40,13 @@ def call(body) {
     throw new GroovyRuntimeException("parameter must be specified")
   }
 
+  return ssmParameter(this,config)
+
+}
+
+@NonCPS
+def ssmParameter(steps, config) {
+  def ssm = setupSSMClient(config.region, config.accountId, config.role)
   if(config.action.toLowerCase() == 'put') {
     if(!(config.value)){
       throw new GroovyRuntimeException("value must be specified")
@@ -52,11 +58,11 @@ def call(body) {
       .withValue(config.value)
       .withOverwrite(true)
     )
-    println "put param ${config.parameter}"
+    steps.println "put param ${config.parameter}"
+    return null
   } else if(config.action.toLowerCase() == 'get') {
     return getSSMParams(ssm, config.parameter)
   }
-
 }
 
 @NonCPS
