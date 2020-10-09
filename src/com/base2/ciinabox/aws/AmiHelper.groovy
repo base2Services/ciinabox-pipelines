@@ -12,6 +12,7 @@ class AmiHelper implements Serializable {
   String accountId
   String iamRole
   String region
+  Object job = null
 
   static AmiHelperBuilder builder() {
     return new AmiHelperBuilder()
