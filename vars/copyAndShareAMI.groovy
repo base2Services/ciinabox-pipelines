@@ -51,7 +51,7 @@ def call(body) {
       copyRegion: copyRegion
     )
 
-    AmazonEC2 client = setupClient(copyRegion)
+    def client = setupClient(copyRegion)
     def copied = wait(client, copyRegion, copiedAMI)
 
     if (copied) {
@@ -77,10 +77,10 @@ def call(body) {
 }
 
 def wait(client, region, ami)   {
-  Waiter waiter = client.waiters().imageAvailable()
+  def waiter = client.waiters().imageAvailable()
 
   try {
-    Future future = waiter.runAsync(
+    def future = waiter.runAsync(
       new WaiterParameters<>(new DescribeImagesRequest().withImageIds(ami)),
       new NoOpWaiterHandler()
     )
@@ -100,6 +100,7 @@ def wait(client, region, ami)   {
    }
 }
 
+@NonCPS
 def setupClient(region) {
   return AmazonEC2ClientBuilder.standard()
     .withRegion(region)

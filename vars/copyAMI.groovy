@@ -36,8 +36,8 @@ def call(body) {
     role: config.role
   ])
 
-  AmazonEC2 sourceClient = sourceClientBuilder.ec2()
-  AmazonEC2 targetClient = targetClientBuilder.ec2()
+  def sourceClient = sourceClientBuilder.ec2()
+  def targetClient = targetClientBuilder.ec2()
   copyImageId = copyAMI(targetClient,config)
 
   if (config.name) {
@@ -52,8 +52,9 @@ def call(body) {
   return copyImageId
 }
 
+@NonCPS
 def copyAMI(client,config) {
-  CopyImageRequest copyImageRequest = new CopyImageRequest()
+  def copyImageRequest = new CopyImageRequest()
     .withSourceImageId(config.ami)
     .withSourceRegion(config.region)
      
@@ -64,19 +65,20 @@ def copyAMI(client,config) {
     }
   }
 
-  CopyImageResult copyImageResult = client
+  def copyImageResult = client
     .copyImage(copyImageRequest)
 
   return copyImageResult.getImageId();
 }
 
+@NonCPS
 def copyTags(sourceClient,targetClient,sourceImageId,copyImageId) {
-  DescribeImagesResult describeImagesResult = sourceClient
+  def describeImagesResult = sourceClient
 				.describeImages(new DescribeImagesRequest()
 						.withImageIds(sourceImageId))
 
-  List<Image> images = describeImagesResult.getImages()
-	Image image = images.get(0)
+  def images = describeImagesResult.getImages()
+	def image = images.get(0)
 
 	for (Tag tag : image.getTags()) {
 		targetClient.createTags(new CreateTagsRequest().withResources(
@@ -85,10 +87,10 @@ def copyTags(sourceClient,targetClient,sourceImageId,copyImageId) {
 }
 
 def wait(client, region, ami)   {
-  Waiter waiter = client.waiters().imageAvailable()
+  def waiter = client.waiters().imageAvailable()
 
   try {
-    Future future = waiter.runAsync(
+    def future = waiter.runAsync(
       new WaiterParameters<>(new DescribeImagesRequest().withImageIds(ami)),
       new NoOpWaiterHandler()
     )

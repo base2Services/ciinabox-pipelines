@@ -23,7 +23,7 @@ def call(body) {
     awsAccountId: config.accountId,
     role: config.role
   ])
-  AmazonEC2 client = clientBuilder.ec2()
+  def client = clientBuilder.ec2()
   //Share Ami
   shareAmi(client,config)
   //Share ebs volume if ebs backed ami
@@ -40,7 +40,7 @@ def shareAmi(client,config) {
   config.accounts.each { account ->
     launchPermission << new LaunchPermission().withUserId(account)
   }
-  LaunchPermissionModifications launchPermissionModifications = new LaunchPermissionModifications()
+  def launchPermissionModifications = new LaunchPermissionModifications()
     .withAdd(launchPermission)
   println "Sharing ${config.ami} with ${launchPermission}"
   client.modifyImageAttribute(new ModifyImageAttributeRequest()
@@ -55,7 +55,7 @@ def modifySnapshotAttribute(client,snapshot,config) {
   config.accounts.each { account ->
     volumePermission << new CreateVolumePermission().withUserId(account)
   }
-  CreateVolumePermissionModifications volumePermissionModifications = new CreateVolumePermissionModifications()
+  def volumePermissionModifications = new CreateVolumePermissionModifications()
     .withAdd(volumePermission)
   println "Adding create volume permission to ${snapshot}"
   client.modifySnapshotAttribute(new ModifySnapshotAttributeRequest()

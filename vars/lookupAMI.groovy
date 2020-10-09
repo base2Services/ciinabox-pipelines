@@ -62,6 +62,7 @@ def call(body) {
   }
 }
 
+@NonCPS
 def lookupAMI(config) {  
   def ec2 = AmazonEC2ClientBuilder.standard()
     .withRegion(config.region)
