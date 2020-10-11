@@ -27,7 +27,7 @@ def call(config, body) {
     body()
     notifyGH(config, "${config.description} - SUCCESS", 'SUCCESS')
   } catch(ex) {
-    notifyGH(config, "${config.description} - FAIlED", 'FAILURE')
+    notifyGH(config, "${config.description} - FAILED", 'FAILURE')
     throw ex
   }
 }
