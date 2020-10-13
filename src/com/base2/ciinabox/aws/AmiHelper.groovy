@@ -87,6 +87,7 @@ class AmiHelper implements Serializable {
       }
     }
     def copyImageResult = client.copyImage(copyImageRequest)
+    client = null
     return String.valueOf(copyImageResult.getImageId());
   }
 
@@ -111,15 +112,16 @@ class AmiHelper implements Serializable {
     for (Tag tag : image.getTags()) {
       targetClient.createTags(new CreateTagsRequest().withResources(copyImageId).withTags(tag))
     }
+    sourceClient = null
+    targetClient = null
   }
 
   def shareAMI(shareRegion, ami, accounts) {
-    def clientBuilder = new AwsClientBuilder([
+    def client = new AwsClientBuilder([
       region: shareRegion,
       awsAccountId: accountId,
       role: iamRole
-    ])
-    def client = clientBuilder.ec2()
+    ]).ec2()
 
     def launchPermission = []
     accounts.each { account ->
@@ -139,6 +141,7 @@ class AmiHelper implements Serializable {
         modifySnapshotAttribute(client, snapshot, accounts)
       }
     }
+    client = null
   }
 
   private void getEbsSnapshot(client, ami) {
@@ -199,10 +202,11 @@ class AmiHelper implements Serializable {
             log("We seem to be timing out ${ex}...ignoring")
         }
       }
-
+      client = null
       return true
     } catch(Exception e) {
       log("AMI: ${ami} in ${amiRegion} copy failed")
+      client = null
       return false
     }
   }
