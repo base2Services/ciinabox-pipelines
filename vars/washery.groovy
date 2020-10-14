@@ -55,7 +55,7 @@ def call(body) {
         opt = "${opts} -I ${config.instanceSize}"
     }
     
-    def command = "./main.sh ${opts}"
+    def command = "cd /opt/washery && ./main.sh ${opts}"
 
     echo("running washery with command: ${command}")
 
@@ -64,18 +64,14 @@ def call(body) {
             if (s3cmd) {
                 sh(script: s3cmd, label: 'copy script to s3')
             }
-            dir('/opt/washery') {
-                sh(script: command, label: 'washery')
-            }
+            sh(script: command, label: 'washery')
         }
     } else {
         withAWS(region: config.region) {
             if (s3cmd) {
                 sh(script: s3cmd, label: 'copy script to s3')
             }
-            dir('/opt/washery') {
-                sh(script: command, label: 'washery')
-            }
+            sh(script: command, label: 'washery')
         }   
     }
 
