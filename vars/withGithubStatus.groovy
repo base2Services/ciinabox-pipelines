@@ -56,11 +56,13 @@ def notifyGH(config, description, status) {
     status: status
 }
 
+@NonCPS
 def githubRepoFromUrl(githubUrl) {
   //GIT_URL=https://github.com/base2services/ciinabox-pipelines.git
   return githubUrl.replace('https://github.com/','').replace('.git', '').split('/')
 }
 
+@NonCPS
 def githubStatusFromBuildResult(result) {
   switch(result) {
     case 'SUCCESS':
