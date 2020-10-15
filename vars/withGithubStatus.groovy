@@ -48,12 +48,19 @@ def notifyGH(config, description, status, branch, githubUrl = null) {
     error('must supply account/repo or env.GIT_URL')
   }
 
+  def sha = null
+  if(config.gitSha) {
+    sha = config.gitSha
+  } else {
+    sha = getRealLastCommit(branch)
+  }
+
   githubNotify credentialsId: creds,
     account: ghAccount, 
     repo: ghRepo, 
     context: config.context,
     description: description,
-    sha: config.get('gitSha', getRealLastCommit(env.GIT_BRANCH)), 
+    sha: sha, 
     status: status
 }
 
