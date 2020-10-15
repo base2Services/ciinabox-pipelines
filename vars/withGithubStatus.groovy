@@ -34,8 +34,18 @@ def call(config, body) {
 
 def notifyGH(config, description, status) {
   def creds = config.get('credentialsId', 'github')
-  def ghAccount = config.get('account', githubRepoFromUrl(env.GIT_URL)[0])
-  def ghRepo = config.get('repo',  githubRepoFromUrl(env.GIT_URL)[1])
+  def ghAccount = null
+  def ghRepo = null
+  if(config.account && config.repo) {
+    ghAccount = config.account
+    ghRepo = config.repo
+  } else if(env.GIT_URL) {
+    def gh = githubRepoFromUrl(env.GIT_URL)
+    ghAccount = gh[0]
+    ghRepo = gh[1]
+  } else {
+    error('must supply account/repo or env.GIT_URL')
+  }
 
   githubNotify credentialsId: creds,
     account: ghAccount, 
