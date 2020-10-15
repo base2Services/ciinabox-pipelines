@@ -23,24 +23,25 @@ withGithubStatus(
 
 def call(config, body) {
   try {
-    notifyGH(config, "${config.description} - PENDING", 'PENDING')
+    def branch = config.get(branch, env.GIT_BRANCH)
+    notifyGH(config, "${config.description} - PENDING", 'PENDING', branch, env.GIT_URL)
     body()
-    notifyGH(config, "${config.description} - SUCCESS", 'SUCCESS')
+    notifyGH(config, "${config.description} - SUCCESS", 'SUCCESS', branch, env.GIT_URL)
   } catch(ex) {
-    notifyGH(config, "${config.description} - FAILED", 'FAILURE')
+    notifyGH(config, "${config.description} - FAILED", 'FAILURE', branch, env.GIT_URL)
     throw ex
   }
 }
 
-def notifyGH(config, description, status) {
+def notifyGH(config, description, status, branch, githubUrl = null) {
   def creds = config.get('credentialsId', 'github')
   def ghAccount = null
   def ghRepo = null
   if(config.account && config.repo) {
     ghAccount = config.account
     ghRepo = config.repo
-  } else if(env.GIT_URL) {
-    def gh = githubRepoFromUrl(env.GIT_URL)
+  } else if(githubUrl) {
+    def gh = githubRepoFromUrl(githubUrl)
     ghAccount = gh[0]
     ghRepo = gh[1]
   } else {
