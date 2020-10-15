@@ -22,8 +22,8 @@ withGithubStatus(
 ************************************/
 
 def call(config, body) {
+  def branch = config.get(branch, env.GIT_BRANCH)
   try {
-    def branch = config.get(branch, env.GIT_BRANCH)
     notifyGH(config, "${config.description} - PENDING", 'PENDING', branch, env.GIT_URL)
     body()
     notifyGH(config, "${config.description} - SUCCESS", 'SUCCESS', branch, env.GIT_URL)
