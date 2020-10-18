@@ -52,12 +52,12 @@ def call(body) {
     }
 
     if (config.instanceSize) {
-        opt = "${opts} -I ${config.instanceSize}"
+        opts = "${opts} -I ${config.instanceSize}"
     }
 
     if (config.accountId && config.role) {
-        opt = "${opts} -a ${config.accountId}"
-        opt = "${opts} -R ${config.role}"
+        opts = "${opts} -a ${config.accountId}"
+        opts = "${opts} -R ${config.role}"
     }
         
     def command = "cd /opt/washery && ./main.sh ${opts}"
