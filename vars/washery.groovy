@@ -54,26 +54,32 @@ def call(body) {
     if (config.instanceSize) {
         opt = "${opts} -I ${config.instanceSize}"
     }
-    
+
+    if (config.accountId && config.role) {
+        opt = "${opts} -a ${config.accountId}"
+        opt = "${opts} -R ${config.role}"
+    }
+        
     def command = "cd /opt/washery && ./main.sh ${opts}"
+
+    if (s3cmd) {
+        echo("copying the sql script to s3 bucket ${config.scriptBucket}")
+        if (config.accountId && config.role) {
+            withAWS(region: config.region, role: config.role, roleAccount: config.accountId, duration: config.get('sessionDuration', 900), roleSessionName: 'washery') {
+                sh(script: s3cmd, label: 'copy script to s3')
+            }
+        } else {
+            withAWS(region: config.region) {
+                sh(script: s3cmd, label: 'copy script to s3')
+            }
+        }
+    }
 
     echo("running washery with command: ${command}")
 
-    if (config.accountId && config.role) {
-        withAWS(region: config.region, role: config.role, roleAccount: config.accountId, duration: config.get('sessionDuration', 3600), roleSessionName: 'washery') {
-            if (s3cmd) {
-                sh(script: s3cmd, label: 'copy script to s3')
-            }
-            sh(script: command, label: 'washery')
-        }
-    } else {
-        withAWS(region: config.region) {
-            if (s3cmd) {
-                sh(script: s3cmd, label: 'copy script to s3')
-            }
-            sh(script: command, label: 'washery')
-        }   
-    }
+    withAWS(region: config.region) {
+        sh(script: command, label: 'washery')
+    } 
 
     echo("washery proccess completed")
 
