@@ -63,12 +63,12 @@ def handleDBCluster(client, config) {
   def request = new DescribeDBClusterSnapshotsRequest()
     .withDBClusterIdentifier(config.resource)
 
-  def snapshotsResult =  client.describeDBClusterSnapshots(request)
-  def snapshots = snapshotsResult.getDBClusterSnapshots()
-
   if (config.snapshotType) {
     request.setSnapshotType(config.snapshotType)
   } 
+
+  def snapshotsResult =  client.describeDBClusterSnapshots(request)
+  def snapshots = snapshotsResult.getDBClusterSnapshots()
 
   if(snapshots.size() > 0) {
     if(sortBy.toLowerCase() == 'latest') {
