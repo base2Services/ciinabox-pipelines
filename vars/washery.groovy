@@ -16,8 +16,7 @@ washery(
     instanceType: 'instance|cluster', // (required, cluster if using aurora, instance for mysql|postgres|sql-server rds)
     instanceSize: 'db.t3.small', // (optional, overide the default instance sizes set by washery)
     dumpBucket: 's3-bucket-name', // (optional, specify if dumping database to a s3 bucket)
-    saveSnapshot: true|false, // (optional, defaults to true. Determines if a snapshot is taken of the scrubbed database)
-    databasePasswordArn: 'arn:aws:ssm:us-east-1:00000000000:parameter/my/database/password'
+    saveSnapshot: true|false // (optional, defaults to true. Determines if a snapshot is taken of the scrubbed database)
 )
 ************************************/
 
@@ -34,9 +33,7 @@ def call(body) {
     def s3cmd = ""
     def opts = ""
     opts = "${opts} -s ${config.snapshotId}"
-    opts = "${opts} -i ${config.instanceType}"
-    opts = "${opts} -p ${config.databasePasswordArn}"
-    
+    opts = "${opts} -i ${config.instanceType}"    
     
     if (config.sqlScript && config.scriptBucket) {
         s3cmd = "aws s3 cp ${config.sqlScript} s3://${config.scriptBucket}/washery/script/${config.sqlScript} --region ${config.region}"
@@ -88,6 +85,6 @@ def call(body) {
     }
 
     if (config.dumpBucket) {
-        env['WASHERY_S3_DUMP'] = "s3://${config.dumpBucke}/washery/${config.snapshotId}-${timestamp}"
+        env['WASHERY_S3_DUMP'] = "s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}"
     }
 }
