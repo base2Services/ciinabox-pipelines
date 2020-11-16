@@ -91,8 +91,10 @@ def lookupAMI(config) {
     if(config.amiBranch) {
       images = filterAMIBranch(images, config.amiBranch.replaceAll("/", "-"))
     }
+    ec2 = null
     return images.get(findNewestImage(images))
   }
+  ec2 = null
   return null
 }
 

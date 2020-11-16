@@ -69,7 +69,7 @@ def call(body) {
     } else {
       throw new GroovyRuntimeException("Failed to copy ${copiedAMI} to ${copyRegion}!")
     }
-
+    client = null
   }
 
   println "Copy and share complete for AMI ${sourceAMI} for ${config.copyRegions} region(s) to accounts ${config.shareAccounts}"

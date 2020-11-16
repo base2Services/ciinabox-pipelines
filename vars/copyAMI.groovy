@@ -49,6 +49,8 @@ def call(body) {
   if (config.waitOnCopy) {
     wait(targetClient, config.copyRegion, copyImageId) 
   }
+  sourceClient = null
+  targetClient = null
   return copyImageId
 }
 
