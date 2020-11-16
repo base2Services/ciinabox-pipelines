@@ -33,6 +33,9 @@ def call(body) {
       modifySnapshotAttribute(client,snapshot,config)
     }
   }
+  //set to null to avoid serialization issue
+  client = null
+  clientBuilder = null
 }
 
 def shareAmi(client,config) {
@@ -48,6 +51,7 @@ def shareAmi(client,config) {
     .withAttribute('launchPermission')
     .withLaunchPermission(launchPermissionModifications)
   )
+  
 }
 
 def modifySnapshotAttribute(client,snapshot,config) {
