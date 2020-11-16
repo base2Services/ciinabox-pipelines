@@ -64,13 +64,11 @@ def notifyGH(config, description, status, branch, githubUrl = null) {
     status: status
 }
 
-@NonCPS
 def githubRepoFromUrl(githubUrl) {
   //GIT_URL=https://github.com/base2services/ciinabox-pipelines.git
   return githubUrl.replace('https://github.com/','').replace('.git', '').split('/')
 }
 
-@NonCPS
 def githubStatusFromBuildResult(result) {
   switch(result) {
     case 'SUCCESS':
@@ -80,7 +78,6 @@ def githubStatusFromBuildResult(result) {
   }
 }
 
-@NonCPS
 def String getRealLastCommit(branch_name) {
     def lastCommit=""
     
