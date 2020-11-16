@@ -38,6 +38,7 @@ def call(body) {
   clientBuilder = null
 }
 
+@NonCPS
 def shareAmi(client,config) {
   def launchPermission = []
   config.accounts.each { account ->
@@ -54,6 +55,7 @@ def shareAmi(client,config) {
   
 }
 
+@NonCPS
 def modifySnapshotAttribute(client,snapshot,config) {
   def volumePermission = []
   config.accounts.each { account ->
@@ -68,6 +70,7 @@ def modifySnapshotAttribute(client,snapshot,config) {
   )
 }
 
+@NonCPS
 def getEbsSnapshot(client,config) {
   def result = client.describeImages(new DescribeImagesRequest().withImageIds(config.ami))
   def ebsSnaphots = []
