@@ -23,11 +23,14 @@ createChangeSet(
 )
 ************************************/
 
+@Grab(group='com.jakewharton.fliptables', module='fliptables', version='1.1.0')
+
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.CloudformationStack
 
 import com.amazonaws.services.cloudformation.model.CreateChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeChangeSetRequest
+import com.amazonaws.services.cloudformation.model.ListChangeSetsRequest
 import com.amazonaws.services.cloudformation.model.Parameter
 import com.amazonaws.services.cloudformation.model.Tag
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException
@@ -39,9 +42,11 @@ import com.amazonaws.waiters.WaiterUnrecoverableException
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest
 
+import com.jakewharton.fliptables.FlipTable
+
 def call(body) {
   def config = body
-  
+
   def changeSetName = "cs-${UUID.randomUUID().toString()}"
   
   def clientBuilder = new AwsClientBuilder([
@@ -53,18 +58,35 @@ def call(body) {
     
   def cfclient = clientBuilder.cloudformation()
   createChangeSet(cfclient,changeSetName,config)
-  def success = wait(cfclient,changeSetName,config.stackName, config.ignoreEmptyChanges)
-  
-  if (success) {
-    def request = new DescribeChangeSetRequest()
-      .withStackName(config.stackName)
-      .withChangeSetName(changeSetName)
-    def changes = cfclient.describeChangeSet(request).getChanges()
-    
-    if (changes) {
-      printChanges(changes,config.stackName)
+  wait(cfclient,changeSetName,config.stackName)
+
+  def stackChanges = getChangeSetDetails(cfclient, config.stackName, changeSetName)
+
+  if (stackChanges) {
+    def changes = [collectChanges(stackChanges, config.stackName)]
+    def nestedStacks = collectNestedStacks(stackChanges)
+
+    def nestedChanges = null
+    def nestedChangeList = null
+    def nestedNestedStacks = null
+    def nestedChangeSet = null
+
+    if (nestedStacks) {
+      nestedStacks.each { stack ->
+        echo("Getting changeset for nested stack ${stack}")
+        nestedChangeSet = getNestedChangeSet(cfclient, changeSetName, stack)
+        if (nestedChangeSet) {
+          wait(cfclient, nestedChangeSet, stack)
+          nestedChanges = getChangeSetDetails(cfclient, stack, nestedChangeSet)
+          changes << collectChanges(nestedChanges, stack)
+        } else {
+          echo("Unable to find changes set for nested stack ${stack}")
+        }
+      }
     }
+    printChanges(changes,config.stackName)
   }
+
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
   env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
 }
@@ -110,22 +132,36 @@ def createChangeSet(cfclient,changeSetName,config) {
     request.withTags(tags)
   }
 
+  if (config.nestedStacks) {
+    request.withIncludeNestedStacks(true)
+  }
+
   echo "Creating change set ${changeSetName} for stack ${config.stackName} with operation ${changeSetType}"
 
   try {
     cfclient.createChangeSet(request)
   } catch (AlreadyExistsException ex) {
-    error "Change set with name ${changeSetName} already exists. Use a different name and try again."
+    error("Change set with name ${changeSetName} already exists. Use a different name and try again.")
   } catch (AmazonCloudFormationException ex) {
     if (ex.getErrorMessage().find(/^Parameters:(.*)must\shave\svalues$/)) {
-      error "Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}"
+      error("Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}")
     } else {
-      error "Failed to create the changeset due to error: ${ex.getErrorMessage()}"
+      error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
     }
   }
 }
 
-def wait(cfclient,changeSetName,stackName,ignoreEmptyChanges) {
+def getNestedChangeSet(cfclient, changeSetName, stackName) {
+  def listRequest = new ListChangeSetsRequest()
+    .withStackName(stackName)
+
+  def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
+  def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
+
+  return selected ? selected.getChangeSetName() : null
+}
+
+def wait(cfclient,changeSetName,stackName) {
   echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
 
   def request = new DescribeChangeSetRequest()
@@ -137,75 +173,83 @@ def wait(cfclient,changeSetName,stackName,ignoreEmptyChanges) {
   } catch (WaiterUnrecoverableException ex) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
-      error "Change set ${changeSetName} for stack ${stackName} ${changeset.getStatus()} because ${changeset.getStatusReason()}"
+      error("Change set ${changeSetName} for stack ${stackName} ${changeset.getStatus()} because ${changeset.getStatusReason()}")
     } else {
-      error "Failed to wait for the changeset due to error: ${ex.getErrorMessage()}"
+      error("Failed to wait for the changeset due to error: ${ex.getErrorMessage()}")
     }
   }
   
   return true
 }
 
-def printChanges(changes,stackName) {
-  def changeString = "\n" + " ${stackName} ".center(134,'-') + "\n\n"
+def getChangeSetDetails(cfclient, stackName, changeSetName) {
+  def request = new DescribeChangeSetRequest()
+      .withStackName(stackName)
+      .withChangeSetName(changeSetName)
+  return cfclient.describeChangeSet(request).getChanges()
+}
+
+@NonCPS
+def collectChanges(changes, stackName) {
+  def changeList = []
   
   changes.each {
-    
     def change = it.getResourceChange()
-    def logical = change.getLogicalResourceId()
-    def resourceType = change.getResourceType()
-    
-    def action = change.getAction()
-    def replace = (change.getReplacement().equals('True') ? 'Replace' : 'In-Place')
-    def operation = (action.equals('Modify') ? "${action} (${replace})" : action)
-    
-    changeString += seperator([20,50,60])
-    changeString += values(['Operation': 20, 'LogicalResourceId': 50, 'ResourceType': 60])
-    changeString += seperator([20,50,60])
-    changeString += values([(operation): 20, (logical): 50, (resourceType): 60])
+    def changeMap = [stack: stackName]
 
-        
-    if (change.getAction().equals('Modify')) {
-      changeString += seperator([20,39,10,9,20,29])
-      changeString += values(['Attribute': 60, 'ChangeSource': 20, 'RequiresRecreation': 20, 'CausingEntity': 29])
-      changeString += seperator([60,20,20,29])
-      
+    changeMap.action = change.getAction()
+    changeMap.logical = change.getLogicalResourceId()
+    changeMap.resourceType = change.getResourceType()
+    changeMap.replace = change.getReplacement() ? change.getReplacement() : 'N/A'
+    changeMap.details = []
+
+    if (changeMap.action.equals('Modify')) {
       def details = change.getDetails()
-      
       details.each {
-        def target = it.getTarget()
-        def att = target.getAttribute()
-        def changeSource = it.getChangeSource().concat(" ") //conact space due to a wierd padding bug
-        def causingEntity = (it.getCausingEntity() ? it.getCausingEntity() : "DirectModification")
-        if (target.getAttribute().equals('Properties')) {
-          att = "Property -> ${target.getName()}"
-        }
-        changeString += values([(att): 60, (changeSource): 20, (target.getRequiresRecreation()): 20, (causingEntity): 29])
+        changeMap.details << it.getTarget().getName()
       }
-      changeString += seperator([60,20,20,29])
-      
-    } else {
-      changeString += seperator([20,50,60])
     }
-    
-    changeString += "\n"
+
+    changeList << changeMap
   }
-  
+
+  return changeList.sort { c1, c2 -> c1.action <=> c2.action }
+}
+
+@NonCPS
+def collectNestedStacks(changes) {
+  def nestedStacks = []
+
+  changes.each {
+    def change = it.getResourceChange()
+    if (change.getResourceType().equals('AWS::CloudFormation::Stack')) {
+      if (change.getPhysicalResourceId()) {
+        nestedStacks << change.getPhysicalResourceId()
+      }
+    }
+  }
+
+  return nestedStacks
+}
+
+def printChanges(changeList,stackName) {
+  def border = null
+  def title = null
+  def changeString = ""
+  String[] headers = ['Operation', 'LogicalResourceId', 'ResourceType', 'Replace', 'Details']
+  ArrayList data = []
+
+  changeList.each { changes ->
+    border = "\n+" + "-".multiply(7) + "+" + "-".multiply(changes.getAt(0).stack.length() + 2) + "+"
+    changeString += "${border}\n| Stack | ${changes.getAt(0).stack} |${border}" + "\n"
+    data = []
+    if (changes) {
+      changes.each {
+        data.add([it.action, it.logical, it.resourceType, it.replace, it.details.join('\n')])
+      }
+      changeString += FlipTable.of(headers, data as String[][]).toString()
+    }
+  }
+
   echo changeString
-}
-
-def seperator(list=[]) {
-  line = '+'
-  list.each { line += '-'.multiply(it) + '+' }
-  line += "\n"
-  return line
-}
-
-def values(list=[:]) {
-  line = '|'
-  list.each { k,v ->
-    line += ' ' + k.padRight(v-1) + '|'
-  }
-  line += "\n"
-  return line
 }
