@@ -21,6 +21,28 @@ createChangeSet(
   ],
   capabilities: false // (optional, set to false to remove capabilities or supply a list of capabilities. Defaults to [CAPABILITY_IAM,CAPABILITY_NAMED_IAM])
 )
+
+returns Map with summarised stack changes
+[
+  changeset: 'cs-0000-0000-0000-0000',
+  stack: 'my-stack',
+  region: 'ap-southeast-2',
+  changes: [
+    [
+      stack: 'my-stack',
+      action: 'Add|Modify|Remove',
+      logical:  'MyInstance',
+      resourceType: 'AWS::EC2Instance', 
+      replace: 'True|Conditional|N/A',
+      details:[
+        [
+          name: 'InstanceType',
+          attribute: 'Properties'
+        ]
+      ]
+    ]
+  ]
+]
 ************************************/
 
 @Grab(group='com.jakewharton.fliptables', module='fliptables', version='1.1.0')
@@ -61,9 +83,15 @@ def call(body) {
   wait(cfclient,changeSetName,config.stackName)
 
   def stackChanges = getChangeSetDetails(cfclient, config.stackName, changeSetName)
+  def changeMap = [
+    changeset: changeSetName,
+    stack: config.stackname,
+    region: config.region,
+    changes: []
+  ]
 
   if (stackChanges) {
-    def changes = [collectChanges(stackChanges, config.stackName)]
+    changeMap.changes << collectChanges(stackChanges, config.stackName)
     def nestedStacks = collectNestedStacks(stackChanges)
 
     def nestedChanges = null
@@ -78,17 +106,19 @@ def call(body) {
         if (nestedChangeSet) {
           wait(cfclient, nestedChangeSet, stack)
           nestedChanges = getChangeSetDetails(cfclient, stack, nestedChangeSet)
-          changes << collectChanges(nestedChanges, stack)
+          changeMap.changes << collectChanges(nestedChanges, stack)
         } else {
           echo("Unable to find changes set for nested stack ${stack}")
         }
       }
     }
-    printChanges(changes,config.stackName)
+    printChanges(changeMap.changes,config.stackName)
   }
 
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
   env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
+
+  return changeMap
 }
 
 def createChangeSet(cfclient,changeSetName,config) {
@@ -206,7 +236,7 @@ def collectChanges(changes, stackName) {
     if (changeMap.action.equals('Modify')) {
       def details = change.getDetails()
       details.each {
-        changeMap.details << it.getTarget().getName()
+        changeMap.details << [name: it.getTarget().getName(), attribute: it.getTarget().getAttribute()]
       }
     }
 
@@ -244,8 +274,8 @@ def printChanges(changeList,stackName) {
     changeString += "${border}\n| Stack | ${changes.getAt(0).stack} |${border}" + "\n"
     data = []
     if (changes) {
-      changes.each {
-        data.add([it.action, it.logical, it.resourceType, it.replace, it.details.join('\n')])
+      changes.each { change ->
+        data.add([change.action, change.logical, change.resourceType, change.replace, change.details.collect{it.name}.join('\n')])
       }
       changeString += FlipTable.of(headers, data as String[][]).toString()
     }
