@@ -85,7 +85,7 @@ def call(body) {
   def stackChanges = getChangeSetDetails(cfclient, config.stackName, changeSetName)
   def changeMap = [
     changeset: changeSetName,
-    stack: config.stackname,
+    stack: config.stackName,
     region: config.region,
     changes: []
   ]
