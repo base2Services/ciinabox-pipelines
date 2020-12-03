@@ -90,8 +90,11 @@ class AwsClientBuilder implements Serializable {
 
   def s3() {
     def cb = new AmazonS3ClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
