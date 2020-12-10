@@ -10,6 +10,7 @@
    template: template.yaml,
    source_bucket: source.bucket,
    prefix: cloudformation/${PROJECT}/${BRANCH_NAME}/${BUILD_NUMBER},
+   noFailOnEmptyChangeset: true||false, # if there are no changes then don't exit/fail
    uploadToS3: true||false, #if the template is too large the file has to be re-uploaded to s3. Requires PutObject permissions from the assumed account to the source bucket
    parameters: [
      'ENVIRONMENT_NAME' : 'dev',
@@ -27,7 +28,7 @@ def call(body) {
 
   sh "aws s3 cp s3://${config.source_bucket}/${config.prefix}/${compiled_template} ${compiled_template}"
 
-  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --capabilities CAPABILITY_IAM --region ${config.region} --no-fail-on-empty-changeset"
+  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --capabilities CAPABILITY_IAM --region ${config.region}"
 
   if (config.parameters != null && !config.parameters.empty) {
     options = options.concat(" --parameter-overrides")
@@ -38,6 +39,10 @@ def call(body) {
 
   if (config.uploadToS3 != null && config.uploadToS3) {
     options = options.concat(" --s3-bucket ${config.source_bucket} --s3-prefix ${config.prefix}")
+  }
+
+  if (config.noFailOnEmptyChangeset != null && config.noFailOnEmptyChangeset == "true") {
+    options = options.concat(" --no-fail-on-empty-changeset")
   }
 
   println("deploying ${compiled_template} to environment ${config.environment}")
