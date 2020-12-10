@@ -27,7 +27,7 @@ def call(body) {
 
   sh "aws s3 cp s3://${config.source_bucket}/${config.prefix}/${compiled_template} ${compiled_template}"
 
-  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --capabilities CAPABILITY_IAM --region ${config.region}"
+  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --capabilities CAPABILITY_IAM --region ${config.region} --no-fail-on-empty-changeset"
 
   if (config.parameters != null && !config.parameters.empty) {
     options = options.concat(" --parameter-overrides")
