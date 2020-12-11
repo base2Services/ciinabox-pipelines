@@ -69,7 +69,7 @@ import com.jakewharton.fliptables.FlipTable
 def call(body) {
   def config = body
 
-  def changeSetName = "cs-${UUID.randomUUID().toString()}"
+  def changeSetName = config.get('changeSetName', "cs-${UUID.randomUUID().toString()}")
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
