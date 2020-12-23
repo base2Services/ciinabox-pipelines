@@ -10,7 +10,8 @@ ecsTask (
   launchType: 'FARGATE',
   subnets: ['subnet-12345'],
   securityGroup: ['sg-12345'],
-  credsDuration: '3600'
+  credsDuration: '3600',
+  platformVersion: 'LATEST'
 )
 ************************************/
 
@@ -72,6 +73,7 @@ def startTask(client, config) {
     def awsVpcConfiguration = new AwsVpcConfiguration().withSubnets(config.subnets).withSecurityGroups(config.securityGroup)
     def networkConfiguration = new NetworkConfiguration().withAwsvpcConfiguration(awsVpcConfiguration)
     taskRequest.withNetworkConfiguration(networkConfiguration)
+    taskRequest.platformVersion = config.platformVersion ? config.platformVersion : "LATEST"
   }
 
 
