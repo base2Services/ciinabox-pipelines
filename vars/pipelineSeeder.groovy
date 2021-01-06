@@ -22,6 +22,7 @@ def call(body) {
         when {
           anyOf {
             branch 'master';
+            branch 'main';
           }
         }
         steps {
