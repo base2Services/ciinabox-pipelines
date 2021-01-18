@@ -24,6 +24,8 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
 import com.amazonaws.services.cloudformation.waiters.AmazonCloudFormationWaiters
 import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.waiters.WaiterUnrecoverableException
+import com.amazonaws.waiters.NoOpWaiterHandler
+import java.util.concurrent.Future
 
 def call(body) {
   def config = body
@@ -48,38 +50,55 @@ def call(body) {
     changeSetName = env["${stackNameUpper}_CHANGESET_NAME"]
   }
 
-  def request = new ExecuteChangeSetRequest()
-    .withChangeSetName(changeSetName)
-    .withStackName(config.stackName)
-  
   echo "Executing change set ${changeSetName}"
+  executeChangeSet(cfclient, config.stackName, changeSetName)
+  def success = wait(cfclient, config.stackName, changeSetType)
 
-  cfclient.executeChangeSet(request)
-
-  def waitRequest = new DescribeStacksRequest()
-    .withStackName(config.stackName)
-    
-  def waitParameter = new WaiterParameters(waitRequest)
-  def waiter = new AmazonCloudFormationWaiters(cfclient)
-
-  echo "Waiting for change set ${changeSetName} to ${changeSetType}"
-  
-  try {
-    if (changeSetType == 'CREATE') {
-      waiter.stackCreateComplete().run(waitParameter)
-    } else {
-      waiter.stackUpdateComplete().run(waitParameter)
-    }
-  } catch (WaiterUnrecoverableException ex) {
-    if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
-      def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
-      def table = events.getFailedEventsTable()
-      echo table
-      error "Changeset ${changeSetName} for stack ${config.stackName} failed to execute."
-    } else {
-      error "Failed to wait for the changeset ${changeSetName} to execute due to error: ${ex.getErrorMessage()}"
-    }
+  if (!success) {
+    def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
+    echo events.getFailedEventsTable()
+    error "${config.stackName} changeset ${changeSetName} failed to execute."
   }
-    
+  
   echo "Change set ${changeSetName} ${changeSetType}D"
+}
+
+@NonCPS
+def executeChangeSet(cfclient, stackName, changeSetName) {
+  cfclient.executeChangeSet(new ExecuteChangeSetRequest()
+    .withChangeSetName(changeSetName)
+    .withStackName(stackName))
+}
+
+@NonCPS
+def wait(cfclient, stackName, changeSetType) {
+  def waiter = null
+  switch(changeSetType) {
+    case 'CREATE':
+      waiter = cfclient.waiters().stackCreateComplete()
+      break
+    default:
+      waiter = cfclient.waiters().stackUpdateComplete()
+      break
+  }
+
+  try {
+    Future future = waiter.runAsync(
+      new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
+      new NoOpWaiterHandler()
+    )
+    while(!future.isDone()) {
+      try {
+        echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
+        Thread.sleep(10000)
+      } catch(InterruptedException ex) {
+          // suppress and continue
+      }
+    }
+  } catch(Exception ex) {
+    echo "execute changeset ${changeSetType.toLowerCase()} failed with error ${ex.getMessage()}"
+    return false
+  }
+  
+  return true
 }
