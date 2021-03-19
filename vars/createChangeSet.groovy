@@ -78,11 +78,10 @@ def call(body) {
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env])
     
-  def cfclient = clientBuilder.cloudformation()
-  createChangeSet(cfclient,changeSetName,config)
-  wait(cfclient,changeSetName,config.stackName)
+  createChangeSet(clientBuilder,changeSetName,config)
+  wait(clientBuilder,changeSetName,config.stackName)
 
-  def stackChanges = getChangeSetDetails(cfclient, config.stackName, changeSetName)
+  def stackChanges = getChangeSetDetails(clientBuilder, config.stackName, changeSetName)
   def changeMap = [
     changeset: changeSetName,
     stack: config.stackName,
@@ -102,10 +101,10 @@ def call(body) {
     if (nestedStacks) {
       nestedStacks.each { stack ->
         echo("Getting changeset for nested stack ${stack}")
-        nestedChangeSet = getNestedChangeSet(cfclient, changeSetName, stack)
+        nestedChangeSet = getNestedChangeSet(clientBuilder, changeSetName, stack)
         if (nestedChangeSet) {
-          wait(cfclient, nestedChangeSet, stack)
-          nestedChanges = getChangeSetDetails(cfclient, stack, nestedChangeSet)
+          wait(clientBuilder, nestedChangeSet, stack)
+          nestedChanges = getChangeSetDetails(clientBuilder, stack, nestedChangeSet)
           changeMap.changes << collectChanges(nestedChanges, stack)
         } else {
           echo("Unable to find changes set for nested stack ${stack}")
@@ -121,7 +120,8 @@ def call(body) {
   return changeMap
 }
 
-def createChangeSet(cfclient,changeSetName,config) {
+def createChangeSet(clientBuilder,changeSetName,config) {
+  def cfclient = clientBuilder.cloudformation()
   def cfstack = new CloudformationStack(cfclient, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
 
@@ -178,20 +178,25 @@ def createChangeSet(cfclient,changeSetName,config) {
     } else {
       error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
     }
+  } finally {
+      cfclient = null
   }
 }
 
-def getNestedChangeSet(cfclient, changeSetName, stackName) {
+def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
+  def cfclient = clientBuilder.cloudformation()
   def listRequest = new ListChangeSetsRequest()
     .withStackName(stackName)
 
   def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
   def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
 
+  cfclient = null
   return selected ? selected.getChangeSetName() : null
 }
 
-def wait(cfclient,changeSetName,stackName) {
+def wait(clientBuilder,changeSetName,stackName) {
+  def cfclient = clientBuilder.cloudformation()
   echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
 
   def request = new DescribeChangeSetRequest()
@@ -207,16 +212,21 @@ def wait(cfclient,changeSetName,stackName) {
     } else {
       error("Failed to wait for the changeset due to error: ${ex.getErrorMessage()}")
     }
+  } finally {
+    cfclient = null
   }
   
   return true
 }
 
-def getChangeSetDetails(cfclient, stackName, changeSetName) {
+def getChangeSetDetails(clientBuilder, stackName, changeSetName) {
+  def cfclient = clientBuilder.cloudformation()
   def request = new DescribeChangeSetRequest()
       .withStackName(stackName)
       .withChangeSetName(changeSetName)
-  return cfclient.describeChangeSet(request).getChanges()
+  def cs =  cfclient.describeChangeSet(request).getChanges()
+  cfclient = null
+  return cs
 }
 
 @NonCPS
