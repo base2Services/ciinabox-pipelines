@@ -61,7 +61,6 @@ def call(body) {
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
-@NonCPS
 def executeChangeSet(clientBuilder, stackName, changeSetName) {
   def cfclient = clientBuilder.cloudformation()
   try {
@@ -73,7 +72,6 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
   }
 }
 
-@NonCPS
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
   def waiter = null
