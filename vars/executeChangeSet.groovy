@@ -39,6 +39,7 @@ def call(body) {
     
   def cfstack = new CloudformationStack(clientBuilder, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
+  cfstack = null
   def changeSetName = null
   
   if (config.changeSetName) {
