@@ -23,7 +23,7 @@ class CloudformationStackEvents implements Serializable {
 
   def getClient() {
       if(builder != null) {
-          return clientBuilder.cloudformation()
+          return builder.cloudformation()
       } else {
           return client
       }
