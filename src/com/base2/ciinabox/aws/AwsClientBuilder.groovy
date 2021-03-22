@@ -104,6 +104,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+
   def cloudformation() {
     def cb = new AmazonCloudFormationClientBuilder().standard()
       .withRegion(region)
@@ -113,8 +114,9 @@ class AwsClientBuilder implements Serializable {
     if(creds != null) {
       cb.withCredentials(new AWSStaticCredentialsProvider(creds))
     }
-
-    return cb.build()
+    def client = cb.build()
+    cb = null
+    return client
   }
 
   private def config() {
