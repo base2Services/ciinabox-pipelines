@@ -37,9 +37,7 @@ def call(body) {
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env])
     
-  def cfclient = clientBuilder.cloudformation()
-
-  def cfstack = new CloudformationStack(cfclient, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
   def changeSetName = null
   
@@ -51,11 +49,11 @@ def call(body) {
   }
 
   echo "Executing change set ${changeSetName}"
-  executeChangeSet(cfclient, config.stackName, changeSetName)
-  def success = wait(cfclient, config.stackName, changeSetType)
+  executeChangeSet(clientBuilder, config.stackName, changeSetName)
+  def success = wait(clientBuilder, config.stackName, changeSetType)
 
   if (!success) {
-    def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
+    def events = new CloudformationStackEvents(clientBuilder, config.region, config.stackName)
     echo events.getFailedEventsTable()
     error "${config.stackName} changeset ${changeSetName} failed to execute."
   }
@@ -64,14 +62,20 @@ def call(body) {
 }
 
 @NonCPS
-def executeChangeSet(cfclient, stackName, changeSetName) {
-  cfclient.executeChangeSet(new ExecuteChangeSetRequest()
-    .withChangeSetName(changeSetName)
-    .withStackName(stackName))
+def executeChangeSet(clientBuilder, stackName, changeSetName) {
+  def cfclient = clientBuilder.cloudformation()
+  try {
+    cfclient.executeChangeSet(new ExecuteChangeSetRequest()
+        .withChangeSetName(changeSetName)
+        .withStackName(stackName))
+  } finally {
+      cfclient = null
+  }
 }
 
 @NonCPS
-def wait(cfclient, stackName, changeSetType) {
+def wait(clientBuilder, stackName, changeSetType) {
+  def cfclient = clientBuilder.cloudformation()
   def waiter = null
   switch(changeSetType) {
     case 'CREATE':
@@ -97,8 +101,9 @@ def wait(cfclient, stackName, changeSetType) {
     }
   } catch(Exception ex) {
     echo "execute changeset ${changeSetType.toLowerCase()} failed with error ${ex.getMessage()}"
+    cfclient = null
     return false
   }
-  
+  cfclient = null
   return true
 }
