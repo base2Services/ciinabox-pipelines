@@ -15,12 +15,26 @@ import com.amazonaws.services.cloudformation.model.Parameter
 
 class CloudformationStack implements Serializable {
   
-  def client
+  private transient client
   def stackName
+  def builder = null
   
   CloudformationStack(client, stackName) {
     this.client = client
     this.stackName = stackName
+  }
+
+  CloudFormation(AwsClientBuilder builder, String stackName) {
+      this.builder = builder
+      this.stackName = stackName
+  }
+
+  def getClient() {
+      if(builder != null) {
+          return clientBuilder.cloudformation()
+      } else {
+          return client
+      }
   }
   
   /**
@@ -32,7 +46,7 @@ class CloudformationStack implements Serializable {
       .withStackName(stackName)
       
     try {
-      def stacks = client.describeStacks(request).getStacks()
+      def stacks = getClient().describeStacks(request).getStacks()
       def stack = stacks.find {it.getStackName().equals(stackName)}
       // if a change set has been created but the stack is not yet created
       if (stack.getStackStatus().equals('REVIEW_IN_PROGRESS')) {
@@ -61,7 +75,7 @@ class CloudformationStack implements Serializable {
     def stacks = []
     
     try {
-      stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
+      stacks = getClient().describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
     } catch (AmazonCloudFormationException ex) {
       if(!ex.getErrorMessage().contains("does not exist")){
         throw ex
@@ -129,6 +143,7 @@ class CloudformationStack implements Serializable {
       def jsonSlurper = new JsonSlurper()
       template = jsonSlurper.parseText(templateBody)
     }
+    s3Client = null
     return template
   }
 
