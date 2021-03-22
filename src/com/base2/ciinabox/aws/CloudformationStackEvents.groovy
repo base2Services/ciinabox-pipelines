@@ -5,7 +5,7 @@ import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException
 
 class CloudformationStackEvents implements Serializable {
   
-  def client
+  private transient client
   def region
   def stackName
   
@@ -13,6 +13,20 @@ class CloudformationStackEvents implements Serializable {
     this.client = client
     this.region = region
     this.stackName = stackName
+  }
+
+  CloudFormation(AwsClientBuilder builder, String region, String stackName) {
+      this.builder = builder
+      this.region = region
+      this.stackName = stackName
+  }
+
+  def getClient() {
+      if(builder != null) {
+          return clientBuilder.cloudformation()
+      } else {
+          return client
+      }
   }
   
   /** 
@@ -79,7 +93,7 @@ class CloudformationStackEvents implements Serializable {
      def results = []
      
      try {
-      results = client.describeStackEvents(request).getStackEvents()
+      results = getClient().describeStackEvents(request).getStackEvents()
     } catch (AmazonCloudFormationException ex) {
       if(ex.message.contains("does not exist")) {
         return false
