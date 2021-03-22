@@ -24,7 +24,7 @@ class CloudformationStack implements Serializable {
     this.stackName = stackName
   }
 
-  CloudFormation(AwsClientBuilder builder, String stackName) {
+  CloudformationStack(AwsClientBuilder builder, String stackName) {
       this.builder = builder
       this.stackName = stackName
   }
