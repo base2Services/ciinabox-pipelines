@@ -703,20 +703,26 @@ def s3bucketKeyFromUrl(String s3url) {
   if (domain.endsWith('.s3.amazonaws.com')) {
     return [
             bucket: domain.replace('.s3.amazonaws.com', ''),
-            key   : parts[3..parts.size() - 1].join("/")
+            key   : parts[3..-1].join("/")
+    ]
+    //format https://$bucket.s3.$region.amazonaws.com/$key
+  } else if (domain.endsWith('.amazonaws.com') && domainParts.size() > 4 && domainParts[-4].equals('s3')) {
+    return [
+            bucket: domainParts[0..-5].join('.'),
+            key: parts[3..-1].join('/')
     ]
     //format https://bucket.s3-$region.amazonaws.com/key
-  } else if (domain.endsWith('.amazonaws.com') && domainParts.size() > 3 && domainParts[domainParts.size()-3].startsWith('s3-')) {
+  } else if (domain.endsWith('.amazonaws.com') && domainParts.size() > 3 && domainParts[-3].startsWith('s3-')) {
     return [
-            bucket: domainParts[0..domainParts.size()-4].join('.'),
-            key   : parts[3..parts.size() - 1].join("/")
+            bucket: domainParts[0..-4].join('.'),
+            key   : parts[3..-1].join("/")
     ]
     //format https://s3-$region.amazonaws.com/$bucket/$key
     //format https://s3.amazonaws.com/$bucket/$key
   }else if ((domain.endsWith('.amazonaws.com') && domain.startsWith('s3-')) || (domain == 's3.amazonaws.com')) {
     return [
             bucket: parts[3],
-            key   : parts[4..parts.size() - 1].join("/")
+            key   : parts[4..-1].join("/")
     ]
   }
 }
