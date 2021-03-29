@@ -706,7 +706,7 @@ def s3bucketKeyFromUrl(String s3url) {
             key   : parts[3..-1].join("/")
     ]
     //format https://$bucket.s3.$region.amazonaws.com/$key
-  } else if domain.matches('.+\\.s3\\..+\\.amazonaws\\.com') {
+  } else if (domain.matches('.+\\.s3\\..+\\.amazonaws\\.com')) {
     return [
             bucket: domain.split('.s3.')[0],
             key: parts[3..-1].join("/")
