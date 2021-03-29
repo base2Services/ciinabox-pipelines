@@ -105,5 +105,15 @@ def wait(cfclient, stackName, changeSetType) {
     return false
   }
   
+  // check the final state of the stack to check for any false positive stack status such as ROLLBACK_COMPLETE
+  def request = new DescribeStacksRequest().withStackName(stackName)
+  def stacks = client.describeStacks(request).getStacks()
+  def finalStatus = stacks[0].getStackStatus()
+
+  if (!finalStatus.matches("UPDATE_COMPLETE|CREATE_COMPLETE")) {
+    echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${finalStatus}"
+    return false
+  }
+  
   return true
 }
