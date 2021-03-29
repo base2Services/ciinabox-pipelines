@@ -29,6 +29,12 @@ import java.util.concurrent.Future
 
 def call(body) {
   def config = body
+  def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+
+  if (env["${stackNameUpper}_CHANGESET_NAME"] == 'TRUE') {
+    echo("Skipping execution changeset as no changes have been detected ...")
+    return null
+  }
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -46,7 +52,6 @@ def call(body) {
   if (config.changeSetName) {
     changeSetName = config.changeSetName
   } else {
-    def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
     changeSetName = env["${stackNameUpper}_CHANGESET_NAME"]
   }
 

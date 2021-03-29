@@ -15,6 +15,7 @@ createChangeSet(
   parameters: [ // (optional, map of key value pairs)
     key: value
   ],
+  failOnEmptyChangeSet: true | false, // if set to false createChangeSet wont error when no changes are detected
   templateUrl: 'bucket/template.yaml' // (required, full s3 path of template),
   tags: [ // (optional, tags to add to the cloudformation stack)
     key: value
@@ -70,6 +71,8 @@ def call(body) {
   def config = body
 
   def changeSetName = config.get('changeSetName', "cs-${UUID.randomUUID().toString()}")
+  def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -78,8 +81,15 @@ def call(body) {
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env])
     
-  createChangeSet(clientBuilder,changeSetName,config)
-  wait(clientBuilder,changeSetName,config.stackName)
+  createChangeSet(clientBuilder, changeSetName, config)
+  def success = wait(clientBuilder, changeSetName, config.stackName)
+
+  def failOnEmptyChangeSet = config.get('failOnEmptyChangeSet', false)
+  // if there were no changes in our changeset 
+  if (!success && !failOnEmptyChangeSet) {
+    env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] = 'TRUE'
+    return null
+  }
 
   def stackChanges = getChangeSetDetails(clientBuilder, config.stackName, changeSetName)
   def changeMap = [
@@ -113,9 +123,6 @@ def call(body) {
     }
     printChanges(changeMap.changes,config.stackName)
   }
-
-  def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
-  env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
 
   return changeMap
 }
@@ -195,7 +202,7 @@ def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
   return selected ? selected.getChangeSetName() : null
 }
 
-def wait(clientBuilder,changeSetName,stackName) {
+def wait(clientBuilder, changeSetName, stackName) {
   def cfclient = clientBuilder.cloudformation()
   echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
 
@@ -208,10 +215,11 @@ def wait(clientBuilder,changeSetName,stackName) {
   } catch (WaiterUnrecoverableException ex) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
-      error("Change set ${changeSetName} for stack ${stackName} ${changeset.getStatus()} because ${changeset.getStatusReason()}")
-    } else {
-      error("Failed to wait for the changeset due to error: ${ex.getErrorMessage()}")
-    }
+      if (changeset.getStatusReason().contains("The submitted information didn't contain changes.")) {
+        echo("WARNING: No changes were detected when creating the changeset")
+        return false
+      }
+    throw ex
   } finally {
     cfclient = null
   }
