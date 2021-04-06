@@ -29,6 +29,12 @@ import java.util.concurrent.Future
 
 def call(body) {
   def config = body
+  def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+
+  if (env["${stackNameUpper}_CHANGESET_NAME"] == 'TRUE') {
+    echo("Skipping execution changeset as no changes have been detected ...")
+    return null
+  }
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -46,7 +52,6 @@ def call(body) {
   if (config.changeSetName) {
     changeSetName = config.changeSetName
   } else {
-    def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
     changeSetName = env["${stackNameUpper}_CHANGESET_NAME"]
   }
 
@@ -97,6 +102,16 @@ def wait(cfclient, stackName, changeSetType) {
     }
   } catch(Exception ex) {
     echo "execute changeset ${changeSetType.toLowerCase()} failed with error ${ex.getMessage()}"
+    return false
+  }
+  
+  // check the final state of the stack to check for any false positive stack status such as ROLLBACK_COMPLETE
+  def request = new DescribeStacksRequest().withStackName(stackName)
+  def stacks = client.describeStacks(request).getStacks()
+  def finalStatus = stacks[0].getStackStatus()
+
+  if (!finalStatus.matches("UPDATE_COMPLETE|CREATE_COMPLETE")) {
+    echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${finalStatus}"
     return false
   }
   
