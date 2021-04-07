@@ -219,6 +219,7 @@ def wait(clientBuilder, changeSetName, stackName) {
         echo("WARNING: No changes were detected when creating the changeset")
         return false
       }
+    }
     throw ex
   } finally {
     cfclient = null
