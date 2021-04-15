@@ -27,7 +27,7 @@ class AwsClientBuilder implements Serializable {
   def env
   def duration
   
-  AwsClientBuilder(Map config) {
+  AwsClientBuilder(Map config = [:]) {
     this.region = config.get('region', null)
     this.awsAccountId = config.get('awsAccountId', null)
     this.role = config.get('role', null)
