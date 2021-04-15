@@ -28,7 +28,7 @@ class AwsClientBuilder implements Serializable {
   def duration
   
   AwsClientBuilder(Map config) {
-    this.region = config.region
+    this.region = config.get('region', null)
     this.awsAccountId = config.get('awsAccountId', null)
     this.role = config.get('role', null)
     this.maxErrorRetry = config.get('maxErrorRetry', 3)
@@ -38,8 +38,11 @@ class AwsClientBuilder implements Serializable {
 
   def redshift() {
     def cb = new AmazonRedshiftClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
@@ -51,8 +54,11 @@ class AwsClientBuilder implements Serializable {
 
   def rds() {
     def cb = new AmazonRDSClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
@@ -64,8 +70,11 @@ class AwsClientBuilder implements Serializable {
   
   def ecs() {
     def cb = new AmazonECSClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
@@ -77,8 +86,11 @@ class AwsClientBuilder implements Serializable {
   
   def ec2() {
     def cb = new AmazonEC2ClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
@@ -106,8 +118,11 @@ class AwsClientBuilder implements Serializable {
 
   def cloudformation() {
     def cb = new AmazonCloudFormationClientBuilder().standard()
-      .withRegion(region)
       .withClientConfiguration(config())
+
+    if (region) {
+      cb.withRegion(region)
+    }
 
     def creds = getCredentials()
     if(creds != null) {
