@@ -146,7 +146,7 @@ class CloudformationStack implements Serializable {
 
     if (bucketRegion == '' || bucketRegion == 'US') {
       bucketRegion = 'us-east-1'
-    } else if (headBucketRegion == 'EU') {
+    } else if (bucketRegion == 'EU') {
       bucketRegion = 'eu-west-1'
     }
 
