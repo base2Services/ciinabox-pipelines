@@ -117,7 +117,11 @@ class CloudformationStack implements Serializable {
   **/
   def getTemplateFromUrl(String templateUrl) {
     def s3URI = new AmazonS3URI(templateUrl)
-    def s3Client = new AwsClientBuilder([region: s3URI.getRegion()]).s3()
+
+    // get the region of the bucket because the S3URI always returns null
+    def bucketRegion = getBucketRegion(s3URI.getBucket())
+
+    def s3Client = new AwsClientBuilder([region: bucketRegion]).s3()
     def template = null
     def templateBody = s3Client.getObject(new GetObjectRequest(s3URI.getBucket(), s3URI.getKey())).getObjectContent()
 
@@ -130,6 +134,23 @@ class CloudformationStack implements Serializable {
       template = jsonSlurper.parseText(templateBody)
     }
     return template
+  }
+
+  /**
+  Looks up a S3 Bucket region and returns a complete 
+  region string that can be used in a client
+  **/
+  def getBucketRegion(String bucket) {
+    def s3GetRegionClient = new AwsClientBuilder().s3()
+    def bucketRegion = s3GetRegionClient.getBucketLocation(bucket)
+
+    if (bucketRegion == '' || bucketRegion == 'US') {
+      bucketRegion = 'us-east-1'
+    } else if (headBucketRegion == 'EU') {
+      bucketRegion = 'eu-west-1'
+    }
+
+    return bucketRegion
   }
 
 }
