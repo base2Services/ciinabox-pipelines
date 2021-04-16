@@ -115,14 +115,14 @@ def appy(config) {
 
     if (nestedStacks) {
       nestedStacks.each { stack ->
-        echo("Getting changeset for nested stack ${stack}")
+        steps.echo("Getting changeset for nested stack ${stack}")
         nestedChangeSet = getNestedChangeSet(clientBuilder, changeSetName, stack)
         if (nestedChangeSet) {
           wait(clientBuilder, nestedChangeSet, stack)
           nestedChanges = getChangeSetDetails(clientBuilder, stack, nestedChangeSet)
           changeMap.changes << collectChanges(nestedChanges, stack)
         } else {
-          echo("Unable to find changes set for nested stack ${stack}")
+          steps.echo("Unable to find changes set for nested stack ${stack}")
         }
       }
     }
@@ -157,7 +157,7 @@ def createChangeSet(clientBuilder,changeSetName,config) {
   }
 
   if (config.roleArn) {
-    echo "using cloudformation service role arn ${config.roleArn}"
+    steps.echo "using cloudformation service role arn ${config.roleArn}"
     request.withRoleARN(config.roleArn)
   }
 
@@ -179,17 +179,17 @@ def createChangeSet(clientBuilder,changeSetName,config) {
     request.withIncludeNestedStacks(true)
   }
 
-  echo "Creating change set ${changeSetName} for stack ${config.stackName} with operation ${changeSetType}"
+  steps.echo "Creating change set ${changeSetName} for stack ${config.stackName} with operation ${changeSetType}"
 
   try {
     cfclient.createChangeSet(request)
   } catch (AlreadyExistsException ex) {
-    error("Change set with name ${changeSetName} already exists. Use a different name and try again.")
+    steps.error("Change set with name ${changeSetName} already exists. Use a different name and try again.")
   } catch (AmazonCloudFormationException ex) {
     if (ex.getErrorMessage().find(/^Parameters:(.*)must\shave\svalues$/)) {
-      error("Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}")
+      steps.error("Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}")
     } else {
-      error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
+      steps.error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
     }
   } finally {
       cfclient = null
@@ -223,7 +223,7 @@ def wait(clientBuilder, changeSetName, stackName) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
       if (changeset.getStatusReason().contains("The submitted information didn't contain changes.")) {
-        echo("WARNING: No changes were detected when creating the changeset")
+        steps.echo("WARNING: No changes were detected when creating the changeset")
         return false
       }
     }
