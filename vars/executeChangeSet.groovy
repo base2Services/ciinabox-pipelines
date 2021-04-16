@@ -33,8 +33,13 @@ def call(body) {
 
   if (env["${stackNameUpper}_CHANGESET_NAME"] == 'TRUE') {
     echo("Skipping execution changeset as no changes have been detected ...")
-    return null
+  } else {
+    apply(config, stackNameUpper)
   }
+}
+
+@NonCPS
+def apply(config, stackNameUpper) {
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -75,7 +80,7 @@ def call(body) {
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
-
+@NonCPS
 def executeChangeSet(clientBuilder, stackName, changeSetName) {
   def cfclient = clientBuilder.cloudformation()
   cfclient.executeChangeSet(new ExecuteChangeSetRequest()
@@ -84,7 +89,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
  cfclient = null 
 }
 
-
+@NonCPS
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
   def waiter = null
