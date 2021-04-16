@@ -220,6 +220,11 @@ def wait(clientBuilder, changeSetName, stackName) {
       def changeset = cfclient.describeChangeSet(request)
       if (changeset.getStatusReason().contains("The submitted information didn't contain changes.")) {
         steps.echo("WARNING: No changes were detected when creating the changeset")
+        def r = cfclient.deleteChangeSet(
+          new DeleteChangeSetRequest()
+            .withStackName(stackName)
+            .withChangeSetName(changeSetName)
+        )
         return false
       }
     }
