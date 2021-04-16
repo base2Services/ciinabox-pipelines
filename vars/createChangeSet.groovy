@@ -70,6 +70,11 @@ import com.jakewharton.fliptables.FlipTable
 def call(body) {
   def config = body
 
+  return appy(config)
+}
+
+@NonCPS
+def appy(config) {
   def changeSetName = config.get('changeSetName', "cs-${UUID.randomUUID().toString()}")
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
   env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
@@ -85,7 +90,7 @@ def call(body) {
   def success = wait(clientBuilder, changeSetName, config.stackName)
 
   def failOnEmptyChangeSet = config.get('failOnEmptyChangeSet', false)
-  // if there were no changes in our changeset 
+  // if there were no changes in our changeset
   if (!success && !failOnEmptyChangeSet) {
     env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] = 'TRUE'
     return null
@@ -127,6 +132,7 @@ def call(body) {
   return changeMap
 }
 
+@NonCPS
 def createChangeSet(clientBuilder,changeSetName,config) {
   def cfclient = clientBuilder.cloudformation()
   def cfstack = new CloudformationStack(cfclient, config.stackName)
@@ -190,6 +196,7 @@ def createChangeSet(clientBuilder,changeSetName,config) {
   }
 }
 
+@NonCPS
 def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
   def cfclient = clientBuilder.cloudformation()
   def listRequest = new ListChangeSetsRequest()
@@ -228,6 +235,7 @@ def wait(clientBuilder, changeSetName, stackName) {
   return true
 }
 
+@NonCPS
 def getChangeSetDetails(clientBuilder, stackName, changeSetName) {
   def cfclient = clientBuilder.cloudformation()
   def request = new DescribeChangeSetRequest()
@@ -281,6 +289,7 @@ def collectNestedStacks(changes) {
   return nestedStacks
 }
 
+@NonCPS
 def printChanges(changeList,stackName) {
   def border = null
   def title = null
