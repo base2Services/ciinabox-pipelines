@@ -57,12 +57,13 @@ def call(body) {
   }
 
   echo "Executing change set ${changeSetName}"
-  executeChangeSet(cfclient, config.stackName, changeSetName)
+  executeChangeSet(clientBuilder, config.stackName, changeSetName)
   def success = wait(cfclient, config.stackName, changeSetType)
 
   if (!success) {
     def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
     echo events.getFailedEventsTable()
+    events = null
     error "${config.stackName} changeset ${changeSetName} failed to execute."
   }
   
@@ -72,14 +73,17 @@ def call(body) {
 }
 
 
-def executeChangeSet(cfclient, stackName, changeSetName) {
+def executeChangeSet(clientBuilder, stackName, changeSetName) {
+  def cfclient = clientBuilder.cloudformation()
   cfclient.executeChangeSet(new ExecuteChangeSetRequest()
     .withChangeSetName(changeSetName)
     .withStackName(stackName))
+ cfclient = null 
 }
 
 
-def wait(cfclient, stackName, changeSetType) {
+def wait(clientBuilder, stackName, changeSetType) {
+  def cfclient = clientBuilder.cloudformation()
   def waiter = null
   switch(changeSetType) {
     case 'CREATE':
@@ -104,6 +108,7 @@ def wait(cfclient, stackName, changeSetType) {
       }
     }
   } catch(Exception ex) {
+    cfclient = null
     echo "execute changeset ${changeSetType.toLowerCase()} failed with error ${ex.getMessage()}"
     return false
   }
@@ -112,7 +117,7 @@ def wait(cfclient, stackName, changeSetType) {
   def request = new DescribeStacksRequest().withStackName(stackName)
   def stacks = cfclient.describeStacks(request).getStacks()
   def finalStatus = stacks[0].getStackStatus()
-
+  cfclient = null
   if (!finalStatus.matches("UPDATE_COMPLETE|CREATE_COMPLETE")) {
     echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${finalStatus}"
     return false
