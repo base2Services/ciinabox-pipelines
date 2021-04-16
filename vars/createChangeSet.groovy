@@ -53,6 +53,7 @@ import com.base2.ciinabox.aws.CloudformationStack
 
 import com.amazonaws.services.cloudformation.model.CreateChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeChangeSetRequest
+import com.amazonaws.services.cloudformation.model.DeleteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.ListChangeSetsRequest
 import com.amazonaws.services.cloudformation.model.Parameter
 import com.amazonaws.services.cloudformation.model.Tag
@@ -220,11 +221,10 @@ def wait(clientBuilder, changeSetName, stackName) {
       def changeset = cfclient.describeChangeSet(request)
       if (changeset.getStatusReason().contains("The submitted information didn't contain changes.")) {
         steps.echo("WARNING: No changes were detected when creating the changeset")
-        def r = cfclient.deleteChangeSet(
-          new DeleteChangeSetRequest()
+        def deleteRequest =  new DeleteChangeSetRequest()
             .withStackName(stackName)
             .withChangeSetName(changeSetName)
-        )
+        def r = cfclient.deleteChangeSet(deleteRequest)
         return false
       }
     }
