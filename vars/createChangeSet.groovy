@@ -187,6 +187,7 @@ def createChangeSet(clientBuilder,changeSetName,config) {
       steps.error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
     }
   } finally {
+      cfstack = null
       cfclient = null
   }
 }

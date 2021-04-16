@@ -38,7 +38,6 @@ def call(body) {
   }
 }
 
-@NonCPS
 def apply(config, stackNameUpper) {
   
   def clientBuilder = new AwsClientBuilder([
@@ -80,7 +79,6 @@ def apply(config, stackNameUpper) {
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
-@NonCPS
 def executeChangeSet(clientBuilder, stackName, changeSetName) {
   def cfclient = clientBuilder.cloudformation()
   cfclient.executeChangeSet(new ExecuteChangeSetRequest()
@@ -89,7 +87,6 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
  cfclient = null 
 }
 
-@NonCPS
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
   def waiter = null
