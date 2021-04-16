@@ -48,6 +48,7 @@ def call(body) {
   def cfstack = new CloudformationStack(cfclient, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
   cfStack = null
+  cfclient = null
   def changeSetName = null
     
   if (config.changeSetName) {
@@ -58,12 +59,14 @@ def call(body) {
 
   echo "Executing change set ${changeSetName}"
   executeChangeSet(clientBuilder, config.stackName, changeSetName)
-  def success = wait(cfclient, config.stackName, changeSetType)
+  def success = wait(clientBuilder, config.stackName, changeSetType)
 
   if (!success) {
+    cfclient = clientBuilder.cloudformation()
     def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
     echo events.getFailedEventsTable()
     events = null
+    cfclient = null
     error "${config.stackName} changeset ${changeSetName} failed to execute."
   }
   
