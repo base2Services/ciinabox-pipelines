@@ -241,7 +241,7 @@ def getChangeSetDetails(clientBuilder, stackName, changeSetName) {
   return cs
 }
 
-
+@NonCPS
 def collectChanges(changes, stackName) {
   def changeList = []
   
@@ -268,7 +268,7 @@ def collectChanges(changes, stackName) {
   return changeList.sort { c1, c2 -> c1.action <=> c2.action }
 }
 
-
+@NonCPS
 def collectNestedStacks(changes) {
   def nestedStacks = []
 
@@ -284,7 +284,7 @@ def collectNestedStacks(changes) {
   return nestedStacks
 }
 
-
+@NonCPS
 def printChanges(changeList,stackName) {
   def border = null
   def title = null
