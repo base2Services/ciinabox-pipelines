@@ -47,9 +47,9 @@ def call(body) {
 
   def cfstack = new CloudformationStack(cfclient, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
-  cfstack = null
+  cfStack = null
   def changeSetName = null
-  
+    
   if (config.changeSetName) {
     changeSetName = config.changeSetName
   } else {
@@ -71,14 +71,14 @@ def call(body) {
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
-@NonCPS
+
 def executeChangeSet(cfclient, stackName, changeSetName) {
   cfclient.executeChangeSet(new ExecuteChangeSetRequest()
     .withChangeSetName(changeSetName)
     .withStackName(stackName))
 }
 
-@NonCPS
+
 def wait(cfclient, stackName, changeSetType) {
   def waiter = null
   switch(changeSetType) {
