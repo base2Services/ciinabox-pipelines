@@ -65,6 +65,8 @@ def call(body) {
     error "${config.stackName} changeset ${changeSetName} failed to execute."
   }
   
+  cfclient = null
+  clientBuilder = null
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
