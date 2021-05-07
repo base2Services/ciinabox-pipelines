@@ -22,8 +22,6 @@ createChangeSet(
   ],
   capabilities: false, // (optional, set to false to remove capabilities or supply a list of capabilities. Defaults to [CAPABILITY_IAM,CAPABILITY_NAMED_IAM]),
   nestedStacks: true | false // (optional, defaults to false, set to true to add nestedStacks diff )
-  nestedStackVerboseLogs: true | false, // (optional, defaults to true, set to false to remove echo commands for nestedStacks)
-  expandedDetails: true | false // (optional, defaults to false, set to true to print extra details)
 )
 
 returns Map with summarised stack changes
@@ -113,25 +111,17 @@ def call(body) {
     def nestedChangeSet = null
 
     if (nestedStacks) {
-      def nestedStackVerboseLogs = config.get('nestedStackVerboseLogs', true)
 
       nestedStacks.each { stack ->
-        if (nestedStackVerboseLogs) {
-          steps.echo("Getting changeset for nested stack ${stack}")
-        }
         nestedChangeSet = getNestedChangeSet(clientBuilder, changeSetName, stack)
         if (nestedChangeSet) {
-          wait(clientBuilder, nestedChangeSet, stack, nestedStackVerboseLogs)
+          wait(clientBuilder, nestedChangeSet, stack, false)
           nestedChanges = getChangeSetDetails(clientBuilder, stack, nestedChangeSet)
           changeMap.changes << collectChanges(nestedChanges, stack)
-        } else {
-          if (nestedStackVerboseLogs) {
-            steps.echo("Unable to find changes set for nested stack ${stack}")
-          }
-        }
+        } 
       }
     }
-    printChanges(changeMap.changes,config.stackName, config.get('expandedDetails', false))
+    printChanges(changeMap.changes,config.stackName)
   }
 
   return changeMap
@@ -302,7 +292,7 @@ def collectNestedStacks(changes) {
 }
 
 @NonCPS
-def printChanges(changeList,stackName, expandedDetails) {
+def printChanges(changeList,stackName) {
   def border = null
   def title = null
   def changeString = ""
@@ -316,7 +306,7 @@ def printChanges(changeList,stackName, expandedDetails) {
       data = []
       changes.each { change ->
         data.add([change.action, change.logical, change.resourceType, change.replace, change.details.collect{
-          expandedDetails? "${it.causingEntity? it.causingEntity:''}[${it.name}] (${it.evaluation})" : it.name
+          "${it.causingEntity? it.causingEntity:''}[${it.name}] (${it.evaluation})"
         }.join('\n')])
       }
       changeString += FlipTable.of(headers, data as String[][]).toString()
