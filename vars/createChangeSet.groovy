@@ -20,7 +20,8 @@ createChangeSet(
   tags: [ // (optional, tags to add to the cloudformation stack)
     key: value
   ],
-  capabilities: false // (optional, set to false to remove capabilities or supply a list of capabilities. Defaults to [CAPABILITY_IAM,CAPABILITY_NAMED_IAM])
+  capabilities: false, // (optional, set to false to remove capabilities or supply a list of capabilities. Defaults to [CAPABILITY_IAM,CAPABILITY_NAMED_IAM]),
+  nestedStacks: true | false // (optional, defaults to false, set to true to add nestedStacks diff )
 )
 
 returns Map with summarised stack changes
@@ -83,7 +84,7 @@ def call(body) {
     env: env])
     
   createChangeSet(clientBuilder, changeSetName, config)
-  def success = wait(clientBuilder, changeSetName, config.stackName)
+  def success = wait(clientBuilder, changeSetName, config.stackName, true)
 
   def failOnEmptyChangeSet = config.get('failOnEmptyChangeSet', false)
   // if there were no changes in our changeset
@@ -110,16 +111,14 @@ def call(body) {
     def nestedChangeSet = null
 
     if (nestedStacks) {
+
       nestedStacks.each { stack ->
-        steps.echo("Getting changeset for nested stack ${stack}")
         nestedChangeSet = getNestedChangeSet(clientBuilder, changeSetName, stack)
         if (nestedChangeSet) {
-          wait(clientBuilder, nestedChangeSet, stack)
+          wait(clientBuilder, nestedChangeSet, stack, false)
           nestedChanges = getChangeSetDetails(clientBuilder, stack, nestedChangeSet)
           changeMap.changes << collectChanges(nestedChanges, stack)
-        } else {
-          steps.echo("Unable to find changes set for nested stack ${stack}")
-        }
+        } 
       }
     }
     printChanges(changeMap.changes,config.stackName)
@@ -206,9 +205,11 @@ def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
   return selected ? selected.getChangeSetName() : null
 }
 
-def wait(clientBuilder, changeSetName, stackName) {
+def wait(clientBuilder, changeSetName, stackName, verbose) {
   def cfclient = clientBuilder.cloudformation()
-  echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
+  if (verbose) {
+    echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
+  }
 
   def request = new DescribeChangeSetRequest()
     .withStackName(stackName)
@@ -264,7 +265,7 @@ def collectChanges(changes, stackName) {
     if (changeMap.action.equals('Modify')) {
       def details = change.getDetails()
       details.each {
-        changeMap.details << [name: it.getTarget().getName(), attribute: it.getTarget().getAttribute()]
+        changeMap.details << [name: it.getTarget().getName(), attribute: it.getTarget().getAttribute(), causingEntity: it.getCausingEntity(), evaluation: it.getEvaluation()]
       }
     }
 
@@ -299,12 +300,14 @@ def printChanges(changeList,stackName) {
   ArrayList data = []
 
   changeList.each { changes ->
-    border = "\n+" + "-".multiply(7) + "+" + "-".multiply(changes.getAt(0).stack.length() + 2) + "+"
-    changeString += "${border}\n| Stack | ${changes.getAt(0).stack} |${border}" + "\n"
-    data = []
     if (changes) {
+      border = "\n+" + "-".multiply(7) + "+" + "-".multiply(changes.getAt(0).stack.length() + 2) + "+"
+      changeString += "${border}\n| Stack | ${changes.getAt(0).stack} |${border}" + "\n"
+      data = []
       changes.each { change ->
-        data.add([change.action, change.logical, change.resourceType, change.replace, change.details.collect{it.name}.join('\n')])
+        data.add([change.action, change.logical, change.resourceType, change.replace, change.details.collect{
+          "${it.causingEntity? it.causingEntity:''}[${it.name}] (${it.evaluation})"
+        }.join('\n')])
       }
       changeString += FlipTable.of(headers, data as String[][]).toString()
     }
