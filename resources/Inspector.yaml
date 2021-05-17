@@ -171,6 +171,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
+<<<<<<< HEAD
       IamInstanceProfile:
           Ref: testinstanceprofile
       ImageId:
@@ -184,7 +185,14 @@ Resources:
 >>>>>>> 1e54ffd (fixed some werid syntax issue from git rebase)
 =======
         Fn::Sub: "${subnetId}"
+<<<<<<< HEAD
 >>>>>>> a0d7927 (fixed some syntax issues)
+=======
+=======
+      ImageId:
+        Fn::Sub: "${AmiId}"
+>>>>>>> b471972 (reverted changes to s3put)
+>>>>>>> 442f6e2 (reverted changes to s3put)
       Tags:
         - Key: Inspector
           Value: "True"
