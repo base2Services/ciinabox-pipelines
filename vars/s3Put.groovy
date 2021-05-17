@@ -19,8 +19,7 @@ import com.amazonaws.regions.*
 
 def call(body) {
   def config = body
-  def template = libraryResource('Inspector.yaml')
-  File file = new File(template)
+  File file = new File(config.file)
   AmazonS3 s3 = setupClient(config.region)
   putObject(s3,file,config)
 }
