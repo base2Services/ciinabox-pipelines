@@ -1,4 +1,14 @@
 Resources:
+  testinstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Fn::Sub: ${AmiId}
+      InstanceType: t2.micro
+      Tags:
+        - Key: Inspector
+          Value: "True"
+
   testresourcegroup:
     Type: "AWS::Inspector::ResourceGroup"
     Properties:
