@@ -1,0 +1,70 @@
+Resources:
+  testresourcegroup:
+    Type: "AWS::Inspector::ResourceGroup"
+    Properties:
+      ResourceGroupTags:
+        - Key: Inspector
+          Value: "True"
+
+  testtargetgroup:
+    Type: AWS::Inspector::AssessmentTarget
+    Properties:
+        AssessmentTargetName : test-targetgroup
+        ResourceGroupArn :
+          Ref: testresourcegroup
+
+  testtemplate:
+    Type: AWS::Inspector::AssessmentTemplate
+    Properties:
+      AssessmentTargetArn:
+        Fn::GetAtt: [ testtargetgroup, Arn ]
+      AssessmentTemplateName: test-template
+      DurationInSeconds: 1200 # 20mins
+      RulesPackageArns:
+        - arn:aws:inspector:ap-southeast-2:454640832652:rulespackage/0-asL6HRgN # Security Best Practice in ap-southeast-2
+
+  testeventrule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: test-event
+      Description: A test event which triggers an inspector template to run
+      EventBusName: default
+      EventPattern:
+        source:
+          - "aws.ec2"
+        detail-type:
+          - EC2 Instance State-change Notification
+        detail:
+          instance-id:
+            -  i-0edde676a3e356b94 # This is hard coded because its a test, normally you would pass in the instance(s) you want inspector to run against on the state change
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt: [testtemplate, Arn]
+          Id: test-inspector-template
+          RoleArn:
+            Fn::GetAtt: [ testeventrole, Arn ]
+
+  testeventrole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: test-role
+      Description: A test role to allow test-event to call the test-template for inspector
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+          - PolicyName: allow-inspector
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:  "inspector:*"
+                  Resource: "*"
