@@ -2,9 +2,9 @@ Resources:
   testinstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId:
-        Fn::Sub: ${AmiId}
       InstanceType: t2.micro
+      ImageId:
+        Fn::Sub: "${AmiId}"
       Tags:
         - Key: Inspector
           Value: "True"
