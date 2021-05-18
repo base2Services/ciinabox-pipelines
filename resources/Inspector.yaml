@@ -2,6 +2,7 @@ Parameters:
   AmiID:
     Type: AWS::EC2::Image::Id
     Description: Ami Id to be passed in from the pipeline
+    Default: 'test'
 
 Resources:
   testinstance:
