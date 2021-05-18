@@ -1,9 +1,7 @@
 Parameters:
-  AmiImageId:
-    Type: AWS::EC2::IMaged::Id
+  AmiID:
+    Type: AWS::EC2::Image::Id
     Description: Ami Id to be passed in from the pipeline
-    Default:
-      Fn::Sub: "${AmiId}"
 
 Resources:
   testinstance:
@@ -11,7 +9,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       ImageId:
-        Ref: AmiImageId
+        Fn::Sub: "${AmiId}"
       Tags:
         - Key: Inspector
           Value: "True"
