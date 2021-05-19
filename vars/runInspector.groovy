@@ -11,10 +11,10 @@ def call(body) {
       def config = body
       // Query stack for inspector assessment template arn
       def arn = cloudformation(
-        stackName: config.stackName,
+        stackName: 'inspector-test',//config.stackName,
         queryType: 'output',
         query: 'TemplateArn',
-        region: config.region,
+        region: 'ap-southeast-2' //config.region,
       );
       print (arn)
       def assessmentRun = assessmentRun(body.arn)
