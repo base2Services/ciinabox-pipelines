@@ -8,12 +8,13 @@ import com.amazonaws.services.inspector.model.StartAssessmentRunResult
 
 
 def call(body) {
+      def config = body
       // Query stack for inspector assessment template arn
       def arn = cloudformation(
-        stackName: body.stackName,
+        stackName: config.stackName,
         queryType: 'output',
         query: 'TemplateArn',
-        region: body.region,
+        region: config.region,
       );
       print (arn)
       def assessmentRun = assessmentRun(body.arn)
