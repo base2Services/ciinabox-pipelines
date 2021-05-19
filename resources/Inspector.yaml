@@ -84,3 +84,8 @@ Resources:
                 - Effect: Allow
                   Action:  "inspector:*"
                   Resource: "*"
+
+Outputs:
+      TemplateArn:
+            Value:
+                   Fn::GetAtt: [ testtemplate, Arn ]
