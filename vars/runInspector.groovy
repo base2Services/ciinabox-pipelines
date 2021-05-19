@@ -10,7 +10,7 @@ import com.amazonaws.services.inspector.model.StartAssessmentRunResult
 def call(body) {
       // Query stack for inspector assessment template arn
       def arn = cloudformation(
-        stackName: 'dev',
+        stackName: body.stackName,
         queryType: 'output',
         query: 'TemplateArn',
         region: body.region,
@@ -41,5 +41,6 @@ def assessmentRun(String arn) {
 //  }
 
 call([
-    region: 'ap-southeast-2'
+    region: 'ap-southeast-2',
+    stackName: 'inspector-test'
 ])
