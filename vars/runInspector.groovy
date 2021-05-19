@@ -17,7 +17,7 @@ def call(body) {
         region: 'ap-southeast-2' //config.region,
       );
       print (arn)
-      def assessmentRun = assessmentRun(body.arn)
+      def assessmentRun = assessmentRun(arn)
       println(assessmentRun)
 
 
