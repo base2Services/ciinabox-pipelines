@@ -40,7 +40,7 @@ def assessmentRun(String arn) {
 //         .build()
 //  }
 
-call([
-    region: 'ap-southeast-2',
-    stackName: 'inspector-test'
-])
+// call([
+//     region: 'ap-southeast-2',
+//     stackName: 'inspector-test'
+// ])
