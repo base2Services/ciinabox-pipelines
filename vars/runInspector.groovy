@@ -1,6 +1,6 @@
-@Grapes([
-      @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
-])
+// @Grapes([
+//       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
+// ])
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
@@ -27,13 +27,13 @@ def call(body) {
 }
 
 def assessmentRun(String template_arn) {
-      AmazonInspector client = AmazonInspectorClientBuilder.standard().build()
-      StartAssessmentRunRequest request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
-      StartAssessmentRunResult response = client.startAssessmentRun(request)
+      def client = AmazonInspectorClientBuilder.standard().build()
+      def request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
+      def response = client.startAssessmentRun(request)
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn())
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn))
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
-      println(StartAssessmentRunRequest.withAssessmentTemplateArn(template_arn).getAssessmentTemplateArn())
+      println(response.getAssessmentTemplateArn)
       // return StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn)
 }
 
