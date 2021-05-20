@@ -33,7 +33,7 @@ def assessmentRun(String template_arn) {
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn())
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn))
       println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
-      return StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn)
+      // return StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn)
 }
 
 def assessmentResults(String result_arn) {
