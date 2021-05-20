@@ -5,6 +5,8 @@ import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
 import com.amazonaws.services.inspector.model.StartAssessmentRunResult
+import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
+import com.amazonaws.services.inspector.model.GetAssessmentReportResult
 
 
 def call(body) {
