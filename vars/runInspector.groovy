@@ -1,6 +1,6 @@
-@Grapes([
-      @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
-])
+// @Grapes([
+//       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
+// ])
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
@@ -8,6 +8,7 @@ import com.amazonaws.services.inspector.model.StartAssessmentRunResult
 import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
 import com.amazonaws.services.inspector.model.GetAssessmentReportResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
+import com.amazonaws.services.inspector.model.ListAssessmentRunsRequest
 
 
 def call(body) {
@@ -43,7 +44,7 @@ def assessmentArn(String arn) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
       println('*****request completed*****')
       println(request)
-      def response = client.listAssessmentRun(request)
+      def response = client.listAssessmentRuns(request)
       println('*****response completed*****')
       println(response)
       return response
@@ -51,7 +52,7 @@ def assessmentArn(String arn) {
 
 def assessmentResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn([result_arn])
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
       def response = client.getAssessmentReport(request)
       println(GetAssessmentReportResult)
       return GetAssessmentReportResult
@@ -63,8 +64,8 @@ def assessmentResults(String result_arn) {
 //         .withRegion(region)
 //         .build()
 //  }
-
-call([
-    region: 'ap-southeast-2',
-    stackName: 'inspector-test'
-])
+// 
+// call([
+//     region: 'ap-southeast-2',
+//     stackName: 'inspector-test'
+// ])
