@@ -18,7 +18,7 @@ def call(body) {
         query: 'TemplateArn',
         region: 'ap-southeast-2' //config.region,
       );
-      print (template_arn)
+      println(template_arn)
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
@@ -30,7 +30,7 @@ def assessmentRun(String template_arn) {
       AmazonInspector client = AmazonInspectorClientBuilder.standard().build()
       StartAssessmentRunRequest request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
       StartAssessmentRunResult response = client.startAssessmentRun(request)
-      return StartAssessmentRunResult.getAssessmentTemplateArn()
+      return StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn)
 }
 
 def assessmentResults(String result_arn) {
