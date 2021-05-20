@@ -10,28 +10,33 @@ import com.amazonaws.services.inspector.model.StartAssessmentRunResult
 def call(body) {
       def config = body
       // Query stack for inspector assessment template arn
-      def arn = cloudformation(
+      def template_arn = cloudformation(
         stackName: 'inspector-test',//config.stackName,
         queryType: 'output',
         query: 'TemplateArn',
         region: 'ap-southeast-2' //config.region,
       );
-      print (arn)
-      def assessmentRun = assessmentRun(arn)
+      print (template_arn)
+      def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-
-
-    // def client = client(body.region)
-    // def request = new StartAssessmentRunRequest()
-    //     .withAssessmentTemplateArn(body.arn)
+      def assessmentResults = assessmentResults(assessmentRun)
+      println(assessmentResults)
 }
 
-def assessmentRun(String arn) {
+def assessmentRun(String template_arn) {
       AmazonInspector client = AmazonInspectorClientBuilder.standard().build()
-      StartAssessmentRunRequest request = new StartAssessmentRunRequest().withAssessmentTemplateArn(arn)
+      StartAssessmentRunRequest request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
       StartAssessmentRunResult response = client.startAssessmentRun(request)
-      return StartAssessmentRunResult
+      return StartAssessmentRunResult.getAssessmentTemplateArn()
+}
+
+def assessmentResults(String result_arn) {
+      AmazonInspector client = AmazonInspectorClientBuilder.standard().build()
+      GetAssessmentReportRequest request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
+      GetAssessmentReportResult response = client.getAssessmentReport(request)
+      println(GetAssessmentReportResult)
+      return GetAssessmentReportResult
 }
 
 
