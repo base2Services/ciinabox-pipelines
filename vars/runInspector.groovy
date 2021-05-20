@@ -32,7 +32,8 @@ def assessmentRun(String template_arn) {
       StartAssessmentRunResult response = client.startAssessmentRun(request)
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn())
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn))
-      println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
+      // println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
+      println(StartAssessmentRunRequest.withAssessmentTemplateArn(template_arn).getAssessmentTemplateArn())
       // return StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn)
 }
 
