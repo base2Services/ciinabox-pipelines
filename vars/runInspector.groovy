@@ -23,7 +23,7 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def assessmentArn = assessmentArn(template_arn)
+      def assessmentArn = assessmentArn(assessmentRun)
 
       def assessmentResults = assessmentResults(assessmentArn)
       println(assessmentResults)
