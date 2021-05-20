@@ -43,7 +43,7 @@ def assessmentArn(String arn) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
       println('*****request completed*****')
       println(request)
-      def response = client.listAssessmentRuns(request)
+      def response = client.listAssessmentRun(request)
       println('*****response completed*****')
       println(response)
       return response
