@@ -46,7 +46,7 @@ def assessmentArn(String arn) {
 
 def assessmentResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn([result_arn])
       def response = client.getAssessmentReport(request)
       println(GetAssessmentReportResult)
       return GetAssessmentReportResult
