@@ -1,6 +1,6 @@
-// @Grapes([
-//       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
-// ])
+@Grapes([
+      @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
+])
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
@@ -64,7 +64,7 @@ def assessmentResults(String result_arn) {
 //         .build()
 //  }
 
-// call([
-//     region: 'ap-southeast-2',
-//     stackName: 'inspector-test'
-// ])
+call([
+    region: 'ap-southeast-2',
+    stackName: 'inspector-test'
+])
