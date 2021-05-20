@@ -42,10 +42,10 @@ def assessmentArn(String arn) {
       println('*****client completed*****')
       def request = new ListAssessmentRunsResult().withAssessmentRunArns(arn)
       println('*****request completed*****')
-      // def response = client.listAssessmentRunsResult(request)
-      // println('response completed')
-      println(request)
-      return request.withAssessmentRunArn(arn)
+      def response = client.listAssessmentRunsResult(request)
+      println('response completed')
+      println(response)
+      return response
 }
 
 def assessmentResults(String result_arn) {
