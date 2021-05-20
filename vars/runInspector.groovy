@@ -42,10 +42,10 @@ def assessmentRun(String template_arn) {
 
 def assessmentArn(String arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new ListAssessmentRunsResult().withAssessmentRunArn(arn)
+      def request = new ListAssessmentRunsResult()
       def response = client.listAssessmentRunsResult(request)
-      println(response)
-      return response
+      println(response.withAssessmentRunArn(arn))
+      return response.withAssessmentRunArn(arn)
 }
 
 def assessmentResults(String result_arn) {
