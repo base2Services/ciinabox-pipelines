@@ -7,6 +7,7 @@ import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
 import com.amazonaws.services.inspector.model.StartAssessmentRunResult
 import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
 import com.amazonaws.services.inspector.model.GetAssessmentReportResult
+import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
 
 
 def call(body) {
@@ -22,7 +23,9 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def assessmentResults = assessmentResults(assessmentRun)
+      def assessmentArn = assessmentArn(assessmentRun)
+
+      def assessmentResults = assessmentResults(assessmentArn)
       println(assessmentResults)
 }
 
@@ -35,6 +38,13 @@ def assessmentRun(String template_arn) {
       // println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
       println(request.getAssessmentTemplateArn())
       return response.getAssessmentTemplateArn()
+}
+
+def assessmentArn(String arn) {
+      def client = AmazonInspectorClientBuilder.standard().build()
+      def request = new ListAssessmentRunsResult().withAssessmentRunArn(arn)
+      println(request)
+      return request
 }
 
 def assessmentResults(String result_arn) {
