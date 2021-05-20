@@ -40,7 +40,7 @@ def assessmentArn(String arn) {
       println('*****start*****')
       def client = AmazonInspectorClientBuilder.standard().build()
       println('*****client completed*****')
-      def request = new ListAssessmentRunsResult().getAssessmentRunArns(arn)
+      def request = new ListAssessmentRunsResult().withAssessmentRunArns(arn)
       println('*****request completed*****')
       // def response = client.listAssessmentRunsResult(request)
       // println('response completed')
