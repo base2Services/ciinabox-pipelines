@@ -33,25 +33,21 @@ def assessmentRun(String template_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
       def response = client.startAssessmentRun(request)
-      // println(StartAssessmentRunRequest.getAssessmentTemplateArn())
-      // println(StartAssessmentRunRequest.getAssessmentTemplateArn(template_arn))
-      // println(StartAssessmentRunRequest.getAssessmentTemplateArn().withAssessmentTemplateArn(template_arn))
-      println(request.getAssessmentTemplateArn())
       return request.getAssessmentTemplateArn()
 }
 
 def assessmentArn(String arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new ListAssessmentRunsResult()
+      def request = new ListAssessmentRunsResult().withAssessmentRunArn(arn)
       def response = client.listAssessmentRunsResult(request)
-      println(response.withAssessmentRunArn(arn))
+      println(response)
       return response.withAssessmentRunArn(arn)
 }
 
 def assessmentResults(String result_arn) {
-      AmazonInspector client = AmazonInspectorClientBuilder.standard().build()
-      GetAssessmentReportRequest request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
-      GetAssessmentReportResult response = client.getAssessmentReport(request)
+      def client = AmazonInspectorClientBuilder.standard().build()
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
+      def response = client.getAssessmentReport(request)
       println(GetAssessmentReportResult)
       return GetAssessmentReportResult
 }
