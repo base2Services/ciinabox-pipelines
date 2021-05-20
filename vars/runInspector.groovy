@@ -37,10 +37,14 @@ def assessmentRun(String template_arn) {
 }
 
 def assessmentArn(String arn) {
+      println('start')
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new ListAssessmentRunsResult()
+      println('client coplete')
+      def request = new ListAssessmentRunsResult().setAssessmentRunArns(arn)
+      println('request completed')
       // def response = client.listAssessmentRunsResult(request)
-      println(request.setAssessmentRunArns(arn))
+      // println('response completed')
+      println(request)
       return request.withAssessmentRunArn(arn)
 }
 
