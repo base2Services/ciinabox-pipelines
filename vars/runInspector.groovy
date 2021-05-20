@@ -23,7 +23,7 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def assessmentArn = assessmentArn(assessmentRun)
+      def assessmentArn = assessmentArn(template_arn)
 
       def assessmentResults = assessmentResults(assessmentArn)
       println(assessmentResults)
@@ -43,7 +43,7 @@ def assessmentArn(String arn) {
       def request = new ListAssessmentRunsResult().withAssessmentRunArns(arn)
       println('*****request completed*****')
       println(request)
-      def response = client.listAssessmentRunsResult()
+      def response = client.listAssessmentRunsResult(request)
       println('*****response completed*****')
       println(response)
       return response
