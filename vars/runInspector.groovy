@@ -9,6 +9,10 @@ import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
 import com.amazonaws.services.inspector.model.GetAssessmentReportResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsRequest
+import com.amazonaws.services.inspector.model.TimestampRange
+import com.amazonaws.services.inspector.model.AssessmentRunFilter
+
+
 
 
 def call(body) {
@@ -46,7 +50,7 @@ def assessmentRun(String template_arn) {
 
 def assessmentArn(String arn, testStartTime, testCompleteTime) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def timeRange = new TimeStampRange.withBeginDate(testStartTime).withEndDate(testCompleteTime)
+      def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
       def filter = new AssessmentRunFilter().withCompletionTimeRange(timeRange)
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
       def response = client.listAssessmentRuns(request)
