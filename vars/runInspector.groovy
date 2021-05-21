@@ -26,8 +26,8 @@ def call(body) {
 
       def assessmentArn = assessmentArn(assessmentRun)
 
-      def assessmentResults = assessmentResults(assessmentArn)
-      println(assessmentResults)
+      def getResults = getResults(assessmentArn)
+      println(getResults)
 }
 
 def assessmentRun(String template_arn) {
@@ -45,7 +45,7 @@ def assessmentArn(String arn) {
       return response
 }
 
-def assessmentResults(String result_arn) {
+def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
       def response = client.getAssessmentReport(request)
