@@ -22,16 +22,16 @@ def call(body) {
       );
       println(template_arn)
 
-      def testStartTime = Util.getTimeSpanString(System.currentTimeMillis())
+      def testStartTime = java.time.LocalDateTime.now()
       println(testStartTime)
 
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def testCompleteTime = Util.getTimeSpanString(System.currentTimeMillis())
+      def testCompleteTime = java.time.LocalDateTime.now()
       println(testCompleteTime)
 
-      def assessmentArn = assessmentArn(assessmentRun)
+      def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
 
       def getResults = getResults(assessmentArn[0])
       println(getResults)
@@ -44,12 +44,11 @@ def assessmentRun(String template_arn) {
       return request.getAssessmentTemplateArn()
 }
 
-def assessmentArn(String arn) {
+def assessmentArn(String arn, testStartTime, testCompleteTime) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
+      def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withCompletionTimeRange(TimestampRange.withBeginDate(testStartTime).withEndDate(testCompleteTime))
       def response = client.listAssessmentRuns(request)
       println(response)
-      println(response.grep(arn))
       return response
 }
 
