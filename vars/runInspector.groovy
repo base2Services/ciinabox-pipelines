@@ -38,14 +38,9 @@ def assessmentRun(String template_arn) {
 }
 
 def assessmentArn(String arn) {
-      println('*****start*****')
       def client = AmazonInspectorClientBuilder.standard().build()
-      println('*****client completed*****')
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
-      println('*****request completed*****')
-      println(request)
       def response = client.listAssessmentRuns(request)
-      println('*****response completed*****')
       println(response)
       return response
 }
@@ -54,8 +49,8 @@ def assessmentResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn)
       def response = client.getAssessmentReport(request)
-      println(GetAssessmentReportResult)
-      return GetAssessmentReportResult
+      println(response)
+      return response
 }
 
 
@@ -64,7 +59,7 @@ def assessmentResults(String result_arn) {
 //         .withRegion(region)
 //         .build()
 //  }
-// 
+//
 // call([
 //     region: 'ap-southeast-2',
 //     stackName: 'inspector-test'
