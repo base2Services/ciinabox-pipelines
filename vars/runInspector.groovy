@@ -21,9 +21,15 @@ def call(body) {
         region: 'ap-southeast-2' //config.region,
       );
       println(template_arn)
-      def priorRunTime
+
+      def testStartTime = currentBuild.startTimeInMillis
+      println(testStartTime)
+
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
+
+      def testCompleteTime = currentBuild.startTimeInMillis
+      println(testCompleteTime)
 
       def assessmentArn = assessmentArn(assessmentRun)
 
