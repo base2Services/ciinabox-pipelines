@@ -22,13 +22,13 @@ def call(body) {
       );
       println(template_arn)
 
-      def testStartTime = currentBuild.startTimeInMillis
+      def testStartTime = Util.getTimeSpanString(System.currentTimeMillis())
       println(testStartTime)
 
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def testCompleteTime = currentBuild.startTimeInMillis
+      def testCompleteTime = Util.getTimeSpanString(System.currentTimeMillis())
       println(testCompleteTime)
 
       def assessmentArn = assessmentArn(assessmentRun)
