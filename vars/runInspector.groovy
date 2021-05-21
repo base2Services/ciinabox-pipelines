@@ -25,6 +25,13 @@ def call(body) {
         region: 'ap-southeast-2' //config.region,
       );
       println(template_arn)
+      // Query stack for inspector assessment template test duration
+      def testDuration = cloudformation(
+        stackName: 'inspector-test',//config.stackName,
+        queryType: 'output',
+        query: 'TestDuration',
+        region: 'ap-southeast-2' //config.region,
+      );
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -32,12 +39,13 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
+      TimeUnit.SECONDS.sleep(testDuration);
       Date testCompleteTime = new Date()
       println(testCompleteTime)
 
       def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
 
-      def getResults = getResults(assessmentArn[0])
+      def getResults = getResults(assessmentArn)
       println(getResults)
 }
 
@@ -50,12 +58,8 @@ def assessmentRun(String template_arn) {
 
 def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      // def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
-      // def filter = new AssessmentRunFilter().withCompletionTimeRange(timeRange)
-      def filter = new AssessmentRunFilter()
-      filter.withCompletionTimeRange()
-      filter.withBeginDate(testStartTime)
-      filter.withEndDate(testCompleteTime)
+      def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
+      def filter = new AssessmentRunFilter().withCompletionTimeRange(timeRange)
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
       def response = client.listAssessmentRuns(request)
       println(response)

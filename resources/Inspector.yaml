@@ -89,3 +89,6 @@ Outputs:
       TemplateArn:
             Value:
                    Fn::GetAtt: [ testtemplate, Arn ]
+      TestDuration:
+            Value:
+                  Fn::GetAtt:: [ testtemplate, DurationInSeconds]
