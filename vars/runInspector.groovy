@@ -46,7 +46,9 @@ def assessmentRun(String template_arn) {
 
 def assessmentArn(String arn, testStartTime, testCompleteTime) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter()withCompletionTimeRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
+      def timeRange = new TimeStampRange.withBeginDate(testStartTime).withEndDate(testCompleteTime)
+      def filter = new AssessmentRunFilter().withCompletionTimeRange(timeRange)
+      def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
       def response = client.listAssessmentRuns(request)
       println(response)
       return response
