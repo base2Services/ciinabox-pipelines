@@ -21,12 +21,13 @@ def call(body) {
         region: 'ap-southeast-2' //config.region,
       );
       println(template_arn)
+      def priorRunTime
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
       def assessmentArn = assessmentArn(assessmentRun)
 
-      def getResults = getResults(assessmentArn)
+      def getResults = getResults(assessmentArn[0])
       println(getResults)
 }
 
@@ -42,6 +43,7 @@ def assessmentArn(String arn) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
       def response = client.listAssessmentRuns(request)
       println(response)
+      println(response[0])
       return response
 }
 
