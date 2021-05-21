@@ -43,7 +43,7 @@ def assessmentArn(String arn) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn)
       def response = client.listAssessmentRuns(request)
       println(response)
-      println(response[0])
+      println(response.grep(arn))
       return response
 }
 
