@@ -64,6 +64,8 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
       def response = client.listAssessmentRuns(request)
       println(response)
+      response  = response.findall(arn.*])
+      response = response.substring(0, response.length() - 1)
       return response
 }
 
