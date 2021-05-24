@@ -33,7 +33,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
-      testDuration += 120  //pad the test length by 5 mins
+      testDuration += 120  //pad the test length by 2 mins
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -79,7 +79,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat('html')
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).setReportFileFormat('HTML')
       def response = client.getAssessmentReport(request)
       println(response)
       return response
