@@ -79,7 +79,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).setReportFileFormat('HTML')
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).setReportFileFormat(HTML)
       def response = client.getAssessmentReport(request)
       println(response)
       return response
