@@ -11,6 +11,7 @@ import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsRequest
 import com.amazonaws.services.inspector.model.TimestampRange
 import com.amazonaws.services.inspector.model.AssessmentRunFilter
+import com.amazonaws.services.inspector.model.ReportFileFormat
 import java.util.concurrent.TimeUnit
 
 
