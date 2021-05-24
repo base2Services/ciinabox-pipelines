@@ -33,7 +33,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
-      testDuration += 2  //pad the test length by 2 mins
+      testDuration += 5  //pad the test length by 5 mins
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -65,7 +65,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
       def response = client.listAssessmentRuns(request)
       println(response)
-      
+
       // Get the first returned arn by itself
       def regex = /arn.*]/
       response = (response =~ regex)
