@@ -67,9 +67,9 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       regex = /arn.*]/
       // response  = response.findAll(regex)
       println(response)
-      def response = (response =~ regex)
+      response = (response =~ regex)
       def length = response.length()
-      def response = response.substring(0, (length - 1))
+      response = response.substring(0, (length - 1))
       println(response)
       return response
 }
