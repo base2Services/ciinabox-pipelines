@@ -33,6 +33,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
+      testDuration += 2 //pad the test length by 2 mins
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -68,7 +69,6 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       // response  = response.findAll(regex)
       response = (response =~ regex)
       response = response[0].toString()
-      println(response)
       def length = response.length()
       response = response.substring(0, (length - 1))
       println(response)
