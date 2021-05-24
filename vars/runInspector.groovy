@@ -27,7 +27,7 @@ def call(body) {
       );
       println(template_arn)
       // Query stack for inspector assessment template test duration
-      def testDuration = cloudformation(
+      int testDuration = cloudformation(
         stackName: 'inspector-test',//config.stackName,
         queryType: 'output',
         query: 'TestDuration',
