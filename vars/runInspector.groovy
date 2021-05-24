@@ -32,7 +32,7 @@ def call(body) {
         queryType: 'output',
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
-      ).totoInteger();
+      ).toInteger();
 
       Date testStartTime = new Date()
       println(testStartTime)
