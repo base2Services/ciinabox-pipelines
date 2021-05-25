@@ -42,6 +42,7 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
+      println("waiting " + SECONDS + " to allow test to run")
       TimeUnit.SECONDS.sleep(testDuration);
       Date testCompleteTime = new Date()
       println(testCompleteTime)
