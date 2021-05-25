@@ -48,6 +48,11 @@ def call(body) {
                   TimeUnit.SECONDS.sleep(20);
                   testDuration = (testDuration - 20)
             }
+            else if (testDuration < 300) {
+                  println("The test has  " + testDuration + " seconds left to run")
+                  TimeUnit.SECONDS.sleep(60);
+                  testDuration = (testDuration - 60)
+            }
             else if (testDuration > 300) {
                   println ("The test has " + (testDuration/60) + " minutes left to run")
                   TimeUnit.SECONDS.sleep(300);
