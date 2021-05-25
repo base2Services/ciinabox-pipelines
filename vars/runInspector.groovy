@@ -42,7 +42,7 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      println("waiting " + SECONDS + " to allow test to run")
+      println("waiting " + testDuration + " seconds to allow test to run")
       TimeUnit.SECONDS.sleep(testDuration);
       Date testCompleteTime = new Date()
       println(testCompleteTime)
@@ -82,7 +82,6 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       String format = html
-      // def fileFormat = ReportFileFormat.fromValue(format)
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.fromValue(format))
       def response = client.getAssessmentReport(request)
       println(response)
