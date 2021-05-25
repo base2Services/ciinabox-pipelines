@@ -42,15 +42,25 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      println("waiting " + testDuration + " seconds to allow test to run")
-      TimeUnit.SECONDS.sleep(testDuration);
+      while (testDuration > 0) {
+            if (testDuration < 60) {
+                  println("The test has  " + testDuration + " seconds left to run")
+                  TimeUnit.SECONDS.sleep(20);
+                  testDuration = (testDuration - 20)
+            }
+            else if (testDuration > 300) {
+                  println ("The test has " + (testDuration/60) + " minutes left to run")
+                  TimeUnit.SECONDS.sleep(300);
+                  testDuration = (testDuration - 300)
+            }
+      }
       Date testCompleteTime = new Date()
       println(testCompleteTime)
 
       def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
-
       def getResults = getResults(assessmentArn)
       println(getResults)
+      def pass = pass(getResults)
 }
 
 def assessmentRun(String template_arn) {
@@ -86,6 +96,14 @@ def getResults(String result_arn) {
       def response = client.getAssessmentReport(request)
       println(response)
       return response
+}
+
+def pass(String fullResult) {
+      def grepString = /regex to look for/
+      def result = (fullResult =~ grepString)
+      if (result.equals('Failed')) {
+            throw new GroovyRuntimeException("AMI failed insecptor test, see above for test result, AMI not pushed out")
+      }
 }
 
 // call([
