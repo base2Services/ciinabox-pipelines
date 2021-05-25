@@ -9,9 +9,9 @@ import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
 import com.amazonaws.services.inspector.model.GetAssessmentReportResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
 import com.amazonaws.services.inspector.model.ListAssessmentRunsRequest
+import com.amazonaws.services.inspector.model.ReportFileFormat
 import com.amazonaws.services.inspector.model.TimestampRange
 import com.amazonaws.services.inspector.model.AssessmentRunFilter
-import com.amazonaws.services.inspector.model.ReportFileFormat
 import java.util.concurrent.TimeUnit
 
 
@@ -96,7 +96,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      String format = 'html'
+      String format = 'HTML'
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.fromValue(format))
       def response = client.getAssessmentReport(request)
       println(response)
