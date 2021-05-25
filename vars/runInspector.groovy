@@ -50,7 +50,7 @@ def call(body) {
                   testDuration -= 20
             }
             else if (testDuration <= 300) {
-                  println("The test has  " + (testDuration/60) + " seconds left to run")
+                  println("The test has  " + (testDuration/60) + " minutes left to run")
                   TimeUnit.SECONDS.sleep(60);
                   testDuration -= 60
             }
@@ -97,7 +97,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      String format = 'HTML'
+      String format = 'html'
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
       def response = client.getAssessmentReport(request)
       println(response)
