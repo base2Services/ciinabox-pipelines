@@ -82,7 +82,7 @@ def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       // String format = HTML
       // def fileFormat = ReportFileFormat.fromValue(format)
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).setReportFileFormat(reportFileFormat(HTML))
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).setReportFileFormat(HTML)
       def response = client.getAssessmentReport(request)
       println(response)
       return response
