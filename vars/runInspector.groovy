@@ -56,17 +56,24 @@ def call(body) {
 
       def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
 
-      def testRunning = true
-      def workingPattern = /WORK_IN_PROGRESS/
-      while (testRunning.equals(true)) {
-            def getResults = getResults(assessmentArn)
-            println("Pre Regex: ${getResults}")
-            getResults = (getResults =~ workingPattern)
-            println("Post Regex: ${getResults}")
-      }
+      // // This was a test to check the status of the test and then only get the result when the test is complete, this does not work as of current as querying a running test (this way) produces an error.
+      // def testRunning = true
+      // def workingPattern = /WORK_IN_PROGRESS/
+      // while (testRunning.equals(true)) {
+      //       def getResults = getResults(assessmentArn)
+      //       println("Pre Regex: ${getResults}")
+      //       getResults = (getResults =~ workingPattern)
+      //       println("Post Regex: ${getResults}")
+      // }
 
       def getResults = getResults(assessmentArn)
       println(getResults)
+      def urlRegex = /http.*/
+      def resutlUrl = (getResults =~ urlRegex)
+      def length = urlRegex.length()
+      resutlUrl = urlRegex.substring(0, (length - 1))
+      println(resutlUrl)
+      println(urlRegex.toURL().test)
       pass(getResults)
 }
 
