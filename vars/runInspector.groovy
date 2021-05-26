@@ -24,7 +24,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
-      testDuration += 120  //pad the test length by 2 mins to account for startup/finshup time
+      testDuration += 180  //pad the test length by 3 mins to account for startup/finshup time
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -56,7 +56,7 @@ def call(body) {
       def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
       def getResults = getResults(assessmentArn)
       println(getResults)
-      def pass = pass(getResults)
+      pass(getResults)
 }
 
 def assessmentRun(String template_arn) {
