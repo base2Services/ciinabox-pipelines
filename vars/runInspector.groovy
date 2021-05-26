@@ -117,12 +117,13 @@ def formatedResults(String fullResult) {
       def regex = /A total of \d/
       def findings = (fullResult =~ regex)
       findings = findings[0]
+      println(findings)
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
       println(findings)
 
       if (findings >= 1) {
-            println("Test(s) not passed ${findings} found")
-            throw new GroovyRuntimeException("AMI failed insecptor test, see above for test result, AMI not pushed out")
+            println("Test(s) not passed ${findings} issue found")
+            throw new GroovyRuntimeException("AMI failed insecptor test, see insepctor for details, AMI not pushed out")
       }
       else {
             println('Test(s) passed')
