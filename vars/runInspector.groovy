@@ -32,28 +32,39 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      // Display the reamining time in a realtively informative way
-      while (testDuration > 0) {
-            if (testDuration <= 60) {
-                  println("The test has ${testDuration} seconds left to run")
-                  TimeUnit.SECONDS.sleep(20);
-                  testDuration -= 20
-            }
-            else if (testDuration <= 300) {
-                  println("The test has ${(testDuration/60)} minutes left to run")
-                  TimeUnit.SECONDS.sleep(60);
-                  testDuration -= 60
-            }
-            else if (testDuration > 300) {
-                  println ("The test has ${(testDuration/60)} minutes left to run")
-                  TimeUnit.SECONDS.sleep(300);
-                  testDuration -= 300
-            }
-      }
+      // // Display the reamining time in a realtively informative way
+      // while (testDuration > 0) {
+      //       if (testDuration <= 60) {
+      //             println("The test has ${testDuration} seconds left to run")
+      //             TimeUnit.SECONDS.sleep(20);
+      //             testDuration -= 20
+      //       }
+      //       else if (testDuration <= 300) {
+      //             println("The test has ${(testDuration/60)} minutes left to run")
+      //             TimeUnit.SECONDS.sleep(60);
+      //             testDuration -= 60
+      //       }
+      //       else if (testDuration > 300) {
+      //             println ("The test has ${(testDuration/60)} minutes left to run")
+      //             TimeUnit.SECONDS.sleep(300);
+      //             testDuration -= 300
+      //       }
+      // }
+
       Date testCompleteTime = new Date()
       println(testCompleteTime)
 
       def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
+
+      def testRunning = true
+      def workingPattern = /WORK_IN_PROGRESS/
+      while (testRunning.equals(true)) {
+            def getResults = getResults(assessmentArn)
+            println("Pre Regex: ${getResults}")
+            getResults = (getResults =~ workingPattern)
+            println("Post Regex: ${getResults}")
+      }
+
       def getResults = getResults(assessmentArn)
       println(getResults)
       pass(getResults)
