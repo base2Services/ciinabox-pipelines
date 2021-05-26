@@ -2,6 +2,7 @@
 //       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
 // ])
 import com.amazonaws.services.inspector.AmazonInspector
+import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
 import java.util.concurrent.TimeUnit
 
@@ -86,16 +87,16 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       return response
 }
 
-// def getResults(String result_arn) {
-//       def client = AmazonInspectorClientBuilder.standard().build()
-//       String format = "HTML"
-//       format.toUpperCase()
-//       println(format)
-//       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
-//       def response = client.getAssessmentReport(request)
-//       println(response)
-//       return response
-// }
+def getResults(String result_arn) {
+      def client = AmazonInspectorClientBuilder.standard().build()
+      String format = "HTML"
+      format.toUpperCase()
+      println(format)
+      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
+      def response = client.getAssessmentReport(request)
+      println(response)
+      return response
+}
 
 
 def getResults(String result_arn) {
