@@ -68,10 +68,9 @@ def call(body) {
 
       def getResults = getResults(assessmentArn)
       println(getResults)
-      def urlRegex = /http.*/
+      def urlRegex = /http.*[^}]/
       def resutlUrl = (getResults =~ urlRegex)
-      def length = urlRegex.length()
-      resutlUrl = urlRegex.substring(0, (length - 1))
+      resutlUrl = resutlUrl[0]
       println(resutlUrl)
       println(urlRegex.toURL().test)
       pass(getResults)
