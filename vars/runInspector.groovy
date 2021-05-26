@@ -1,6 +1,7 @@
 // @Grapes([
 //       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
 // ])
+import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.model.*
 import java.util.concurrent.TimeUnit
 
