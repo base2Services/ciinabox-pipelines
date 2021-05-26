@@ -72,7 +72,7 @@ def call(body) {
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
       println(resutlUrl)
-      println(urlRegex.toURL().test)
+      println(resutlUrl.toURL().test)
       pass(getResults)
 }
 
