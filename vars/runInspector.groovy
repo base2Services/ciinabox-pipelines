@@ -7,8 +7,6 @@ import com.amazonaws.services.inspector.model.*
 import java.util.concurrent.TimeUnit
 
 
-
-
 def call(body) {
       def config = body
       // Query stack for inspector assessment template arn
@@ -87,16 +85,16 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       return response
 }
 
-def getResults(String result_arn) {
-      def client = AmazonInspectorClientBuilder.standard().build()
-      String format = "HTML"
-      format.toUpperCase()
-      println(format)
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
-      def response = client.getAssessmentReport(request)
-      println(response)
-      return response
-}
+// def getResults(String result_arn) {
+//       def client = AmazonInspectorClientBuilder.standard().build()
+//       String format = "HTML"
+//       format.toUpperCase()
+//       println(format)
+//       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
+//       def response = client.getAssessmentReport(request)
+//       println(response)
+//       return response
+// }
 
 
 def getResults(String result_arn) {
