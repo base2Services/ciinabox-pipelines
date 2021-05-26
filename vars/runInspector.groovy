@@ -45,17 +45,17 @@ def call(body) {
       // Display the reamining time in a realtively informative way
       while (testDuration > 0) {
             if (testDuration <= 60) {
-                  println("The test has  " + testDuration + " seconds left to run")
+                  println("The test has ${testDuration} seconds left to run")
                   TimeUnit.SECONDS.sleep(20);
                   testDuration -= 20
             }
             else if (testDuration <= 300) {
-                  println("The test has  " + (testDuration/60) + " minutes left to run")
+                  println("The test has ${(testDuration/60)} minutes left to run")
                   TimeUnit.SECONDS.sleep(60);
                   testDuration -= 60
             }
             else if (testDuration > 300) {
-                  println ("The test has " + (testDuration/60) + " minutes left to run")
+                  println ("The test has ${(testDuration/60)} minutes left to run")
                   TimeUnit.SECONDS.sleep(300);
                   testDuration -= 300
             }
@@ -97,7 +97,7 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      String format = "HTML"
+      String format = "${HTML}"
       println(format)
       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
       def response = client.getAssessmentReport(request)
