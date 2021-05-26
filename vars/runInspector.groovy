@@ -72,7 +72,7 @@ def call(body) {
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
       println(resutlUrl)
-      println(resutlUrl.toURL().test)
+      println(resutlUrl.toURL().text)
       pass(getResults)
 }
 
@@ -109,7 +109,6 @@ def getResults(String result_arn) {
                         .withReportFileFormat('HTML') // HTML OR PDF
                         .withReportType('FULL') //FINDING OR FULL
       def response = client.getAssessmentReport(request)
-      println(response)
       return response
 }
 
