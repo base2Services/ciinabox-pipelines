@@ -59,9 +59,9 @@ def call(body) {
       // // This was a test to check the status of the test and then only get the result when the test is complete, this does not work as of current as querying a running test (this way) produces an error.
       def testRunning = true
       while (testRunning.equals(true)) {
-            def getResults = getResults(assessmentArn)
+            def getResults = getResults(assessmentArn).toString()
             println("Pre Regex: ${getResults}")
-            if ((getResults.contains('WORK_IN_PROGRESS').equals(false))) {
+            if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                   testRunning = false
             }
       }
