@@ -73,7 +73,7 @@ def call(body) {
       resutlUrl = resutlUrl[0]
       println(resutlUrl)
       println(resutlUrl.toURL().text)
-      pass(getResults)
+      formatedResults(resutlUrl)
 }
 
 def assessmentRun(String template_arn) {
@@ -112,11 +112,20 @@ def getResults(String result_arn) {
       return response
 }
 
-def pass(String fullResult) {
-      def grepString = /regex to look for/
-      def result = (fullResult =~ grepString)
-      if (result.equals('Failed')) {
+def formatedResults(String fullResult) {
+      // Check if there where Findings
+      def regex = /A total of \d/
+      def findings = (fullResult =~ regex)
+      findings = findings[0]
+      findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
+      println(findings)
+
+      if (findings >= 1) {
+            println("Test(s) not passed ${findings} found")
             throw new GroovyRuntimeException("AMI failed insecptor test, see above for test result, AMI not pushed out")
+      }
+      else {
+            println('Test(s) passed')
       }
 }
 
