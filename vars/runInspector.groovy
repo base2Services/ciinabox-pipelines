@@ -24,7 +24,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
-      testDuration += 300  //pad the test length by 5 mins to account for startup/finshup time
+      testDuration += 60  //pad the test length by 1 min to account for startup/finshup time
 
       Date testStartTime = new Date()
       println(testStartTime)
@@ -32,24 +32,24 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      // // Display the reamining time in a realtively informative way
-      // while (testDuration > 0) {
-      //       if (testDuration <= 60) {
-      //             println("The test has ${testDuration} seconds left to run")
-      //             TimeUnit.SECONDS.sleep(20);
-      //             testDuration -= 20
-      //       }
-      //       else if (testDuration <= 300) {
-      //             println("The test has ${(testDuration/60)} minutes left to run")
-      //             TimeUnit.SECONDS.sleep(60);
-      //             testDuration -= 60
-      //       }
-      //       else if (testDuration > 300) {
-      //             println ("The test has ${(testDuration/60)} minutes left to run")
-      //             TimeUnit.SECONDS.sleep(300);
-      //             testDuration -= 300
-      //       }
-      // }
+      // Display the reamining time in a realtively informative way
+      while (testDuration > 0) {
+            if (testDuration <= 60) {
+                  println("The test has ${testDuration} seconds left to run")
+                  TimeUnit.SECONDS.sleep(20);
+                  testDuration -= 20
+            }
+            else if (testDuration <= 300) {
+                  println("The test has ${(testDuration/60)} minutes left to run")
+                  TimeUnit.SECONDS.sleep(60);
+                  testDuration -= 60
+            }
+            else if (testDuration > 300) {
+                  println ("The test has ${(testDuration/60)} minutes left to run")
+                  TimeUnit.SECONDS.sleep(300);
+                  testDuration -= 300
+            }
+      }
 
       Date testCompleteTime = new Date()
       println(testCompleteTime)
