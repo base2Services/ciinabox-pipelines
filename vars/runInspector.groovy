@@ -24,7 +24,7 @@ def call(body) {
         query: 'TestDuration',
         region: 'ap-southeast-2' //config.region,
       ).toInteger();
-      testDuration += 180  //pad the test length by 3 mins to account for startup/finshup time
+      testDuration += 300  //pad the test length by 5 mins to account for startup/finshup time
 
       Date testStartTime = new Date()
       println(testStartTime)
