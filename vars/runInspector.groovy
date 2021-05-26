@@ -1,17 +1,7 @@
 // @Grapes([
 //       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
 // ])
-import com.amazonaws.services.inspector.AmazonInspector
-import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
-import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
-import com.amazonaws.services.inspector.model.StartAssessmentRunResult
-import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
-import com.amazonaws.services.inspector.model.GetAssessmentReportResult
-import com.amazonaws.services.inspector.model.ListAssessmentRunsResult
-import com.amazonaws.services.inspector.model.ListAssessmentRunsRequest
-import com.amazonaws.services.inspector.model.ReportFileFormat
-import com.amazonaws.services.inspector.model.TimestampRange
-import com.amazonaws.services.inspector.model.AssessmentRunFilter
+import com.amazonaws.services.inspector.model.*
 import java.util.concurrent.TimeUnit
 
 
@@ -95,12 +85,26 @@ def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
       return response
 }
 
+// def getResults(String result_arn) {
+//       def client = AmazonInspectorClientBuilder.standard().build()
+//       String format = "HTML"
+//       format.toUpperCase()
+//       println(format)
+//       def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
+//       def response = client.getAssessmentReport(request)
+//       println(response)
+//       return response
+// }
+
+
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
-      String format = "HTML"
-      format.toUpperCase()
-      println(format)
-      def request = new GetAssessmentReportRequest().withAssessmentRunArn(result_arn).withReportFileFormat(ReportFileFormat.valueOf(format))
+    //   String format = 'HTML'
+    //   println(format)
+      def request = new GetAssessmentReportRequest()
+                        .withAssessmentRunArn(result_arn)
+                        .withReportFileFormat('HTML') // HTML OR PDF
+                        .withReportType('FINDING') //FINDING OR FULL
       def response = client.getAssessmentReport(request)
       println(response)
       return response
