@@ -10,11 +10,12 @@ import java.util.concurrent.TimeUnit
 def call(body) {
       // Query stack for inspector assessment template arn
       def template_arn = cloudformation(
-        stackName: config.stackName,
+        stackName: body.stackName,
         queryType: 'output',
         query: 'TemplateArn',
-        region: config.region
+        region: body.region
       );
+      println(template_arn)
 
       def assessmentArn = assessmentRun(template_arn)
 
