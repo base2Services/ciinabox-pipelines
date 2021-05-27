@@ -4,7 +4,6 @@
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
-import com.amazonaws.services.simplesystemsmanagement
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder
 import com.amazonaws.services.simplesystemsmanagement.model.*
 import java.util.concurrent.TimeUnit
