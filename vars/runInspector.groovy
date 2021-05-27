@@ -73,7 +73,7 @@ def call(body) {
             }
       }
 
-      def getResults = getResults(assessmentRun)
+      getResults = getResults(assessmentArn)
       println(getResults)
       def urlRegex = /http.*[^}]/
       def resutlUrl = (getResults =~ urlRegex)
