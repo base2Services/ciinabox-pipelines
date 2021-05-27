@@ -16,10 +16,8 @@ def call(body) {
         query: 'TemplateArn',
         region: 'ap-southeast-2' //config.region,
       );
-      println(template_arn)
 
       def assessmentArn = assessmentRun(template_arn)
-      println(assessmentArn)
 
       // Wait for the inspector test to run
       def runStatus = getRunStatus(assessmentArn)
@@ -56,25 +54,6 @@ def assessmentRun(String template_arn) {
       return response.getAssessmentRunArn()
 }
 
-// def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
-//       def client = AmazonInspectorClientBuilder.standard().build()
-//       def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
-//       def filter = new AssessmentRunFilter().withStartTimeRange(timeRange)
-//       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
-//       def response = client.listAssessmentRuns(request)
-//       println(response)
-//
-//       // Get the first returned arn by itself
-//       def regex = /arn.*]/
-//       response = (response =~ regex)
-//       response = response[0].toString()
-//       def length = response.length()
-//       response = response.substring(0, (length - 1))
-//       println(response)
-//
-//       return response
-// }
-
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new GetAssessmentReportRequest()
@@ -89,16 +68,12 @@ def formatedResults(fullResult) {
       // Check if there where Findings
       def regex = /A total of \d/
       def findings = (fullResult =~ regex)
-      println('***********')
-      println(findings)
       findings = findings[0]
-      println(findings)
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
-      println(findings)
 
       if (findings >= 1) {
             println("Test(s) not passed ${findings} issue found")
-            // throw new GroovyRuntimeException("AMI failed insecptor test, see insepctor for details, AMI not pushed out")
+            throw new GroovyRuntimeException("****************\nAMI failed insecptor test(s), see insepctor for details vai the AWS CLI or console, AMI not pushed out\n****************")
       }
       else {
             println('Test(s) passed')
