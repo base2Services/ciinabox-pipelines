@@ -124,7 +124,7 @@ def formatedResults(String fullResult) {
       def regex = /A total of \d/
       def findings = (fullResult =~ regex)
       println('***********')
-      println(finding)
+      println(findings)
       findings = findings[0]
       println(findings)
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
