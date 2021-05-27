@@ -116,6 +116,8 @@ def formatedResults(String fullResult) {
       // Check if there where Findings
       def regex = /A total of \d/
       def findings = (fullResult =~ regex)
+      println('***********')
+      println(finding)
       findings = findings[0]
       println(findings)
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
