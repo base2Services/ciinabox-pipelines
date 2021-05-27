@@ -33,46 +33,47 @@ def call(body) {
       println(assessmentRun)
 
       def runStatus = getRunStatus(assessmentRun)
-      println("runStatus: ${runStatus}")
-
-      // Display the reamining time in a realtively informative way
-      while (testDuration > 0) {
-            if (testDuration <= 60) {
-                  println("The test has ${testDuration} seconds left to run")
-                  TimeUnit.SECONDS.sleep(20);
-                  testDuration -= 20
-            }
-            else if (testDuration <= 300) {
-                  println("The test has ${(testDuration/60)} minutes left to run")
-                  TimeUnit.SECONDS.sleep(60);
-                  testDuration -= 60
-            }
-            else if (testDuration > 300) {
-                  println ("The test has ${(testDuration/60)} minutes left to run")
-                  TimeUnit.SECONDS.sleep(300);
-                  testDuration -= 300
-            }
+      while  (runStatus != "COMPLETED") {
+            runStatus = getRunStatus(assessmentRun)
+            println("runStatus: ${runStatus}")
+            TimeUnit.SECONDS.sleep(5);
       }
 
-      runStatus = getRunStatus(assessmentRun)
-      println("runStatus: ${runStatus}")
+      // // Display the reamining time in a realtively informative way
+      // while (testDuration > 0) {
+      //       if (testDuration <= 60) {
+      //             println("The test has ${testDuration} seconds left to run")
+      //             TimeUnit.SECONDS.sleep(20);
+      //             testDuration -= 20
+      //       }
+      //       else if (testDuration <= 300) {
+      //             println("The test has ${(testDuration/60)} minutes left to run")
+      //             TimeUnit.SECONDS.sleep(60);
+      //             testDuration -= 60
+      //       }
+      //       else if (testDuration > 300) {
+      //             println ("The test has ${(testDuration/60)} minutes left to run")
+      //             TimeUnit.SECONDS.sleep(300);
+      //             testDuration -= 300
+      //       }
+      // }
 
-      Date testCompleteTime = new Date()
-      println(testCompleteTime)
+      // Date testCompleteTime = new Date()
+      // println(testCompleteTime)
 
-      def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
+      // def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
 
-      // // This was a test to check the status of the test and then only get the result when the test is complete, this does not work as of current as querying a running test (this way) produces an error.
-      def testRunning = true
-      while (testRunning.equals(true)) {
-            def getResults = getResults(assessmentArn).toString()
-            println("Pre Regex: ${getResults}")
-            if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
-                  testRunning = false
-            }
-      }
+      // // // This was a test to check the status of the test and then only get the result when the test is complete, this does not work as of current as querying a running test (this way) produces an error.
+      // def testRunning = true
+      // while (testRunning.equals(true)) {
+      //       def getResults = getResults(assessmentArn).toString()
+      //       println("Pre Regex: ${getResults}")
+      //       if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
+      //             testRunning = false
+      //       }
+      // }
 
-      def getResults = getResults(assessmentArn)
+      def getResults = getResults(assessmentRun)
       println(getResults)
       def urlRegex = /http.*[^}]/
       def resutlUrl = (getResults =~ urlRegex)
@@ -89,24 +90,24 @@ def assessmentRun(String template_arn) {
       return response.getAssessmentRunArn()
 }
 
-def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
-      def client = AmazonInspectorClientBuilder.standard().build()
-      def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
-      def filter = new AssessmentRunFilter().withStartTimeRange(timeRange)
-      def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
-      def response = client.listAssessmentRuns(request)
-      println(response)
-
-      // Get the first returned arn by itself
-      def regex = /arn.*]/
-      response = (response =~ regex)
-      response = response[0].toString()
-      def length = response.length()
-      response = response.substring(0, (length - 1))
-      println(response)
-
-      return response
-}
+// def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
+//       def client = AmazonInspectorClientBuilder.standard().build()
+//       def timeRange = new TimestampRange().withBeginDate(testStartTime).withEndDate(testCompleteTime)
+//       def filter = new AssessmentRunFilter().withStartTimeRange(timeRange)
+//       def request = new ListAssessmentRunsRequest().withAssessmentTemplateArns(arn).withFilter(filter)
+//       def response = client.listAssessmentRuns(request)
+//       println(response)
+//
+//       // Get the first returned arn by itself
+//       def regex = /arn.*]/
+//       response = (response =~ regex)
+//       response = response[0].toString()
+//       def length = response.length()
+//       response = response.substring(0, (length - 1))
+//       println(response)
+//
+//       return response
+// }
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
