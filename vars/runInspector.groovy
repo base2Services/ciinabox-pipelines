@@ -4,6 +4,8 @@
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
+import com.amazonaws.services.simplesystemsmanagement
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder
 import com.amazonaws.services.simplesystemsmanagement.model.*
 import java.util.concurrent.TimeUnit
 
@@ -59,11 +61,11 @@ def call(body) {
 
 
 def installInspectorAgent(String instanceIds) {
-      def client = AmazonSimpleSystemsManagementClientBuilder.standard().build()
+      def client = AWSSimpleSystemsManagementClientBuilder.standard().build()
       def request = new SendCommandRequest()
             .withInstanceIds(instanceIds)
             .withDocumentName(' AmazonInspector-ManageAWSAgent')
-      def result = client.sendcommand(request)
+      def response = client.sendCommand(request)
 }
 
 def assessmentRun(String template_arn) {
