@@ -29,12 +29,12 @@ def call(body) {
       Date testStartTime = new Date()
       println(testStartTime)
 
-      def assessmentRun = assessmentRun(template_arn)
-      println(assessmentRun)
+      def assessmentArn = assessmentRun(template_arn)
+      println(assessmentArn)
 
-      def runStatus = getRunStatus(assessmentRun)
+      def runStatus = getRunStatus(assessmentArn)
       while  (runStatus != "COMPLETED") {
-            runStatus = getRunStatus(assessmentRun)
+            runStatus = getRunStatus(assessmentArn)
             println("runStatus: ${runStatus}")
             TimeUnit.SECONDS.sleep(5);
       }
