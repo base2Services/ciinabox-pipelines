@@ -32,7 +32,8 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
-      def testArn = getRunArn(assessmentRun)
+      def runStatus = getRunStatus(assessmentRun)
+      println("runStatus: ${runStatus}")
 
       // Display the reamining time in a realtively informative way
       while (testDuration > 0) {
@@ -52,6 +53,9 @@ def call(body) {
                   testDuration -= 300
             }
       }
+
+      def runStatus = getRunStatus(assessmentRun)
+      println("runStatus: ${runStatus}")
 
       Date testCompleteTime = new Date()
       println(testCompleteTime)
@@ -134,7 +138,7 @@ def formatedResults(String fullResult) {
       }
 }
 
-def getRunArn (String arn) {
+def getRunStatus (String arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new DescribeAssessmentRunsRequest()
         .withAssessmentRunArns(arn)
