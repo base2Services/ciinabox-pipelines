@@ -73,7 +73,7 @@ def formatedResults(fullResult) {
 
       if (findings >= 1) {
             println("Test(s) not passed ${findings} issue found")
-            throw new GroovyRuntimeException("****************\nAMI failed insecptor test(s), see insepctor for details vai the AWS CLI or console, AMI not pushed out\n****************")
+            throw new GroovyRuntimeException("****************\nAMI failed insecptor test(s), see insepctor for details via the AWS CLI or console, AMI not pushed out\n****************")
       }
       else {
             println('Test(s) passed')
