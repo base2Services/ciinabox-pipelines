@@ -143,7 +143,18 @@ def getRunStatus (String arn) {
       def request = new DescribeAssessmentRunsRequest()
         .withAssessmentRunArns(arn)
       def response = client.describeAssessmentRuns(request)
-      return response
+      println("getRunStatus - response: ${response}")
+      // Pull out just the state of the test
+      def regex = /State: [A-Z_]*,/
+      def state = (response =~ regex)
+      state = state[0]
+      println("getRunStatus - state pre cleanup: ${state}")
+      // Cleanup the state string so its just the current state (not 'State: (state),')
+      def length = state.length()
+      state = state.substring(0, (length - 1))
+      state = state.replace('State: ', '')
+      println("getRunStatus - state post cleanup: ${state}")
+      return state
 }
 
 // call([
