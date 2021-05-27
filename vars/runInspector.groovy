@@ -32,6 +32,8 @@ def call(body) {
       def assessmentRun = assessmentRun(template_arn)
       println(assessmentRun)
 
+      def testArn = getRunArn(assessmentRun)
+
       // Display the reamining time in a realtively informative way
       while (testDuration > 0) {
             if (testDuration <= 60) {
@@ -80,7 +82,7 @@ def assessmentRun(String template_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
       def request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
       def response = client.startAssessmentRun(request)
-      return request.getAssessmentTemplateArn()
+      return response.getAssessmentRunArn()
 }
 
 def assessmentArn(String arn, Date testStartTime, Date testCompleteTime) {
@@ -130,6 +132,14 @@ def formatedResults(String fullResult) {
       else {
             println('Test(s) passed')
       }
+}
+
+def getRunArn (String arn) {
+      def client = AmazonInspectorClientBuilder.standard().build()
+      def request = new DescribeAssessmentRunsRequest()
+        .withAssessmentRunArns(arn)
+      def response = client.describeAssessmentRuns(request)
+      return response
 }
 
 // call([
