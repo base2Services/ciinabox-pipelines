@@ -12,20 +12,20 @@ def call(body) {
 
       // Query stack for instance Id (must be an output) to install inspector agent if needed
       def instanceIds = cloudformation(
-            stackName: body.stackName,
-            queryType: 'output',
-            query: 'InstanceId',
-            region: body.region
-            )
+              stackName: body.stackName,
+              queryType: 'output',
+              query: 'InstanceId',
+              region: body.region
+      )
       installInspectorAgent(instanceIds)
 
 
       // Query stack for inspector assessment template arn (must be an output)
       def template_arn = cloudformation(
-        stackName: body.stackName,
-        queryType: 'output',
-        query: 'TemplateArn',
-        region: body.region
+              stackName: body.stackName,
+              queryType: 'output',
+              query: 'TemplateArn',
+              region: body.region
       )
 
       def assessmentArn = assessmentRun(template_arn)
