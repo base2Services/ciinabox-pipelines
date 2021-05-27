@@ -119,7 +119,7 @@ def getResults(String result_arn) {
       return response
 }
 
-def formatedResults(String fullResult) {
+def formatedResults(fullResult) {
       // Check if there where Findings
       def regex = /A total of \d/
       def findings = (fullResult =~ regex)
