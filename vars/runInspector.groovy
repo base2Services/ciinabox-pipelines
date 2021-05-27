@@ -54,7 +54,7 @@ def call(body) {
             }
       }
 
-      def runStatus = getRunStatus(assessmentRun)
+      runStatus = getRunStatus(assessmentRun)
       println("runStatus: ${runStatus}")
 
       Date testCompleteTime = new Date()
