@@ -8,13 +8,12 @@ import java.util.concurrent.TimeUnit
 
 
 def call(body) {
-      def config = body
       // Query stack for inspector assessment template arn
       def template_arn = cloudformation(
-        stackName: 'inspector-test',//config.stackName,
+        stackName: config.stackName,
         queryType: 'output',
         query: 'TemplateArn',
-        region: 'ap-southeast-2' //config.region,
+        region: config.region
       );
 
       def assessmentArn = assessmentRun(template_arn)
@@ -72,8 +71,8 @@ def formatedResults(fullResult) {
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
 
       if (findings >= 1) {
-            println("Test(s) not passed ${findings} issue found")
-            throw new GroovyRuntimeException("****************\nAMI failed insecptor test(s), see insepctor for details via the AWS CLI or console, AMI not pushed out\n****************")
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via the AWS CLI or console, AMI not pushed out\n****************")
+            throw new GroovyRuntimeException("One or more interpector test(s)  failed on the AMI")
       }
       else {
             println('Test(s) passed')
