@@ -89,5 +89,3 @@ Outputs:
       TemplateArn:
             Value:
                    Fn::GetAtt: [ testtemplate, Arn ]
-      TestDuration:
-            Value: 120 # This is only hard coded in this case because you can't use Fn::GetAtt: but normally this would be passed in as a parameter an hence could be refeernced here as well

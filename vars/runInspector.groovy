@@ -17,57 +17,22 @@ def call(body) {
         region: 'ap-southeast-2' //config.region,
       );
       println(template_arn)
-      // Query stack for inspector assessment template test duration
-      int testDuration = cloudformation(
-        stackName: 'inspector-test',//config.stackName,
-        queryType: 'output',
-        query: 'TestDuration',
-        region: 'ap-southeast-2' //config.region,
-      ).toInteger();
-      testDuration += 150 //pad the test length by 2 mins to account for startup/finshup time
-
-      Date testStartTime = new Date()
-      println(testStartTime)
 
       def assessmentArn = assessmentRun(template_arn)
       println(assessmentArn)
 
+      // Wait for the inspector test to run
       def runStatus = getRunStatus(assessmentArn)
       while  (runStatus != "COMPLETED") {
             runStatus = getRunStatus(assessmentArn)
-            println("runStatus: ${runStatus}")
+            println("Test Run Status: ${runStatus}")
             TimeUnit.SECONDS.sleep(5);
       }
-
-      // // Display the reamining time in a realtively informative way
-      // while (testDuration > 0) {
-      //       if (testDuration <= 60) {
-      //             println("The test has ${testDuration} seconds left to run")
-      //             TimeUnit.SECONDS.sleep(20);
-      //             testDuration -= 20
-      //       }
-      //       else if (testDuration <= 300) {
-      //             println("The test has ${(testDuration/60)} minutes left to run")
-      //             TimeUnit.SECONDS.sleep(60);
-      //             testDuration -= 60
-      //       }
-      //       else if (testDuration > 300) {
-      //             println ("The test has ${(testDuration/60)} minutes left to run")
-      //             TimeUnit.SECONDS.sleep(300);
-      //             testDuration -= 300
-      //       }
-      // }
-
-      // Date testCompleteTime = new Date()
-      // println(testCompleteTime)
-
-      // def assessmentArn = assessmentArn(assessmentRun, testStartTime, testCompleteTime)
-
-      // // This was a test to check the status of the test and then only get the result when the test is complete, this does not work as of current as querying a running test (this way) produces an error.
+      // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
       def testRunning = true
       while (testRunning.equals(true)) {
             def getResults = getResults(assessmentArn).toString()
-            println("Pre Regex: ${getResults}")
+            println("Cleanup Status: ${getResults}")
             if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                   testRunning = false
             }
@@ -133,7 +98,7 @@ def formatedResults(fullResult) {
 
       if (findings >= 1) {
             println("Test(s) not passed ${findings} issue found")
-            throw new GroovyRuntimeException("AMI failed insecptor test, see insepctor for details, AMI not pushed out")
+            // throw new GroovyRuntimeException("AMI failed insecptor test, see insepctor for details, AMI not pushed out")
       }
       else {
             println('Test(s) passed')
