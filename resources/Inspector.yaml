@@ -89,3 +89,6 @@ Outputs:
       TemplateArn:
             Value:
                    Fn::GetAtt: [ testtemplate, Arn ]
+      InstanceId:
+            Value:
+                  Ref: testinstance

@@ -4,18 +4,29 @@
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
+import com.amazonaws.services.simplesystemsmanagement.model.*
 import java.util.concurrent.TimeUnit
 
 
 def call(body) {
-      // Query stack for inspector assessment template arn
+
+      // Query stack for instance Id (must be an output) to install inspector agent if needed
+      def instanceIds = cloudformation(
+            stackName: body.stackName,
+            queryType: 'output',
+            query: 'InstanceId',
+            region: body.region
+            )
+      installInspectorAgent(instanceIds)
+
+
+      // Query stack for inspector assessment template arn (must be an output)
       def template_arn = cloudformation(
         stackName: body.stackName,
         queryType: 'output',
         query: 'TemplateArn',
         region: body.region
-      );
-      println(template_arn)
+      )
 
       def assessmentArn = assessmentRun(template_arn)
 
@@ -41,10 +52,18 @@ def call(body) {
       def urlRegex = /http.*[^}]/
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
-      println(resutlUrl)
       def fullResult = resutlUrl.toURL().text
-      println(fullResult)
       formatedResults(fullResult)
+}
+
+
+
+def installInspectorAgent(String instanceIds) {
+      def client = AmazonSimpleSystemsManagementClientBuilder.standard().build()
+      def request = new SendCommandRequest()
+            .withInstanceIds(instanceIds)
+            .withDocumentName(' AmazonInspector-ManageAWSAgent')
+      def result = client.sendcommand(request)
 }
 
 def assessmentRun(String template_arn) {
