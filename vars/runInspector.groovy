@@ -79,8 +79,9 @@ def call(body) {
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
       println(resutlUrl)
-      println(resutlUrl.toURL().text)
-      formatedResults(resutlUrl)
+      def fullResult = resutlUrl.toURL().text
+      println(fullResult)
+      formatedResults(fullResult)
 }
 
 def assessmentRun(String template_arn) {
