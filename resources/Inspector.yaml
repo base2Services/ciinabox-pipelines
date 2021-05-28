@@ -9,8 +9,8 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId:
-        Fn::Sub: "${AmiId}"
+      ImageId: ami-0186908e2fdeea8f3
+        # Fn::Sub: "${AmiId}"
       Tags:
         - Key: Inspector
           Value: "True"
