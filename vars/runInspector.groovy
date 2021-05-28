@@ -18,6 +18,7 @@ def call(body) {
               query: 'InstanceId',
               region: body.region
       )
+      println(instanceIds)
       installInspectorAgent(instanceIds)
 
 
