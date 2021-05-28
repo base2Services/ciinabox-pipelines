@@ -61,7 +61,7 @@ def call(body) {
 
 
 def installInspectorAgent(String id) {
-      println("instance id in function: ${instanceIds}")
+      println("instance id in function: ${id}")
       def client = AWSSimpleSystemsManagementClientBuilder.standard().build()
       def request = new SendCommandRequest()
             .withInstanceIds(id)
