@@ -31,7 +31,7 @@ def call(body) {
        templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
-         'AmiId' : body.AmiId
+         'AmiId' : body.AmiId,
          'OS': os
        ]
       )
