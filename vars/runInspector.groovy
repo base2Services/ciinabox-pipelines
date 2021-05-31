@@ -88,7 +88,7 @@ def call(body) {
 
 def returnOs(String ami) {
       def client = AmazonEC2ClientBuilder.standard().build()
-      def request = new DescribeImagesRequest.withImageIds(ami)
+      def request = new DescribeImagesRequest().withImageIds(ami)
       def response = client.describeImagesRequest(request)
       return response
 }
