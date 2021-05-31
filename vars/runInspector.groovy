@@ -20,7 +20,7 @@ def call(body) {
       writeFile(file: fileName, text: template)
       def stackName = 'InspectorAmiTest'
       s3Put(
-            file: fileName,
+            file: '/Inspector.yaml',
             bucket: body.hostBucket,
             key: "/",
             region: '"ap-southeast-2"'
