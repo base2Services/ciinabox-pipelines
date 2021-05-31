@@ -16,13 +16,13 @@ def call(body) {
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
       def stackName = 'InspectorAmiTest'
       s3Put(
-            file: "../resources/Inspector.yaml",
+            file: body.templateFile,
             bucket: body.hostBucket,
             key: "/",
             region: '"ap-southeast-2"'
       )
 
-      def os = returnOs(body.AmiId)
+      def os = returnOs(body.amiId)
       println(os)
       cloudformation(
        stackName: 'inspector-test',
@@ -35,7 +35,6 @@ def call(body) {
          'OS': os
        ]
       )
-
 
       // Query stack for instance Id (must be an output) to install inspector agent if needed
       def instanceIds = cloudformation(
