@@ -8,6 +8,8 @@ import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement
 import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.CreateBucketRequest
 import java.util.concurrent.TimeUnit
 
 
@@ -19,9 +21,12 @@ def call(body) {
       // def fileName = 'Inspector.yaml'
       // writeFile(file: fileName, text: template)
       // def stackName = 'InspectorAmiTest'
+      def bucketName = 'inspectortestbucket'
+      def bucket = createBucket(bucketName)
+      println(bucket)
       s3Put(
             file: 'Inspector.yaml',
-            bucket: body.hostBucket,
+            bucket: bucketName,
             key: "/",
             region: '"ap-southeast-2"'
       )
@@ -88,6 +93,14 @@ def call(body) {
 }
 
 
+
+
+def createBucket(String name) {
+      def client = AmazonS3ClientBuilder.standard().build()
+      def request = new CreateBucketRequest.setBucketName(name)
+      def response = client.CreateBucketRequest(request)
+      return response
+}
 
 def returnOs(String ami) {
       def client = AmazonEC2ClientBuilder.standard().build()
