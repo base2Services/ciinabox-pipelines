@@ -14,6 +14,23 @@ Resources:
       Tags:
         - Key: Inspector
           Value: "True"
+      # UserData:
+      #       Fn::If:
+      #             windows:
+      #                   Fn::Base64:
+      #                         Fn::Join: ['',
+      #                         [
+      #                               "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
+      #                               "AWSAgentInstall.exe"
+      #                         ]]
+      #             linux:
+      #                   Fn::Base64:
+      #                         Fn::Join: [ '',
+      #                         [
+      #                               "#/bin/bash \n",
+      #                               "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
+      #                               "bash install"
+      #                         ]]
 
   testresourcegroup:
     Type: "AWS::Inspector::ResourceGroup"

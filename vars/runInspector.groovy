@@ -6,10 +6,36 @@ import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder
 import com.amazonaws.services.simplesystemsmanagement.model.*
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
+import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import java.util.concurrent.TimeUnit
 
 
 def call(body) {
+
+      // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
+      def stackName = 'InspectorAmiTest'
+      s3Put(
+            file: "../Resources/Inspector.yaml",
+            bucket: body.hostBucket,
+            key: "/",
+            region: '"ap-southeast-2"'
+      )
+
+      def os = returnOs(body.AmiId)
+      println(os)
+      cloudformation(
+       stackName: 'inspector-test',
+       action: 'create',
+       region: 'ap-southeast-2',
+       templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+       waitUntilComplete: 'true',
+       parameters: [
+         'AmiId' : body.AmiId
+         'OS': os
+       ]
+      )
+
 
       // Query stack for instance Id (must be an output) to install inspector agent if needed
       def instanceIds = cloudformation(
@@ -59,6 +85,13 @@ def call(body) {
 }
 
 
+
+def returnOs(String ami) {
+      def client = AmazonEC2ClientBuilder.standard().build()
+      def request = new DescribeImagesRequest.withImageIds(ami)
+      def response = client.describeImagesRequest(request)
+      return response
+}
 
 def installInspectorAgent(String id) {
       println("instance id in function: *${id}*")
@@ -120,6 +153,6 @@ def getRunStatus (String arn) {
 }
 
 // call([
-//     region: 'ap-southeast-2',
-//     stackName: 'inspector-test'
+//     hostBucket: 'sampleBucket',
+//     AMI: 'sampleAMI'
 // ])
