@@ -15,12 +15,12 @@ def call(body) {
 
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
 
-      def template = libraryResource('Inspector.yaml')
-      def fileName = 'Inspector.yaml'
-      writeFile(file: fileName, text: template)
-      def stackName = 'InspectorAmiTest'
+      // def template = libraryResource('Inspector.yaml')
+      // def fileName = 'Inspector.yaml'
+      // writeFile(file: fileName, text: template)
+      // def stackName = 'InspectorAmiTest'
       s3Put(
-            file: '/Inspector.yaml',
+            file: 'Inspector.yaml',
             bucket: body.hostBucket,
             key: "/",
             region: '"ap-southeast-2"'
