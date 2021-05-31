@@ -16,7 +16,7 @@ def call(body) {
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
       def stackName = 'InspectorAmiTest'
       s3Put(
-            file: "../Resources/Inspector.yaml",
+            file: "../resources/Inspector.yaml",
             bucket: body.hostBucket,
             key: "/",
             region: '"ap-southeast-2"'
