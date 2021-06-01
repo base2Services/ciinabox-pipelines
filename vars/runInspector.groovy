@@ -12,16 +12,20 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import java.util.concurrent.TimeUnit
+import java.io.File 
 
 
 def call(body) {
 
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
 
-      def template = new File(libraryResource('Inspector.yaml'))
+      def template = libraryResource('Inspector.yaml')
       println(template)
       def fileName = 'Inspector.yaml'
       // writeFile(file: fileName, text: template)
+      new File ('/', fileName).withWriter('utf-8'){
+            writer -> writer.writeLine template
+      }
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
