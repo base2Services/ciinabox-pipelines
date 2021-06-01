@@ -3,6 +3,10 @@ Parameters:
     Type: AWS::EC2::Image::Id
     Description: Ami Id to be passed in from the pipeline
     Default: 'test'
+  OS:
+     Type: String
+     Description: The OS of the Ami
+     Default: 'empty'
 
 Resources:
   testinstance:
@@ -14,23 +18,22 @@ Resources:
       Tags:
         - Key: Inspector
           Value: "True"
-      # UserData:
-      #       Fn::If:
-      #             windows:
-      #                   Fn::Base64:
-      #                         Fn::Join: ['',
-      #                         [
-      #                               "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
-      #                               "AWSAgentInstall.exe"
-      #                         ]]
-      #             linux:
-      #                   Fn::Base64:
-      #                         Fn::Join: [ '',
-      #                         [
-      #                               "#/bin/bash \n",
-      #                               "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
-      #                               "bash install"
-      #                         ]]
+      UserData:
+            Fn::If: [
+                  Fn::Equal: [${OS}, 'Windows'],
+                  Fn::Base64:
+                        Fn::Join: ['',
+                        [
+                              "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
+                              "AWSAgentInstall.exe"
+                        ]],
+                  Fn::Base64:
+                        Fn::Join: [ '',
+                        [
+                              "#/bin/bash \n",
+                              "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
+                              "bash install"
+                        ]]]
 
   testresourcegroup:
     Type: "AWS::Inspector::ResourceGroup"
