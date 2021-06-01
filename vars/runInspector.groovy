@@ -114,7 +114,8 @@ def returnOs(String ami) {
       regex = /Windows/
       response = (response =~ regex)
       println(response)
-      if (response.size() == 0){
+      println(response.size())
+      if (response.size() != 0){
             response = 'Windows'
       }
       else {
