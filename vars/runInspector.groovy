@@ -113,7 +113,6 @@ def returnOs(String ami) {
       println(response)
       regex = /Windows/
       response = (response =~ regex)
-      response = response[0]
       println(response)
       if (response != null){
             response = 'Windows'
@@ -121,6 +120,7 @@ def returnOs(String ami) {
       else {
             response = 'Linux'
       }
+      println(response)
       return response
 }
 
