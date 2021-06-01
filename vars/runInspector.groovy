@@ -18,15 +18,15 @@ def call(body) {
 
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
 
-      // def template = libraryResource('Inspector.yaml')
-      // def fileName = 'Inspector.yaml'
-      // writeFile(file: fileName, text: template)
-      // def stackName = 'InspectorAmiTest'
+      File template = libraryResource('Inspector.yaml')
+      def fileName = 'Inspector.yaml'
+      writeFile(file: fileName, text: template)
+      def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       def bucket = createBucket(bucketName)
       println(bucket)
       s3Put(
-            file: 'Inspector.yaml',
+            file: template,
             bucket: bucketName,
             key: "/",
             region: '"ap-southeast-2"'
@@ -97,7 +97,6 @@ def call(body) {
 
 
 def createBucket(String name) {
-      println(name)
       def client = AmazonS3ClientBuilder.standard().build()
       def request = new CreateBucketRequest(name, 'ap-southeast-2')
       def response = client.createBucket(request)
