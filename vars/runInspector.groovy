@@ -100,8 +100,7 @@ def call(body) {
 
 def uploadFile(String bucket, String file) {
       def client = AmazonS3ClientBuilder.standard().withRegion('ap-southeast-2').build()
-      def request = new PutObjectRequest(bucket, '/', file)
-      def response = client.putObject(request)
+      def request = new PutObject(bucket, '/', file)
 }
 
 
