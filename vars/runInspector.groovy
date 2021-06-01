@@ -18,7 +18,7 @@ def call(body) {
 
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
 
-      Fiel template = new File(libraryResource('Inspector.yaml'))
+      File template = new File(libraryResource('Inspector.yaml'))
       def fileName = 'Inspector.yaml'
       // writeFile(file: fileName, text: template)
       def stackName = 'InspectorAmiTest'
