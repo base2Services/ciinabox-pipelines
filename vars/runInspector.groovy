@@ -25,7 +25,7 @@ def call(body) {
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
       // println(bucket)
-      uploadFile(bucketName, template)
+      uploadFile(bucketName, fileName, template)
 
       def os = returnOs(body.amiId)
       println(os)
@@ -33,7 +33,7 @@ def call(body) {
        stackName: stackName,
        action: 'create',
        region: 'ap-southeast-2',
-       templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+       templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
          'AmiId' : body.amiId,
@@ -92,9 +92,9 @@ def call(body) {
 
 
 
-def uploadFile(String bucket, String file) {
+def uploadFile(String bucket, String fileName, String file) {
       def client = AmazonS3ClientBuilder.standard().withRegion('ap-southeast-2').build()
-      def request = client.putObject(bucket, 'cftemplate', file)
+      def request = client.putObject(bucket, fileName, file)
 }
 
 
