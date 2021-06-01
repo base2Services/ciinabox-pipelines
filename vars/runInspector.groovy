@@ -36,7 +36,7 @@ def call(body) {
        templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
-         'AmiId' : body.AmiId,
+         'AmiId' : 'ami-0423e2aa5d48a358e', //body.AmiId,
          'OS': os
        ]
       )
@@ -109,7 +109,13 @@ def returnOs(String ami) {
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)
       def response = client.describeImages(request)
+
       println(response)
+      regex = /PlatformDetails.*,U/
+      response = (response =~ regex)
+      response = response[0]
+      println(response)
+
       return response
 }
 
