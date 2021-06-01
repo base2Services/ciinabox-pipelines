@@ -25,7 +25,7 @@ def call(body) {
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
       // println(bucket)
-      uploadFile(bucketName, fileName)
+      uploadFile(bucketName, template)
 
       def os = returnOs(body.amiId)
       println(os)
