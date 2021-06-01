@@ -36,7 +36,7 @@ def call(body) {
        templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
-         'AmiId' : body.AmiId,
+         'AmiId' : body.amiId,
          'OS': os
        ]
       )
@@ -114,7 +114,7 @@ def returnOs(String ami) {
       regex = /Windows/
       response = (response =~ regex)
       println(response)
-      if (response != null){
+      if (response[0] != null){
             response = 'Windows'
       }
       else {
