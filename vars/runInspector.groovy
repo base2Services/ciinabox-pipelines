@@ -23,8 +23,8 @@ def call(body) {
       // writeFile(file: fileName, text: template)
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
-      def bucket = createBucket(bucketName)
-      println(bucket)
+      // def bucket = createBucket(bucketName)
+      // println(bucket)
       s3Put(
             file: template,
             bucket: bucketName,
