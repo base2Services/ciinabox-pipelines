@@ -23,9 +23,9 @@ def call(body) {
       println(template)
       def fileName = 'Inspector.yaml'
       // writeFile(file: fileName, text: template)
-      new File ('/', fileName).withWriter('utf-8'){
-            writer -> writer.writeLine template
-      }
+      // new File ('/', fileName).withWriter('utf-8'){
+      //       writer -> writer.writeLine template
+      // }
       println('Written')
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
@@ -99,7 +99,7 @@ def call(body) {
 
 
 def uploadFile(String bucket, String file) {
-      def client = AmazonS3ClientBuilder.standard().build()
+      def client = AmazonS3ClientBuilder.standard().withRegion('ap-southeast-2').build()
       def request = new PutObjectRequest(bucket, '/', file)
       def response = client.putObject(request)
 }
