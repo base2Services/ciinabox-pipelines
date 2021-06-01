@@ -20,13 +20,7 @@ def call(body) {
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
 
       def template = libraryResource('Inspector.yaml')
-      println(template)
       def fileName = 'Inspector.yaml'
-      // writeFile(file: fileName, text: template)
-      // new File ('/', fileName).withWriter('utf-8'){
-      //       writer -> writer.writeLine template
-      // }
-      println('Written')
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
@@ -36,7 +30,7 @@ def call(body) {
       def os = returnOs(body.amiId)
       println(os)
       cloudformation(
-       stackName: 'inspector-test',
+       stackName: stackName,
        action: 'create',
        region: 'ap-southeast-2',
        templateUrl: "https://${body.hostBucket}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
@@ -114,7 +108,8 @@ def createBucket(String name) {
 def returnOs(String ami) {
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)
-      def response = client.describeImagesRequest(request)
+      def response = client.describeImages(request)
+      println(response)
       return response
 }
 
