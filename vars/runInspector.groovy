@@ -12,7 +12,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import java.util.concurrent.TimeUnit
-import java.io.File 
+import java.io.File
 
 
 def call(body) {
@@ -26,11 +26,12 @@ def call(body) {
       new File ('/', fileName).withWriter('utf-8'){
             writer -> writer.writeLine template
       }
+      println('Written')
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
       // println(bucket)
-      uploadFile(bucketName, template)
+      uploadFile(bucketName, fileName)
 
       def os = returnOs(body.amiId)
       println(os)
@@ -97,7 +98,7 @@ def call(body) {
 
 
 
-def uploadFile(String bucket, File file) {
+def uploadFile(String bucket, String file) {
       def client = AmazonS3ClientBuilder.standard().build()
       def request = new PutObjectRequest(bucket, '/', file)
       def response = client.putObject(request)
