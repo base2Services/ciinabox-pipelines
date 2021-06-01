@@ -26,12 +26,7 @@ def call(body) {
       def bucketName = 'inspectortestbucket'
       // def bucket = createBucket(bucketName)
       // println(bucket)
-      s3Put(
-            file: template,
-            bucket: bucketName,
-            key: "/",
-            region: '"ap-southeast-2"'
-      )
+      uploadFile(bucketName, template)
 
       def os = returnOs(body.amiId)
       println(os)
@@ -95,6 +90,14 @@ def call(body) {
 }
 
 
+
+
+
+def uploadFile(String bucket, File file) {
+      def client = AmazonS3ClientBuilder.standard().build()
+      def request = new PutObjectRequest(bucket, '/', file)
+      def response = client.putObject(request)
+}
 
 
 def createBucket(String name) {
