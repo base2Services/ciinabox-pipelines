@@ -97,8 +97,8 @@ def call(body) {
 
 def createBucket(String name) {
       def client = AmazonS3ClientBuilder.standard().build()
-      def request = new S3.createBucket(name, 'ap-southeast-2')
-      def response = client.CreateBucketRequest(request)
+      def request = new AbstractAmazonS3.createBucket(name, 'ap-southeast-2')
+      def response = client.createBucketRequest(request)
       return response
 }
 
