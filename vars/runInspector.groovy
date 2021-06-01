@@ -9,7 +9,7 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.CreateBucketRequest
+import com.amazonaws.services.s3.*
 import java.util.concurrent.TimeUnit
 
 
@@ -96,8 +96,9 @@ def call(body) {
 
 
 def createBucket(String name) {
+      println(name)
       def client = AmazonS3ClientBuilder.standard().build()
-      def request = new CreateBucketRequest(name)
+      def request = new CreateBucket(name)
       def response = client.createBucketRequest(request)
       return response
 }
