@@ -12,7 +12,7 @@ Conditions:
   OsCheck:
     Fn::Equals:
       - Fn::Sub: OS
-      - Windows
+      - "Windows"
 
 Resources:
   testinstance:
