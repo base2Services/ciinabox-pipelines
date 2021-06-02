@@ -8,6 +8,12 @@ Parameters:
     Description: The OS of the Ami
     Default: 'empty'
 
+Conditions:
+  OsCheck:
+    Fn::Equals:
+      - Fn::Sub: OS
+      - Windows
+
 Resources:
   testinstance:
     Type: AWS::EC2::Instance
@@ -20,22 +26,18 @@ Resources:
           Value: "True"
       UserData:
         Fn::If:
-          Fn::Equals:
-            - Fn::Sub: ${OS}
-            - Windows
-        Fn::Base64:
-          Fn::Join:
-            - ''
-            - - >
-                curl -O
-                https://inspector-agent.amazonaws.com/linux/latest/install
-              - AWSAgentInstall.exe
-        Fn::Base64:
-          Fn::Join:
-            - ''
-            - - \#/bin/bash
-              - curl -O https://inspector-agent.amazonaws.com/linux/latest/install
-              - bash install
+          - OsCheck
+          - Fn::Base64:
+              Fn::Join:
+                - ''
+                - - "curl -O https://inspector-agent.amazonaws.com/linux/latest/install\n"
+                  - "AWSAgentInstall.exe"
+          - Fn::Base64:
+              Fn::Join:
+                - ''
+                - - "#/bin/bash\n"
+                  - "curl -O https://inspector-agent.amazonaws.com/linux/latest/install\n"
+                  - "bash install"
 
 
   testresourcegroup:
