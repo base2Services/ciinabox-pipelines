@@ -8,7 +8,6 @@ runInspector(
     region: 'ap-southeast-2',
     amiId: 'ami-0186908e2fdeea8f3'
 )
-
 */
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
@@ -34,8 +33,9 @@ def call(body) {
       createBucket(bucketName, body.region)
       println('Temp bucket to stroe cloudformaiton template created')
       uploadFile(bucketName, fileName, template, body.region)
-      println('cloudformaiton uploaded to bucket')
+      println('Cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
+      println("The AMI is using ${os} based operating system")
       cloudformation(
             stackName: stackName,
             action: 'create',
@@ -143,19 +143,14 @@ def returnOs(String ami) {
       def request = new DescribeImagesRequest().withImageIds(ami)
       def response = client.describeImages(request)
 
-      println(response)
       regex = /Windows/
       response = (response =~ regex)
-      println(response)
-      println(response.size())
       if (response.size() != 0){
-            response = 'Windows'
+            return('Windows')
       }
       else {
-            response = 'Linux'
+            return('Linux')
       }
-      println(response)
-      return response
 }
 
 
