@@ -93,7 +93,7 @@ def call(body) {
       destroyBucket(bucketName, body.region)
 
       // Fail the pipeline if insepctor tests did not pass
-      if testPassed == 1 {
+      if (testPassed == 1) {
             throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
       }
 }
