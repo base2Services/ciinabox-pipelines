@@ -23,19 +23,22 @@ def call(body) {
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       createBucket(bucketName, body.region)
+      println('Temp bucket to stroe cloudformaiton template created')
       uploadFile(bucketName, fileName, template, body.region)
+      println('cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
       cloudformation(
-       stackName: stackName,
-       action: 'create',
-       region: body.region,
-       templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
-       waitUntilComplete: 'true',
-       parameters: [
-            'AmiId' : body.amiId,
-            'OS': os
+            stackName: stackName,
+            action: 'create',
+            region: body.region,
+            templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+            waitUntilComplete: 'true',
+            parameters: [
+                  'AmiId' : body.amiId,
+                  'OS': os
             ]
       )
+      println('Stack uploaded to CloudFormation')
 
       // Query stack for inspector assessment template arn (must be an output)
       def template_arn = cloudformation(
@@ -47,6 +50,7 @@ def call(body) {
 
       // Run the inspector test
       def assessmentArn = assessmentRun(template_arn)
+      println('Inspector test(s) started')
 
       // Wait for the inspector test to run
       def runStatus = getRunStatus(assessmentArn)
@@ -65,7 +69,7 @@ def call(body) {
             }
       }
 
-      // Get the results of the test and fromated then to give a basic output
+      // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
       getResults = getResults(assessmentArn)
       println(getResults)
       def urlRegex = /http.*[^}]/
@@ -76,14 +80,14 @@ def call(body) {
 
       // Pull down cloudformaiton stack and bucket hosting cloudformation template
       cloudformation(
-      stackName: stackName,
-      action: 'delete',
-      region: body.region,
-      templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
-      waitUntilComplete: 'true',
-      parameters: [
-            'AmiId' : body.amiId,
-            'OS': os
+            stackName: stackName,
+            action: 'delete',
+            region: body.region,
+            templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+            waitUntilComplete: 'true',
+            parameters: [
+                  'AmiId' : body.amiId,
+                  'OS': os
             ]
       )
       destroyBucket(bucketName, body.region)
