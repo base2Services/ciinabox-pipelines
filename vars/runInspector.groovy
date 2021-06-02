@@ -1,6 +1,15 @@
-// @Grapes([
-//       @Grab(group='com.amazonaws', module='aws-java-sdk-inspector', version='1.11.1020')
-// ])
+/*
+Test AMI aginst Inspector rules
+
+To modify the test parameters (i.e. how long to run the test, rule packages used, etc) modify the cloudformaiton found in the ciinabox pipeline repo ciinabox-pipelines/resources/Inspector.yaml
+
+example usage in a pipeline
+runInspector(
+    region: 'ap-southeast-2',
+    amiId: 'ami-0186908e2fdeea8f3'
+)
+
+*/
 import com.amazonaws.services.inspector.AmazonInspector
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
 import com.amazonaws.services.inspector.model.*
@@ -59,6 +68,7 @@ def call(body) {
             println("Test Run Status: ${runStatus}")
             TimeUnit.SECONDS.sleep(5);
       }
+
       // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
       def testRunning = true
       while (testRunning.equals(true)) {
@@ -90,6 +100,7 @@ def call(body) {
                   'OS': os
             ]
       )
+      cleanBucket(bucketName, body.region, fileName)
       destroyBucket(bucketName, body.region)
 
       // Fail the pipeline if insepctor tests did not pass
@@ -103,20 +114,26 @@ def call(body) {
 
 def uploadFile(String bucket, String fileName, String file, String region) {
       def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
-      def request = client.putObject(bucket, fileName, file)
+      client.putObject(bucket, fileName, file)
 }
 
 
 def createBucket(String name, String region) {
       def client = AmazonS3ClientBuilder.standard().build()
       def request = new CreateBucketRequest(name, region)
-      def response = client.createBucket(request)
+      client.createBucket(request)
+}
+
+
+def cleanBucket(String bucketName, String region, String fileName) {
+      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
+      client.deleteObject(bucketName, fileName)
 }
 
 
 def destroyBucket(String name, String region) {
-      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
-      def response = client.deleteBucket(name)
+      def client = AmazonS3ClientBuilder.standard().withRegion(region).build
+      response = client.deleteBucket(name)
 }
 
 
@@ -193,8 +210,3 @@ def getRunStatus (String arn) {
       state = state.replace('State: ', '')
       return state
 }
-
-// call([
-//     hostBucket: 'sampleBucket',
-//     AMI: 'sampleAMI'
-// ])
