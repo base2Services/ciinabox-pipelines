@@ -86,6 +86,7 @@ def call(body) {
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
       def fullResult = resutlUrl.toURL().text
+      writeFile(file: 'Inspector_test_reults.html', text: fullResult)
       def testPassed = formatedResults(fullResult)
 
       // Pull down cloudformaiton stack and bucket hosting cloudformation template
