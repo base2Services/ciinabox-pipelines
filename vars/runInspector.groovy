@@ -31,7 +31,7 @@ def call(body) {
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
       createBucket(bucketName, body.region)
-      println('Temp bucket to stroe cloudformaiton template created')
+      println('Created temp bucket to stroe cloudformaiton template')
       uploadFile(bucketName, fileName, template, body.region)
       println('Cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
