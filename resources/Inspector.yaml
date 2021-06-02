@@ -4,9 +4,9 @@ Parameters:
     Description: Ami Id to be passed in from the pipeline
     Default: 'test'
   OS:
-     Type: String
-     Description: The OS of the Ami
-     Default: 'empty'
+    Type: String
+    Description: The OS of the Ami
+    Default: 'empty'
 
 Resources:
   testinstance:
@@ -19,21 +19,24 @@ Resources:
         - Key: Inspector
           Value: "True"
       UserData:
-            Fn::If: [
-                  Fn::Equal: [${OS}, 'Windows'],
-                  Fn::Base64:
-                        Fn::Join: ['',
-                        [
-                              "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
-                              "AWSAgentInstall.exe"
-                        ]],
-                  Fn::Base64:
-                        Fn::Join: [ '',
-                        [
-                              "#/bin/bash \n",
-                              "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n",
-                              "bash install"
-                        ]]]
+        Fn::If:
+          Fn::Equals:
+            - Fn::Sub: ${OS}
+            - Windows
+        Fn::Base64:
+          Fn::Join:
+            - ''
+            - - >
+                curl -O
+                https://inspector-agent.amazonaws.com/linux/latest/install
+              - AWSAgentInstall.exe
+        Fn::Base64:
+          Fn::Join:
+            - ''
+            - - \#/bin/bash
+              - curl -O https://inspector-agent.amazonaws.com/linux/latest/install
+              - bash install
+
 
   testresourcegroup:
     Type: "AWS::Inspector::ResourceGroup"
