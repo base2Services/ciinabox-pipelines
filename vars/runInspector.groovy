@@ -18,21 +18,17 @@ import java.io.File
 def call(body) {
 
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
-
       def template = libraryResource('Inspector.yaml')
       def fileName = 'Inspector.yaml'
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
-      // def bucket = createBucket(bucketName)
-      // println(bucket)
-      uploadFile(bucketName, fileName, template)
-
+      // def bucket = createBucket(bucketName, body.region)
+      uploadFile(bucketName, fileName, template, body.region)
       def os = returnOs(body.amiId)
-      println(os)
       cloudformation(
        stackName: stackName,
        action: 'create',
-       region: 'ap-southeast-2',
+       region: body.region,
        templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
@@ -40,17 +36,6 @@ def call(body) {
          'OS': os
        ]
       )
-
-      // Query stack for instance Id (must be an output) to install inspector agent if needed
-      def instanceIds = cloudformation(
-              stackName: body.stackName,
-              queryType: 'output',
-              query: 'InstanceId',
-              region: body.region
-      )
-      println("instance id: ${instanceIds}")
-      installInspectorAgent(instanceIds)
-
 
       // Query stack for inspector assessment template arn (must be an output)
       def template_arn = cloudformation(
@@ -60,6 +45,7 @@ def call(body) {
               region: body.region
       )
 
+      // Run the inspector test
       def assessmentArn = assessmentRun(template_arn)
 
       // Wait for the inspector test to run
@@ -92,18 +78,19 @@ def call(body) {
 
 
 
-def uploadFile(String bucket, String fileName, String file) {
-      def client = AmazonS3ClientBuilder.standard().withRegion('ap-southeast-2').build()
+def uploadFile(String bucket, String fileName, String file, String region) {
+      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
       def request = client.putObject(bucket, fileName, file)
 }
 
 
-def createBucket(String name) {
+def createBucket(String name, String region) {
       def client = AmazonS3ClientBuilder.standard().build()
-      def request = new CreateBucketRequest(name, 'ap-southeast-2')
+      def request = new CreateBucketRequest(name, region)
       def response = client.createBucket(request)
       return response
 }
+
 
 def returnOs(String ami) {
       def client = AmazonEC2ClientBuilder.standard().build()
@@ -125,15 +112,6 @@ def returnOs(String ami) {
       return response
 }
 
-def installInspectorAgent(String id) {
-      println("instance id in function: *${id}*")
-      def client = AWSSimpleSystemsManagementClientBuilder.standard().build()
-      def request = new SendCommandRequest()
-            .withInstanceIds(id)
-            .withDocumentName('AmazonInspector-ManageAWSAgent')
-      println(request)
-      def response = client.sendCommand(request)
-}
 
 def assessmentRun(String template_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
@@ -141,6 +119,7 @@ def assessmentRun(String template_arn) {
       def response = client.startAssessmentRun(request)
       return response.getAssessmentRunArn()
 }
+
 
 def getResults(String result_arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
@@ -151,6 +130,7 @@ def getResults(String result_arn) {
       def response = client.getAssessmentReport(request)
       return response
 }
+
 
 def formatedResults(fullResult) {
       // Check if there where Findings
@@ -167,6 +147,7 @@ def formatedResults(fullResult) {
             println('Test(s) passed')
       }
 }
+
 
 def getRunStatus (String arn) {
       def client = AmazonInspectorClientBuilder.standard().build()
