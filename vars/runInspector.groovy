@@ -22,7 +22,7 @@ def call(body) {
       def fileName = 'Inspector.yaml'
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
-      // def bucket = createBucket(bucketName, body.region)
+      createBucket(bucketName, body.region)
       uploadFile(bucketName, fileName, template, body.region)
       def os = returnOs(body.amiId)
       cloudformation(
@@ -32,9 +32,9 @@ def call(body) {
        templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
        waitUntilComplete: 'true',
        parameters: [
-         'AmiId' : body.amiId,
-         'OS': os
-       ]
+            'AmiId' : body.amiId,
+            'OS': os
+            ]
       )
 
       // Query stack for inspector assessment template arn (must be an output)
@@ -65,15 +65,34 @@ def call(body) {
             }
       }
 
+      // Get the results of the test and fromated then to give a basic output
       getResults = getResults(assessmentArn)
       println(getResults)
       def urlRegex = /http.*[^}]/
       def resutlUrl = (getResults =~ urlRegex)
       resutlUrl = resutlUrl[0]
       def fullResult = resutlUrl.toURL().text
-      formatedResults(fullResult)
-}
+      def testPassed = formatedResults(fullResult)
 
+      // Pull down cloudformaiton stack and bucket hosting cloudformation template
+      cloudformation(
+      stackName: stackName,
+      action: 'delete',
+      region: body.region,
+      templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+      waitUntilComplete: 'true',
+      parameters: [
+            'AmiId' : body.amiId,
+            'OS': os
+            ]
+      )
+      destroyBucket(bucketName, body.region)
+
+      // Fail the pipeline if insepctor tests did not pass
+      if testPassed == 1 {
+            throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+      }
+}
 
 
 
@@ -88,7 +107,12 @@ def createBucket(String name, String region) {
       def client = AmazonS3ClientBuilder.standard().build()
       def request = new CreateBucketRequest(name, region)
       def response = client.createBucket(request)
-      return response
+}
+
+
+def destroyBucket(String name, String region) {
+      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
+      def response = client.deleteBucket(name)
 }
 
 
@@ -141,10 +165,11 @@ def formatedResults(fullResult) {
 
       if (findings >= 1) {
             println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via the AWS CLI or console, AMI not pushed out\n****************")
-            throw new GroovyRuntimeException("One or more interpector test(s)  failed on the AMI")
+            return 1
       }
       else {
             println('Test(s) passed')
+            return 0
       }
 }
 
