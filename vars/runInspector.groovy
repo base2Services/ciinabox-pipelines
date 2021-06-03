@@ -30,7 +30,7 @@ def call(body) {
       def fileName = 'Inspector.yaml'
       def stackName = 'InspectorAmiTest'
       def bucketName = 'inspectortestbucket'
-      // createBucket(bucketName, body.region)
+      createBucket(bucketName, body.region)
       println('Created temp bucket to stroe cloudformaiton template')
       uploadFile(bucketName, fileName, template, body.region)
       println('Cloudformaiton uploaded to bucket')
