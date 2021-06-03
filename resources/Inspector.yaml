@@ -67,7 +67,6 @@ Resources:
   testeventrule:
     Type: AWS::Events::Rule
     Properties:
-      Name: test-event
       Description: A test event which triggers an inspector template to run
       EventBusName: default
       EventPattern:
@@ -89,7 +88,6 @@ Resources:
   testeventrole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: test-role
       Description: A test role to allow test-event to call the test-template for inspector
       Path: /
       AssumeRolePolicyDocument:
