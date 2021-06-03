@@ -37,7 +37,7 @@ Resources:
                 - ''
                 - - "#/bin/bash \n"
                   - "curl -O https://inspector-agent.amazonaws.com/linux/latest/install \n"
-                  - "sudo bash install"
+                  - "bash install"
 
 
   testresourcegroup:
