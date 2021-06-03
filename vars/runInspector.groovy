@@ -20,7 +20,6 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import java.util.concurrent.TimeUnit
-import java.io.File
 
 
 def call(body) {
@@ -28,7 +27,7 @@ def call(body) {
       // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
       def template = libraryResource('Inspector.yaml')
       def fileName = 'Inspector.yaml'
-      def stackName = 'InspectorAmiTest'
+      def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
       def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
       createBucket(bucketName, body.region)
       println('Created temp bucket to stroe cloudformaiton template')
