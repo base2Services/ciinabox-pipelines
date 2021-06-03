@@ -29,7 +29,7 @@ def call(body) {
       def template = libraryResource('Inspector.yaml')
       def fileName = 'Inspector.yaml'
       def stackName = 'InspectorAmiTest'
-      def bucketName = 'inspectortestbucket'
+      def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
       createBucket(bucketName, body.region)
       println('Created temp bucket to stroe cloudformaiton template')
       uploadFile(bucketName, fileName, template, body.region)
@@ -181,7 +181,7 @@ def formatedResults(fullResult) {
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
 
       if (findings >= 1) {
-            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via the AWS CLI or console, AMI not pushed out\n****************")
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or console, AMI not pushed out\n****************")
             return 1
       }
       else {
