@@ -87,6 +87,7 @@ def call(body) {
       resutlUrl = resutlUrl[0]
       def fullResult = resutlUrl.toURL().text
       writeFile(file: 'Inspector_test_reults.html', text: fullResult)
+      archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
       def testPassed = formatedResults(fullResult)
 
       // Pull down cloudformaiton stack and bucket hosting cloudformation template
@@ -94,12 +95,7 @@ def call(body) {
             stackName: stackName,
             action: 'delete',
             region: body.region,
-            templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
-            waitUntilComplete: 'true',
-            parameters: [
-                  'AmiId' : body.amiId,
-                  'OS': os
-            ]
+            waitUntilComplete: 'false',
       )
       cleanBucket(bucketName, body.region, fileName)
       destroyBucket(bucketName, body.region)
