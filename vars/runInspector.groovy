@@ -133,7 +133,7 @@ def cleanBucket(String bucketName, String region, String fileName) {
 
 
 def destroyBucket(String name, String region) {
-      def client = AmazonS3ClientBuilder.standard().withRegion(region).build
+      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
       response = client.deleteBucket(name)
 }
 
