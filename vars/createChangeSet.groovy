@@ -130,7 +130,7 @@ def call(body) {
 
 def createChangeSet(clientBuilder,changeSetName,config) {
   def cfclient = clientBuilder.cloudformation()
-  def cfstack = new CloudformationStack(cfclient, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
 
   def request = new CreateChangeSetRequest()

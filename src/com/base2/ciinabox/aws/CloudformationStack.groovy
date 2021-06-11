@@ -15,11 +15,11 @@ import com.amazonaws.services.cloudformation.model.Parameter
 
 class CloudformationStack implements Serializable {
   
-  def client
+  def clientBuilder
   def stackName
   
-  CloudformationStack(client, stackName) {
-    this.client = client
+  CloudformationStack(clientBuilder, stackName) {
+    this.clientBuilder = clientBuilder
     this.stackName = stackName
   }
   
@@ -30,21 +30,26 @@ class CloudformationStack implements Serializable {
   def getChangeSetType() {
     def request = new DescribeStacksRequest()
       .withStackName(stackName)
-      
+    def client = clientBuilder.cloudformation()      
     try {
       def stacks = client.describeStacks(request).getStacks()
       def stack = stacks.find {it.getStackName().equals(stackName)}
+      client = null
       // if a change set has been created but the stack is not yet created
       if (stack.getStackStatus().equals('REVIEW_IN_PROGRESS')) {
         return 'CREATE'
       }
+      
     } catch (AmazonCloudFormationException ex) {
+      client = null
       // catch if stack doesn't exist
       if(ex.getErrorMessage().contains("does not exist")){
         return 'CREATE'
       } else {
         throw ex
       }
+    } finally {
+      client = null
     }
     
     return 'UPDATE'
@@ -55,17 +60,20 @@ class CloudformationStack implements Serializable {
   and overrides values with given parameters
   returns a list of cloudformation parameters
   **/
-  def getStackParams(Map overrideParams, String templateUrl) {
+  def getStackParams(Map overrideParams, String templateUrl, region=null) {
     def stackParams = [:]
     def newTemplateParams = []
     def stacks = []
     
+    def client = clientBuilder.cloudformation()
     try {
       stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
     } catch (AmazonCloudFormationException ex) {
       if(!ex.getErrorMessage().contains("does not exist")){
         throw ex
       }
+    } finally {
+      client = null
     }
     
     if(templateUrl != null) {
@@ -141,7 +149,7 @@ class CloudformationStack implements Serializable {
   region string that can be used in a client
   **/
   def getBucketRegion(String bucket) {
-    def s3GetRegionClient = new AwsClientBuilder().s3()
+    def s3GetRegionClient = clientBuilder.s3()
     def bucketRegion = s3GetRegionClient.getBucketLocation(bucket)
 
     if (bucketRegion == '' || bucketRegion == 'US') {
@@ -149,7 +157,7 @@ class CloudformationStack implements Serializable {
     } else if (bucketRegion == 'EU') {
       bucketRegion = 'eu-west-1'
     }
-
+    s3GetRegionClient == null
     return bucketRegion
   }
 

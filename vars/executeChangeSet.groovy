@@ -49,7 +49,7 @@ def apply(config, stackNameUpper) {
     
   def cfclient = clientBuilder.cloudformation()
 
-  def cfstack = new CloudformationStack(cfclient, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
   def changeSetType = cfstack.getChangeSetType()
   cfStack = null
   cfclient = null
