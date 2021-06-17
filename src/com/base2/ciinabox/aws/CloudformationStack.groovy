@@ -149,7 +149,8 @@ class CloudformationStack implements Serializable {
   region string that can be used in a client
   **/
   def getBucketRegion(String bucket) {
-    def s3GetRegionClient = new AwsClientBuilder().s3()
+    //use any region other than us-east-1 or eu-west-1 to get the bucket location
+    def s3GetRegionClient = new AwsClientBuilder([region: 'us-east-2']).s3()
     def bucketRegion = s3GetRegionClient.getBucketLocation(bucket)
 
     if (bucketRegion == '' || bucketRegion == 'US') {
