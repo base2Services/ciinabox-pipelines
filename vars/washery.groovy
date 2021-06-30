@@ -16,7 +16,8 @@ washery(
     instanceType: 'instance|cluster', // (required, cluster if using aurora, instance for mysql|postgres|sql-server rds)
     instanceSize: 'db.t3.small', // (optional, overide the default instance sizes set by washery)
     dumpBucket: 's3-bucket-name', // (optional, specify if dumping database to a s3 bucket)
-    saveSnapshot: true|false // (optional, defaults to true. Determines if a snapshot is taken of the scrubbed database)
+    saveSnapshot: true|false, // (optional, defaults to true. Determines if a snapshot is taken of the scrubbed database)
+    databases: ['mydb', 'anotherdb'] // (optional list of databases to dump, defaults to all databases)
 )
 ************************************/
 
@@ -55,6 +56,10 @@ def call(body) {
     if (config.accountId && config.role) {
         opts = "${opts} -a ${config.accountId}"
         opts = "${opts} -R ${config.role}"
+    }
+
+    if (config.databases) {
+        opts = "${opts} -d ${config.databases.join(",")}"
     }
         
     def command = "cd /opt/washery && ./main.sh ${opts}"
