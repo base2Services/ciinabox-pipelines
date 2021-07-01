@@ -539,8 +539,14 @@ def waitUntilComplete(cf, stackName) {
 def getTemplateParameterNames(config){
   def newTemplateParams = [],
     s3location = s3bucketKeyFromUrl(config.templateUrl),
-    s3headClient = setupS3Client(config.region),
+
+    // https://github.com/aws/aws-sdk-java/issues/1451#issuecomment-358742502
+    // https://github.com/aws/aws-sdk-java/issues/1338
+    // never using us-east-1 for getBucketLocation or it will yield weird `The authorization header is malformed`
+    s3headClient = setupS3Client((config.region == "us-east-1")? "us-east-2" : config.region),
     newTemplate = null
+
+
 
     def headBucketRegion = s3headClient.getBucketLocation(s3location.bucket)
     if(headBucketRegion == '' || headBucketRegion == 'US'){
