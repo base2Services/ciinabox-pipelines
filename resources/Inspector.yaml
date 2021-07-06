@@ -60,7 +60,7 @@ Resources:
       AssessmentTargetArn:
         Fn::GetAtt: [ testtargetgroup, Arn ]
       AssessmentTemplateName: test-template
-      DurationInSeconds: 120 # 2mins
+      DurationInSeconds: 3600 # 1 hour
       RulesPackageArns:
         - arn:aws:inspector:ap-southeast-2:454640832652:rulespackage/0-asL6HRgN # Security Best Practice in ap-southeast-2
 
