@@ -102,7 +102,7 @@ def call(body) {
       // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
       try {
           def failonfinding = body.failonfinding
-      } catch {
+      } catch(Exception e) {
           failonfinding = True
       }
       if (testPassed == 1 && failonfinding == True) {
