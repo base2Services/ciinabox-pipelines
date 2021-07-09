@@ -103,9 +103,9 @@ def call(body) {
       try {
           failonfinding = body.failonfinding
       } catch(Exception e) {
-          failonfinding = True
+          failonfinding = 'True'
       }
-      if (testPassed == 1 && failonfinding == True) {
+      if (testPassed == 1 && failonfinding == 'True') {
           throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
       }
       else {
