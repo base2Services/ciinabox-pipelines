@@ -43,7 +43,8 @@ def call(body) {
             waitUntilComplete: 'true',
             parameters: [
                   'AmiId' : body.amiId,
-                  'OS': os
+                  'OS': os,
+                  'RuleArns': body.ruleArns
             ]
       )
       println('Stack uploaded to CloudFormation')
