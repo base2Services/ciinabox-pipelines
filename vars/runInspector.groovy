@@ -43,7 +43,7 @@ def call(body) {
           params['ruleArns'] = body.ruleArns
       }
       if (body.testTime) {
-          params["testTime"] = body.testTime
+          params['testTime'] = body.testTime
       }
       for (p in params) {
           println p.key
@@ -56,12 +56,7 @@ def call(body) {
             region: body.region,
             templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
             waitUntilComplete: 'true',
-            parameters: [
-                  'AmiId' : body.amiId,
-                  'OS': os,
-                  'RuleArns': body.ruleArns,
-                  'TestTime': body.testTime
-            ]
+            parameters: params
       )
       println('Stack uploaded to CloudFormation')
 
