@@ -49,7 +49,7 @@ def call(body) {
           def time = ((20+(listOfArns.size()*10))*60)
           params['testTime'] = time
           println('time: ')
-          println(time
+          println(time)
       }
       println(params)
       cloudformation(
