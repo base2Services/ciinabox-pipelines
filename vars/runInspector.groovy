@@ -45,7 +45,7 @@ def call(body) {
       if (body.testTime) {
           params["testTime"].add(body.testTime)
       }
-      for (p in parameters) {
+      for (p in params) {
           println p.key
           println p.value
       }
