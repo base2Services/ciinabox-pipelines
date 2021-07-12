@@ -45,9 +45,9 @@ def call(body) {
       if (body.testTime) {
           params["testTime"].add(body.testTime)
       }
-      for (key in params.keySet()) {
-          println(key)
-          println(params[key])
+      for (p in parameters) {
+          println p.key
+          println p.value
       }
 
       cloudformation(
