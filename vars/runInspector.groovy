@@ -31,7 +31,7 @@ def call(body) {
       def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
       def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
       createBucket(bucketName, body.region)
-      println('Created temp bucket to stroe cloudformaiton template')
+      println('Created temp bucket to store cloudformaiton template')
       uploadFile(bucketName, fileName, template, body.region)
       println('Cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
@@ -47,7 +47,7 @@ def call(body) {
       }
       else if (body.ruleArns) {
           def listOfArns = body.ruleArns.split(", ")
-          def time = 20 + size(listOfArns)
+          def time = ((20 + (size(listOfArns)*10))*60)
           params['testTime'] = time
           println(time)
       }
