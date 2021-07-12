@@ -181,7 +181,7 @@ def formatedResults(fullResult) {
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
 
       if (findings >= 1) {
-            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or console, AMI not pushed out\n****************")
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\n****************")
             return 1
       }
       else {
