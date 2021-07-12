@@ -43,8 +43,9 @@ def call(body) {
           params['ruleArns'].add(body.ruleArns)
       }
       if (body.testTime) {
-          params['testTime'].add(body.testTime)
+          params["testTime"].add(body.testTime)
       }
+      println(params)
 
       cloudformation(
             stackName: stackName,
