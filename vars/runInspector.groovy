@@ -44,7 +44,7 @@ def call(body) {
             parameters: [
                   'AmiId' : body.amiId,
                   'OS': os,
-                  'RuleArns': body.ruleArns
+                  'RuleArns': body.ruleArns,
                   'TestTime': body.testTime
             ]
       )
