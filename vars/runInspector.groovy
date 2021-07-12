@@ -47,8 +47,9 @@ def call(body) {
       }
       else if (body.ruleArns) {
           def listOfArns = body.ruleArns.split(", ")
-          def time = ((20 + (size(listOfArns)*10))*60)
+          def time = ((20+(size(listOfArns)*10))*60)
           params['testTime'] = time
+          println('time: ')
           println(time)
       }
       cloudformation(
