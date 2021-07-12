@@ -1,12 +1,13 @@
 /*
 Test AMI aginst Inspector rules
 
-To modify the test parameters (i.e. how long to run the test, rule packages used, etc) modify the cloudformaiton found in the ciinabox pipeline repo ciinabox-pipelines/resources/Inspector.yaml
-
 example usage in a pipeline
 runInspector(
-    region: 'ap-southeast-2',
-    amiId: 'ami-0186908e2fdeea8f3'
+     region: 'ap-southeast-2',                      # Required
+     amiId: 'ami-0186908e2fdeea8f3'                 # Required
+     failonfinding: 'False',                        # Optional
+     ruleArns: 'ruleARN1,ruleARN2'                  # Optional
+     testTime: '120',                               # Optional
 )
 */
 import com.amazonaws.services.inspector.AmazonInspector
@@ -35,6 +36,19 @@ def call(body) {
       println('Cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
       println("The AMI is using ${os} based operating system")
+
+      // Organise which parameters to send
+      def params = {
+          'AmiId' : body.amiId,
+           'OS': os
+       }
+      if (body.ruleArns) {
+          params.add('RuleArns': body.ruleArns)
+      }
+      if (body.testTime) {
+          params.add('TestTime': body.testTime)
+      }
+
       cloudformation(
             stackName: stackName,
             action: 'create',
