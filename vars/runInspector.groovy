@@ -38,18 +38,19 @@ def call(body) {
       println("The AMI is using ${os} based operating system")
 
       // Organise which parameters to send
-      def params = [amiId: body.amiId, os: os]
+      def params = ['amiId': body.amiId, 'os': os]
       if (body.ruleArns) {
           params['ruleArns'] = body.ruleArns
       }
       if (body.testTime) {
           params['testTime'] = body.testTime
       }
-      for (p in params) {
-          println p.key
-          println p.value
+      else if (body.ruleArns) {
+          def listOfArns = body.ruleArns.split(", ")
+          def time = 20 + size(listOfArns)
+          params['testTime'] = time
+          println(time)
       }
-
       cloudformation(
             stackName: stackName,
             action: 'create',
