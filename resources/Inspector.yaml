@@ -11,6 +11,10 @@ Parameters:
       Type: String
       Description: The ARN's of the rule packages to be used
       Default: arn:aws:inspector:ap-southeast-2:454640832652:rulespackage/0-asL6HRgN # Security Best Practice in ap-southeast-2
+  TestTime:
+      Type: Integer
+      Description: The duration for the inespector test in seconds
+      Default: 1800     # 30 mins
 
 Conditions:
   OsCheck:
@@ -64,7 +68,8 @@ Resources:
       AssessmentTargetArn:
         Fn::GetAtt: [ testtargetgroup, Arn ]
       AssessmentTemplateName: test-template
-      DurationInSeconds: 120 # 2 mins   ----- update after demo ------ #3600 # 1 hour
+      DurationInSeconds:
+          Fn::Sub: "${TestTime}"
       RulesPackageArns:
           Fn::Split: [',', Fn::Sub: "${RuleArns}"]
 

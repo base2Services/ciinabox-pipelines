@@ -45,6 +45,7 @@ def call(body) {
                   'AmiId' : body.amiId,
                   'OS': os,
                   'RuleArns': body.ruleArns
+                  'TestTime': body.testTime
             ]
       )
       println('Stack uploaded to CloudFormation')
