@@ -38,15 +38,12 @@ def call(body) {
       println("The AMI is using ${os} based operating system")
 
       // Organise which parameters to send
-      def params = {
-          'AmiId' : body.amiId,
-           'OS': os
-       }
+      def params = [amiId: body.amiId, os: os]
       if (body.ruleArns) {
-          params.add('RuleArns': body.ruleArns)
+          params['ruleArns'].add(body.ruleArns)
       }
       if (body.testTime) {
-          params.add('TestTime': body.testTime)
+          params['testTime'].add(body.testTime)
       }
 
       cloudformation(
