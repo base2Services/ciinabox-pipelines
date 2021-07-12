@@ -48,10 +48,7 @@ def call(body) {
           def listOfArns = body.ruleArns.split(", ")
           def time = ((20+(listOfArns.size()*10))*60)
           params['testTime'] = time.toString()
-          println('time: ')
-          println(time)
       }
-      println(params)
       cloudformation(
             stackName: stackName,
             action: 'create',
