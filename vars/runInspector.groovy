@@ -45,7 +45,10 @@ def call(body) {
       if (body.testTime) {
           params["testTime"].add(body.testTime)
       }
-      println(params)
+      for (key in params.keySet()) {
+          println(key)
+          println(params[key])
+      }
 
       cloudformation(
             stackName: stackName,
