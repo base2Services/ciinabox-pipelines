@@ -44,8 +44,7 @@ def call(body) {
       }
       if (body.testTime) {
           params['testTime'] = body.testTime
-      }
-      else if (body.ruleArns) {
+      } else if (body.ruleArns) {
           def listOfArns = body.ruleArns.split(", ")
           def time = ((20+(size(listOfArns)*10))*60)
           params['testTime'] = time
