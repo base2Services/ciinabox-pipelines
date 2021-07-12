@@ -40,10 +40,10 @@ def call(body) {
       // Organise which parameters to send
       def params = [amiId: body.amiId, os: os]
       if (body.ruleArns) {
-          params['ruleArns'].add(body.ruleArns)
+          params['ruleArns'] = body.ruleArns
       }
       if (body.testTime) {
-          params["testTime"].add(body.testTime)
+          params["testTime"] = body.testTime
       }
       for (p in params) {
           println p.key
