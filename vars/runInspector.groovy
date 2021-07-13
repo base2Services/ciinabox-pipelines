@@ -20,7 +20,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
-import java.util.concurrent.TimeUnit 
+import java.util.concurrent.TimeUnit
 import java.util.*
 
 
@@ -41,13 +41,12 @@ def call(body) {
       // Organise which parameters to send
       def params = ['amiId': body.amiId, 'os': os]
       if (body.ruleArns) {
-          params['ruleArns'] = body.ruleArns
+          param['ruleArns'] = ','.join(body.ruleArns)
       }
       if (body.testTime) {
           params['testTime'] = body.testTime
       } else if (body.ruleArns) {
-          def listOfArns = body.ruleArns.split(", ")
-          def time = ((20+(listOfArns.size()*10))*60)
+          def time = ((20+(body.ruleArns.size()*10))*60)
           params['testTime'] = time.toString()
       }
       cloudformation(
