@@ -3,7 +3,7 @@ codeArtifactNugetLogin DSL
 
 login to a code artifact repository and add a nuget source 
 
-Requires pip to be avaialable in the path
+Requires nuget to be avaialable in the path
 
 example usage
 codeArtifactNugetLogin(

@@ -3,7 +3,7 @@ codeArtifactDotnetLogin DSL
 
 login to a code artifact repository and add a dotnet source 
 
-Requires pip to be avaialable in the path
+Requires dotnet to be avaialable in the path
 
 example usage
 codeArtifactDotnetLogin(

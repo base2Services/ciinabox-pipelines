@@ -38,8 +38,8 @@ def call(config) {
     def client = clientBuilder.codeartifact()
     
     def domainArn = createDomainIfNotExist(client, config.domain, config.region, config.accountId)
-    def respoitoryExists = checkIfRepositoryExist(client, config.domain, config.name)    
-    def repositoryArn = respoitoryExists ? updateRepository(client, config) : createRepository(client, config)
+    def repositoryExists = checkIfRepositoryExist(client, config.domain, config.name)    
+    def repositoryArn = repositoryExists ? updateRepository(client, config) : createRepository(client, config)
 
     tagResource(client, domainArn, config.domain, config.get('tags', [:]))
     tagResource(client, repositoryArn, config.name, config.get('tags', [:]))
@@ -96,8 +96,8 @@ def checkIfRepositoryExist(client, domain, name) {
     def listRepositoryResult = client.listRepositoriesInDomain(new ListRepositoriesInDomainRequest()
         .withDomain(domain)
         .withRepositoryPrefix(name))
-    def respoitories = listRepositoryResult.getRepositories()
-    return respoitories.any { it.getName() == name }
+    def repositories = listRepositoryResult.getRepositories()
+    return repositories.any { it.getName() == name }
 }
 
 def createRepository(client, config) {
@@ -111,13 +111,13 @@ def createRepository(client, config) {
 
     if (config.upstreams) {
         List<UpstreamRepository> upstreams = new ArrayList<UpstreamRepository>()
-        config.upstreams.each { respoitoryName ->
-            upstreams.add(new UpstreamRepository().withRepositoryName(respoitoryName))
+        config.upstreams.each { repositoryName ->
+            upstreams.add(new UpstreamRepository().withRepositoryName(repositoryName))
         }
         createRepositoryRequest.withUpstreams(upstreams)
     }
 
-    println("creating codeartifact respoitory ${config.name}")
+    println("creating codeartifact repository ${config.name}")
     def createRepositoryResult = client.createRepository(createRepositoryRequest)
 
     return createRepositoryResult.getRepository().getArn()
@@ -134,8 +134,8 @@ def updateRepository(client, config) {
 
     if (config.upstreams) {
         List<UpstreamRepository> upstreams = new ArrayList<UpstreamRepository>()
-        config.upstreams.each { respoitoryName ->
-            upstreams.add(new UpstreamRepository().withRepositoryName(respoitoryName))
+        config.upstreams.each { repositoryName ->
+            upstreams.add(new UpstreamRepository().withRepositoryName(repositoryName))
         }
         createRepositoryRequest.withUpstreams(upstreams)
     }
