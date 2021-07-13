@@ -1,12 +1,16 @@
 /*
 Test AMI aginst Inspector rules
 
-To modify the test parameters (i.e. how long to run the test, rule packages used, etc) modify the cloudformaiton found in the ciinabox pipeline repo ciinabox-pipelines/resources/Inspector.yaml
+Addtional Inspector Rule Package ARN's
+https://docs.aws.amazon.com/inspector/latest/userguide/inspector_rules-arns.html#ap-southeast-2
 
 example usage in a pipeline
 runInspector(
-    region: 'ap-southeast-2',
-    amiId: 'ami-0186908e2fdeea8f3'
+     region: 'ap-southeast-2',                      # Required
+     amiId: 'ami-0186908e2fdeea8f3'                 # Required
+     failonfinding: 'False',                        # Optional
+     ruleArns: ['ruleARN1', 'ruleARN2']             # Optional
+     testTime: '120',                               # Optional
 )
 */
 import com.amazonaws.services.inspector.AmazonInspector
@@ -20,6 +24,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import java.util.concurrent.TimeUnit
+import java.util.*
 
 
 def call(body) {
@@ -30,21 +35,30 @@ def call(body) {
       def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
       def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
       createBucket(bucketName, body.region)
-      println('Created temp bucket to stroe cloudformaiton template')
+      println('Created temp bucket to store cloudformaiton template')
       uploadFile(bucketName, fileName, template, body.region)
       println('Cloudformaiton uploaded to bucket')
       def os = returnOs(body.amiId)
       println("The AMI is using ${os} based operating system")
+
+      // Organise which parameters to send
+      def params = ['amiId': body.amiId, 'os': os]
+      if (body.ruleArns) {
+          params['ruleArns'] = body.ruleArns.join(',')
+      }
+      if (body.testTime) {
+          params['testTime'] = body.testTime
+      } else if (body.ruleArns) {
+          def time = ((20+(body.ruleArns.size()*10))*60)
+          params['testTime'] = time.toString()
+      }
       cloudformation(
             stackName: stackName,
             action: 'create',
             region: body.region,
             templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
             waitUntilComplete: 'true',
-            parameters: [
-                  'AmiId' : body.amiId,
-                  'OS': os
-            ]
+            parameters: params
       )
       println('Stack uploaded to CloudFormation')
 
@@ -99,12 +113,14 @@ def call(body) {
       cleanBucket(bucketName, body.region, fileName)
       destroyBucket(bucketName, body.region)
 
-      // Fail the pipeline if insepctor tests did not pass
-      if (testPassed == 1) {
-            throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
-      }
+      // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
+      def failonfinding = body.get('failonfinding', true)
+      if (!failonfinding) {
+          println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+          } else {
+              throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+          }
 }
-
 
 
 
@@ -176,7 +192,7 @@ def formatedResults(fullResult) {
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
 
       if (findings >= 1) {
-            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or console, AMI not pushed out\n****************")
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\n****************")
             return 1
       }
       else {

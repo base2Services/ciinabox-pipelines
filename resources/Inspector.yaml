@@ -1,12 +1,20 @@
 Parameters:
-  AmiId:
+  amiId:
     Type: AWS::EC2::Image::Id
     Description: Ami Id to be passed in from the pipeline
     Default: 'test'
-  OS:
+  os:
     Type: String
     Description: The OS of the Ami
     Default: 'empty'
+  ruleArns:
+      Type: String
+      Description: The ARN's of the rule packages to be used
+      Default: arn:aws:inspector:ap-southeast-2:454640832652:rulespackage/0-asL6HRgN # Security Best Practice in ap-southeast-2
+  testTime:
+      Type: String
+      Description: The duration for the inespector test in seconds
+      Default: '1200'  # 20 mins
 
 Conditions:
   OsCheck:
@@ -20,7 +28,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       ImageId:
-        Fn::Sub: "${AmiId}"
+        Fn::Sub: "${amiId}"
       Tags:
         - Key: Inspector
           Value: "True"
@@ -60,9 +68,11 @@ Resources:
       AssessmentTargetArn:
         Fn::GetAtt: [ testtargetgroup, Arn ]
       AssessmentTemplateName: test-template
-      DurationInSeconds: 120 # 2mins
+      DurationInSeconds:
+          Fn::Sub: "${testTime}"
       RulesPackageArns:
-        - arn:aws:inspector:ap-southeast-2:454640832652:rulespackage/0-asL6HRgN # Security Best Practice in ap-southeast-2
+          Fn::Split: [',', Fn::Sub: "${ruleArns}"]
+
 
   testeventrule:
     Type: AWS::Events::Rule
