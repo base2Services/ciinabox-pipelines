@@ -114,19 +114,24 @@ def call(body) {
       destroyBucket(bucketName, body.region)
 
       // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
-      if (body.failonfinding) {
-          if (body.failonfinding == 'False' || body.failonfinding == 'f1alse'){
-              println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
-          }
-          else {
+      // if (body.failonfinding) {
+      //     if (body.failonfinding == 'False' || body.failonfinding == 'f1alse'){
+      //         println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+      //     }
+      //     else {
+      //         throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+      //     }
+      // }
+      // else {
+      //     throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+      // }
+      def failonfinding = body.get('failonfinding', true)
+      if (!failonfinding) {
+          println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+          } else {
               throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
           }
-      }
-      else {
-          throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
-      }
 }
-
 
 
 
