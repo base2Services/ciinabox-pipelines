@@ -44,7 +44,7 @@ def call(body) {
       // Organise which parameters to send
       def params = ['amiId': body.amiId, 'os': os]
       if (body.ruleArns) {
-          params['ruleArns'] = ','.join(body.ruleArns)
+          params['ruleArns'] = body.ruleArns.join(',')
       }
       if (body.testTime) {
           params['testTime'] = body.testTime
