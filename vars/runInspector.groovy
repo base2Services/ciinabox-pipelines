@@ -6,7 +6,7 @@ runInspector(
      region: 'ap-southeast-2',                      # Required
      amiId: 'ami-0186908e2fdeea8f3'                 # Required
      failonfinding: 'False',                        # Optional
-     ruleArns: 'ruleARN1,ruleARN2'                  # Optional
+     ruleArns: ['ruleARN1', 'ruleARN2']             # Optional
      testTime: '120',                               # Optional
 )
 */
