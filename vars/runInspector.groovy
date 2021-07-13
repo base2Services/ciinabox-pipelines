@@ -1,6 +1,9 @@
 /*
 Test AMI aginst Inspector rules
 
+Addtional Inspector Rule Package ARN's
+https://docs.aws.amazon.com/inspector/latest/userguide/inspector_rules-arns.html#ap-southeast-2
+
 example usage in a pipeline
 runInspector(
      region: 'ap-southeast-2',                      # Required
@@ -41,7 +44,7 @@ def call(body) {
       // Organise which parameters to send
       def params = ['amiId': body.amiId, 'os': os]
       if (body.ruleArns) {
-          param['ruleArns'] = ','.join(body.ruleArns)
+          params['ruleArns'] = ','.join(body.ruleArns)
       }
       if (body.testTime) {
           params['testTime'] = body.testTime
@@ -112,7 +115,12 @@ def call(body) {
 
       // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
       if (body.failonfinding) {
-          println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+          if (body.failonfinding == 'False' || body.failonfinding == 'f1alse'){
+              println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+          }
+          else {
+              throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+          }
       }
       else {
           throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
