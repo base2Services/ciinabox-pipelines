@@ -115,11 +115,14 @@ def call(body) {
 
       // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
       def failonfinding = body.get('failonfinding', true)
-      if (!failonfinding) {
-          println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
-          } else {
-              throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
-          }
+      if (findings >= 1) {
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\n****************")
+            return 1
+      }
+      else {
+            println('Test(s) passed')
+            return 0
+      }
 }
 
 
