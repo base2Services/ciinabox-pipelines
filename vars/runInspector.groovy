@@ -115,11 +115,18 @@ def call(body) {
 
       // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
       def failonfinding = body.get('failonfinding', true)
-      if (!failonfinding) {
-          println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
-          } else {
+      if (testPassed >= 1) {
+          if (!failonfinding) {
+              println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
+              return testPassed
+          }
+          else {
               throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
           }
+      }
+      else {
+          return testPassed
+      }
 }
 
 
@@ -192,12 +199,12 @@ def formatedResults(fullResult) {
       findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
 
       if (findings >= 1) {
-            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\n****************")
-            return 1
+            println("****************\nTest(s) not passed ${findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or console\n****************")
+            return findings
       }
       else {
             println('Test(s) passed')
-            return 0
+            return findings
       }
 }
 
