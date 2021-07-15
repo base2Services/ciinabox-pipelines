@@ -106,6 +106,7 @@ def main(body, stackName, bucketName, fileName) {
             timeout += 1
             TimeUnit.SECONDS.sleep(5);
 <<<<<<< HEAD
+<<<<<<< HEAD
       }
 
       // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -131,6 +132,8 @@ def main(body, stackName, bucketName, fileName) {
       // Pull down cloudformaiton stack and bucket hosting cloudformation template
       cloudformation(
 =======
+=======
+>>>>>>> adde715 (fixed some syntax issues)
         } else {
             println("Waited 10 minutes for insance to come up, skipping waiting")
             instancesStatus = 'running'
@@ -139,7 +142,36 @@ def main(body, stackName, bucketName, fileName) {
 
     // Query stack for inspector assessment targets arn (must be an output)
     def targetsArn = cloudformation(
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
+=======
+=======
+      }
+
+      // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
+      def testRunning = true
+      while (testRunning.equals(true)) {
+            def getResults = getResults(assessmentArn).toString()
+            println("Cleanup Status: ${getResults}")
+            if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
+                  testRunning = false
+            }
+      }
+
+      // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
+      getResults = getResults(assessmentArn)
+      def urlRegex = /http.*[^}]/
+      def resutlUrl = (getResults =~ urlRegex)
+      resutlUrl = resutlUrl[0]
+      def fullResult = resutlUrl.toURL().text
+      writeFile(file: 'Inspector_test_reults.html', text: fullResult)
+      archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
+      def testPassed = formatedResults(assessmentArn)
+
+      // Pull down cloudformaiton stack and bucket hosting cloudformation template
+      cloudformation(
+>>>>>>> f9e1474 (fixed some syntax issues)
+>>>>>>> adde715 (fixed some syntax issues)
             stackName: stackName,
             queryType: 'output',
             query: 'TargetsArn',
@@ -309,6 +341,7 @@ def destroyBucket(String name, String region) {
 
 def returnOs(String ami) {
 <<<<<<< HEAD
+<<<<<<< HEAD
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)//.withFilters(["platform"])
       def response = client.describeImages(request)
@@ -330,6 +363,8 @@ def returnOs(String ami) {
             return('Linux')
       }
 =======
+=======
+>>>>>>> adde715 (fixed some syntax issues)
     def client = AmazonEC2ClientBuilder.standard().build()
     def request = new DescribeImagesRequest().withImageIds(ami)
     def response = client.describeImages(request)
@@ -340,7 +375,32 @@ def returnOs(String ami) {
     } else {
         return('Linux')
     }
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
+=======
+=======
+      def client = AmazonEC2ClientBuilder.standard().build()
+      def request = new DescribeImagesRequest().withImageIds(ami)//.withFilters(["platform"])
+      def response = client.describeImages(request)
+
+      // println("Response: ${response}")
+      // if (response == 'windows') {
+      //     return('Windows')
+      // } else {
+      //     return('Linux')
+      // }
+
+      // ##### Old was using grep ###
+      regex = /Windows/
+      response = (response =~ regex)
+      if (response.size() != 0){
+            return('Windows')
+      }
+      else {
+            return('Linux')
+      }
+>>>>>>> f9e1474 (fixed some syntax issues)
+>>>>>>> adde715 (fixed some syntax issues)
 }
 
 
@@ -365,6 +425,7 @@ def getResults(String result_arn) {
 
 def formatedResults(arn) {
 <<<<<<< HEAD
+<<<<<<< HEAD
       // // Check if there where Findings
       // def regex = /A total of \d/
       // def findings = (fullResult =~ regex)
@@ -386,6 +447,8 @@ def formatedResults(arn) {
             return total_findings
       }
 =======
+=======
+>>>>>>> adde715 (fixed some syntax issues)
     def client = AmazonInspectorClientBuilder.standard().build()
     def request = new DescribeAssessmentRunsRequest().withAssessmentRunArns(arn)
     def response = client.describeAssessmentRuns(request)
@@ -400,7 +463,32 @@ def formatedResults(arn) {
         println('Test(s) passed')
         return [findings, total_findings]
     }
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
+=======
+=======
+      // // Check if there where Findings
+      // def regex = /A total of \d/
+      // def findings = (fullResult =~ regex)
+      // findings = findings[0]
+      // findings = findings.replaceAll(/A total of /, '').toInteger() // Just get the total number of findings
+      def client = AmazonInspectorClientBuilder.standard().build()
+      def request = new DescribeAssessmentRunsRequest()
+        .withAssessmentRunArns(arn)
+      def response = client.describeAssessmentRuns(request)
+      def findings = response.getAssessmentRuns()[0].getFindingCounts()
+      def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
+
+      if (findings >= 1) {
+            println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${findings['High']}\n Medium: ${findings['Medium']}\n Low: ${findings['Low']}\nInformational: ${findings['Informational']}\n****************")
+            return findings
+      }
+      else {
+            println('Test(s) passed')
+            return total_findings
+      }
+>>>>>>> f9e1474 (fixed some syntax issues)
+>>>>>>> adde715 (fixed some syntax issues)
 }
 
 
@@ -411,6 +499,10 @@ def getRunStatus (String arn) {
       def response = client.describeAssessmentRuns(request)
       def state = response.getAssessmentRuns()[0].getState()
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> adde715 (fixed some syntax issues)
 
       //
       // // Pull out just the state of the test
@@ -421,7 +513,11 @@ def getRunStatus (String arn) {
       // def length = state.length()
       // state = state.substring(0, (length - 1))
       // state = state.replace('State: ', '')
+<<<<<<< HEAD
 =======
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
+=======
+>>>>>>> f9e1474 (fixed some syntax issues)
+>>>>>>> adde715 (fixed some syntax issues)
       return state
 }
