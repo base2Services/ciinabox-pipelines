@@ -15,6 +15,7 @@ import com.amazonaws.services.ecs.model.NetworkConfiguration
 import com.amazonaws.services.ecs.model.DeregisterTaskDefinitionRequest
 import com.amazonaws.services.ecs.model.StopTaskRequest
 import com.amazonaws.services.ecs.model.LaunchType
+import com.amazonaws.services.ecs.model.LogConfiguration
 
 import com.amazonaws.waiters.NoOpWaiterHandler
 import com.amazonaws.waiters.WaiterParameters
