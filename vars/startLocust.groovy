@@ -63,6 +63,15 @@ def call(body=[:]) {
       [key: 'LOCUST_FILE', value: config.locustFile],
       [key: 'LOCUST_MODE', value: locustMode],
       [key: 'HOST_URL', value: config.hostUrl]
+    ],
+    logs: [
+      driver: 'awslogs'
+      options: [
+        "awslogs-group": config.logGroup
+        "awslogs-region": config.region
+        "awslogs-stream-prefix": 'locust-master'
+      ]
+
     ]
   ]
 

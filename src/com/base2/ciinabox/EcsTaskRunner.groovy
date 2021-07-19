@@ -106,6 +106,13 @@ class EcsTaskRunner implements Serializable {
         .withImage(td.image)
         .withEssential(true)
       
+      if (td.logs) {
+        cd.withLogConfiguration(new LogConfiguration()
+          .withLogDriver(td.logs.get('driver', 'awslogs')
+          .withOptions(td.logs.options)
+        )
+      }
+      
       if (td.ports) {
         def portMappings = []
         
