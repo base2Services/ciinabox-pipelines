@@ -65,7 +65,7 @@ def call(body=[:]) {
       [key: 'HOST_URL', value: config.hostUrl]
     ],
     logs: [
-      driver: 'awslogs'
+      driver: 'awslogs',
       options: [
         "awslogs-group": config.logGroup
         "awslogs-region": config.region
