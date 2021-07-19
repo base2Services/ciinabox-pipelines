@@ -67,8 +67,8 @@ def call(body=[:]) {
     logs: [
       driver: 'awslogs',
       options: [
-        "awslogs-group": config.logGroup
-        "awslogs-region": config.region
+        "awslogs-group": config.logGroup,
+        "awslogs-region": config.region,
         "awslogs-stream-prefix": 'locust-master'
       ]
 
