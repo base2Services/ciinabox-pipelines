@@ -108,7 +108,7 @@ class EcsTaskRunner implements Serializable {
       
       if (td.logs) {
         cd.withLogConfiguration(new LogConfiguration()
-          .withLogDriver(td.logs.get('driver', 'awslogs')
+          .withLogDriver(td.logs.get('driver', 'awslogs'))
           .withOptions(td.logs.options)
         )
       }
