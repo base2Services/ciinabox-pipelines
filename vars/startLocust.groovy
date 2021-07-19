@@ -32,28 +32,18 @@ import com.base2.ciinabox.EcsTaskRunner
 
 def call(body=[:]) {
   def config = body
-  def details = [:]
+  def details = [
+    subnet: config.subnet,
+    securityGroup: config.securityGroup,
+    executionRole: config.executionRole,
+    cluster: config.cluster,
+    cpu: config.get('cpu', '512'),
+    memory: config.get('memory', '1024')
+  ]
 
-  def metadata = new InstanceMetadata()
-  // if the node is a ec2 instance using the ec2 plugin
-  def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
 
-  if (!instanceId) {
-    instanceId = metadata.instanceId()
-  }
+  def task = new GetEcsContainerDetails(config.region)
 
-  def region = config.get('region', metadata.region())
-
-  def instance = new GetInstanceDetails(region, instanceId)
-  details.subnet = config.get('subnet', instance.subnet())
-  details.securityGroup = config.get('securityGroup', instance.securityGroup())
-
-  def task = new GetEcsContainerDetails(region)
-  details.executionRole = config.get('executionRole', task.executionRole())
-  details.cluster = config.get('cluster', task.cluster())
-
-  details.cpu = config.get('cpu', '512')
-  details.memory = config.get('memory', '1024')
   def version = config.get('version', '0.10.0')
 
   def locustMode = config.get('locustMode', 'standalone')
@@ -68,7 +58,7 @@ def call(body=[:]) {
       [container: 5558, host: 5558]
     ],
     environment: [
-      [key: 'AWS_REGION', value: region],
+      [key: 'AWS_REGION', value: config.region],
       [key: 'LOCUST_S3_PATH', value: config.locustS3Path],
       [key: 'LOCUST_FILE', value: config.locustFile],
       [key: 'LOCUST_MODE', value: locustMode],
@@ -76,7 +66,7 @@ def call(body=[:]) {
     ]
   ]
 
-  def client = new AwsClientBuilder([region: region]).ecs()
+  def client = new AwsClientBuilder([region: config.region]).ecs()
   def runner = new EcsTaskRunner('locust', client)
   def taskArn = runner.startTask(details, taskDef)
   def endpoint = runner.getEndpoint(taskArn, details.cluster)
