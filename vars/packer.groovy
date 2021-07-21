@@ -23,7 +23,7 @@
     username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
-    runList: ['cookbook::recipe'] // (required, list of recipes)
+    runList: ['cookbook::recipe'] // (optional, list of recipes if using chef)
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
     cookbookS3Bucket: 'source.cookbooks', // (conditional, required for type: 'windows')
@@ -43,16 +43,12 @@ def call(body) {
   def config = body
   
   if(!config.role) {
-    error("(role: 'my-build') must be supplied")
-  }
-  
-  if (!config.runList) {
-    error("(runList: ['cookbook::recipe']) must be supplied")
+    throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
   
   if (config.type.startsWith('windows')) {
     if (!config.cookbookS3Bucket && !config.cookbookS3Path) {
-      error("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
+      throw new GroovyRuntimeException("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
     }
   }
 
@@ -117,11 +113,11 @@ def call(body) {
   } else if (config.amiLookupSSM) {
     sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
-    error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
+    throw new GroovyRuntimeException("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
   
   if (!sourceAMI) {
-    error("Unable to find AMI")
+    throw new GroovyRuntimeException("Unable to find AMI")
   }
   
   println("""
@@ -149,11 +145,15 @@ def call(body) {
   
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
-  ptb.addDownloadCookbookProvisioner(
-    config.get('cookbookS3Bucket'), 
-    config.get('cookbookS3Region', region), 
-    config.get('cookbookS3Path'))
-  ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+
+  if (config.runList) {
+    ptb.addDownloadCookbookProvisioner(
+      config.get('cookbookS3Bucket'), 
+      config.get('cookbookS3Region', region), 
+      config.get('cookbookS3Path'))
+    ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+  }
+
   ptb.addAmamzonConfigProvisioner()
   
   writeScript('packer/download_cookbooks.ps1')
