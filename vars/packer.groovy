@@ -45,8 +45,10 @@ def call(body) {
   if(!config.role) {
     throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
+
+  def platformType = config.get('type', 'linux')
   
-  if (config.type.startsWith('windows')) {
+  if (platformType.startsWith('windows')) {
     if (!config.cookbookS3Bucket && !config.cookbookS3Path) {
       throw new GroovyRuntimeException("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
     }
@@ -131,10 +133,11 @@ def call(body) {
 | Instance Profile: ${instanceProfile}
 | Source AMI: ${sourceAMI}
 | Instance Type: ${instanceType}
+| PlatformType: ${platformType}
 =================================================
   """)
   
-  def ptb = new PackerTemplateBuilder(config.role, config.get('type', 'linux'))
+  def ptb = new PackerTemplateBuilder(config.role, platformType)
   ptb.builder.region = region
   ptb.builder.source_ami = sourceAMI
   ptb.builder.instance_type = instanceType
