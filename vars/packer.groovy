@@ -81,6 +81,7 @@ def call(body) {
 
     // if node name is not an instance id, try getting the instance id from the instance metadata
     if (!instanceId) {
+      println "retrieving the instance metadata"
       def metadata = new InstanceMetadata()
       if (!metadata.isEc2) {
         throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
@@ -96,15 +97,15 @@ def call(body) {
     }
 
     if (!subnet) {
-      vpcId = instance.subnet()
+      subnet = instance.subnet()
     }
 
     if (!securityGroup) {
-      vpcId = instance.securityGroup()
+      securityGroup = instance.securityGroup()
     }
 
     if (!instanceProfile) {
-      vpcId = instance.instanceProfile()
+      instanceProfile = instance.instanceProfile()
     }    
   }
   
