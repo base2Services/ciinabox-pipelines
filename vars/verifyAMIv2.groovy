@@ -18,11 +18,11 @@ verifyAMIv2(
   az: 'a', // (optional, will use jenkins az)
   subnet: 'subnet-1234', // (optional, will lookup)
   securityGroup: 'sg-1234', // (optional, will lookup)
-  vpcId: 'vpc-1234', // (optional, will lookup)
   instanceProfile: 'packer', // (optional, will lookup)
   instanceType: 't3.small' // (optional, default to m5.large)
 )
 ************************************/
+import com.base2.ciinabox.aws.Util
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 
@@ -56,22 +56,61 @@ def call(body) {
   def suite = config.get('suite', config.role)
   def type = config.get('type', 'amzn-linux')
   
-  def metadata = new InstanceMetadata()
-  // if the node is a ec2 instance using the ec2 plugin
-  def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
-    
-  if (!instanceId) {
-    instanceId = metadata.instanceId()
+  // get the local region if not set by the method
+  def region = config.get('region', Util.getRegion())
+  if (!region) {
+    throw new GroovyRuntimeException("no AWS region found")
   }
-  
-  def instance = new GetInstanceDetails(metadata.region(), instanceId)
-  
-  def region = config.get('region', metadata.region())
-  def vpcId = config.get('vpcId', instance.vpcId())
-  def subnet = config.get('subnet', instance.subnet())
-  def securityGroup = config.get('securityGroup', instance.securityGroup())
-  def instanceProfile = config.get('instanceProfile', instance.instanceProfile())
+
+  def subnet = config.get('subnet')
+  def securityGroup = config.get('securityGroup')
+  def instanceProfile = config.get('instanceProfile')
   def instanceType = config.get('instanceType','m5.large')
+
+  if (!subnet || !securityGroup || !instanceProfile) {
+    println "looking up networking details to launch test kitchen instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+
+    if (!subnet) {
+      subnet = instance.subnet()
+    }
+
+    if (!securityGroup) {
+      securityGroup = instance.securityGroup()
+    }
+
+    if (!instanceProfile) {
+      instanceProfile = instance.instanceProfile()
+    }    
+  }
+
+    println("""
+=======================================================
+| Using the following AWS details to run test kitchen |
+=======================================================
+| Region: ${region}
+| Subnet: ${subnet}
+| Security Group: ${securityGroup}
+| Instance Profile: ${instanceProfile}
+| Source AMI: ${sourceAMI}
+| Instance Type: ${instanceType}
+=======================================================
+  """)
   
   def kitchenYaml = [
     driver: [
