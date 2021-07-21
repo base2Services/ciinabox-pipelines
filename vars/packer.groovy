@@ -32,6 +32,7 @@
     debug: 'true|false', // (optional)
   )
 ************************************/
+import com.base2.ciinabox.aws.Util
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 import com.base2.ciinabox.PackerTemplateBuilder
@@ -61,23 +62,53 @@ def call(body) {
     println('debug enabled')
   }
   
-  def metadata = new InstanceMetadata()
-  // if the node is a ec2 instance using the ec2 plugin
-  def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
-    
-  if (!instanceId) {
-    instanceId = metadata.instanceId()
+  // get the local region if not set by the method
+  def region = config.get('region', Util.getRegion())
+  if (!region) {
+    throw new GroovyRuntimeException("no AWS region found")
   }
 
-  def instance = new GetInstanceDetails(metadata.region(), instanceId)
-  
-  def region = config.get('region', metadata.region())
-  def vpcId = config.get('vpcId', instance.vpcId())
-  def subnet = config.get('subnet', instance.subnet())
-  def securityGroup = config.get('securityGroup', instance.securityGroup())
-  def instanceProfile = config.get('instanceProfile', instance.instanceProfile())
+  def vpcId = config.get('vpcId')
+  def subnet = config.get('subnet')
+  def securityGroup = config.get('securityGroup')
+  def instanceProfile = config.get('instanceProfile')
   def instanceType = config.get('instanceType','m5.large')
   def sourceAMI = null
+
+  if (!vpcId || !subnet || !securityGroup || !instanceProfile) {
+    println "looking up networking details to launch packer instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      def metadata = new InstanceMetadata()
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+
+    if (!vpcId) {
+      vpcId = instance.vpcId()
+    }
+
+    if (!subnet) {
+      vpcId = instance.subnet()
+    }
+
+    if (!securityGroup) {
+      vpcId = instance.securityGroup()
+    }
+
+    if (!instanceProfile) {
+      vpcId = instance.instanceProfile()
+    }    
+  }
   
   if (config.ami) {
     sourceAMI = config.ami
@@ -174,4 +205,8 @@ def writeScript(path) {
   def content = libraryResource(path)
   def fileName = path.split('/').last()
   writeFile(file: fileName, text: content)
+}
+
+def lookupNetworkDetails(region) {
+  
 }
