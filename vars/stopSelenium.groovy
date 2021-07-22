@@ -14,16 +14,19 @@ stopSelenium(
 ************************************/
 
 import com.base2.ciinabox.aws.AwsClientBuilder
-import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetEcsContainerDetails
 import com.base2.ciinabox.EcsTaskRunner
+import com.base2.ciinabox.aws.Util
 
 def call(body=[:]) {
   def config = body
   def details = [:]
   
-  def metadata = new InstanceMetadata()  
-  def region = config.get('region', metadata.region())
+  // get the local region if not set by the method
+  def region = config.get('region', Util.getRegion())
+  if (!region) {
+    throw new GroovyRuntimeException("no AWS region found")
+  }
   
   def task = new GetEcsContainerDetails(region)
   details.cluster = config.get('cluster', task.cluster())

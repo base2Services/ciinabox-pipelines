@@ -23,7 +23,7 @@
     username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
-    runList: ['cookbook::recipe'] // (required, list of recipes)
+    runList: ['cookbook::recipe'] // (optional, list of recipes if using chef)
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
     cookbookS3Bucket: 'source.cookbooks', // (conditional, required for type: 'windows')
@@ -32,6 +32,7 @@
     debug: 'true|false', // (optional)
   )
 ************************************/
+import com.base2.ciinabox.aws.Util
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 import com.base2.ciinabox.PackerTemplateBuilder
@@ -42,16 +43,14 @@ def call(body) {
   def config = body
   
   if(!config.role) {
-    error("(role: 'my-build') must be supplied")
+    throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
+
+  def platformType = config.get('type', 'linux')
   
-  if (!config.runList) {
-    error("(runList: ['cookbook::recipe']) must be supplied")
-  }
-  
-  if (config.type.startsWith('windows')) {
+  if (platformType.startsWith('windows')) {
     if (!config.cookbookS3Bucket && !config.cookbookS3Path) {
-      error("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
+      throw new GroovyRuntimeException("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
     }
   }
 
@@ -61,23 +60,54 @@ def call(body) {
     println('debug enabled')
   }
   
-  def metadata = new InstanceMetadata()
-  // if the node is a ec2 instance using the ec2 plugin
-  def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
-    
-  if (!instanceId) {
-    instanceId = metadata.instanceId()
+  // get the local region if not set by the method
+  def region = config.get('region', Util.getRegion())
+  if (!region) {
+    throw new GroovyRuntimeException("no AWS region found")
   }
 
-  def instance = new GetInstanceDetails(metadata.region(), instanceId)
-  
-  def region = config.get('region', metadata.region())
-  def vpcId = config.get('vpcId', instance.vpcId())
-  def subnet = config.get('subnet', instance.subnet())
-  def securityGroup = config.get('securityGroup', instance.securityGroup())
-  def instanceProfile = config.get('instanceProfile', instance.instanceProfile())
+  def vpcId = config.get('vpcId')
+  def subnet = config.get('subnet')
+  def securityGroup = config.get('securityGroup')
+  def instanceProfile = config.get('instanceProfile')
   def instanceType = config.get('instanceType','m5.large')
   def sourceAMI = null
+
+  if (!vpcId || !subnet || !securityGroup || !instanceProfile) {
+    println "looking up networking details to launch packer instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+
+    if (!vpcId) {
+      vpcId = instance.vpcId()
+    }
+
+    if (!subnet) {
+      subnet = instance.subnet()
+    }
+
+    if (!securityGroup) {
+      securityGroup = instance.securityGroup()
+    }
+
+    if (!instanceProfile) {
+      instanceProfile = instance.instanceProfile()
+    }    
+  }
   
   if (config.ami) {
     sourceAMI = config.ami
@@ -86,11 +116,11 @@ def call(body) {
   } else if (config.amiLookupSSM) {
     sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
-    error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
+    throw new GroovyRuntimeException("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
   
   if (!sourceAMI) {
-    error("Unable to find AMI")
+    throw new GroovyRuntimeException("Unable to find AMI")
   }
   
   println("""
@@ -104,10 +134,11 @@ def call(body) {
 | Instance Profile: ${instanceProfile}
 | Source AMI: ${sourceAMI}
 | Instance Type: ${instanceType}
+| PlatformType: ${platformType}
 =================================================
   """)
   
-  def ptb = new PackerTemplateBuilder(config.role, config.get('type', 'linux'))
+  def ptb = new PackerTemplateBuilder(config.role, platformType)
   ptb.builder.region = region
   ptb.builder.source_ami = sourceAMI
   ptb.builder.instance_type = instanceType
@@ -118,11 +149,15 @@ def call(body) {
   
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
-  ptb.addDownloadCookbookProvisioner(
-    config.get('cookbookS3Bucket'), 
-    config.get('cookbookS3Region', region), 
-    config.get('cookbookS3Path'))
-  ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+
+  if (config.runList) {
+    ptb.addDownloadCookbookProvisioner(
+      config.get('cookbookS3Bucket'), 
+      config.get('cookbookS3Region', region), 
+      config.get('cookbookS3Path'))
+    ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+  }
+
   ptb.addAmamzonConfigProvisioner()
   
   writeScript('packer/download_cookbooks.ps1')

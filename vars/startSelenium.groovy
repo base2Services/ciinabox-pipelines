@@ -25,25 +25,50 @@ import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 import com.base2.ciinabox.GetEcsContainerDetails
 import com.base2.ciinabox.EcsTaskRunner
+import com.base2.ciinabox.aws.Util
 
 def call(body=[:]) {
   def config = body
   def details = [:]
   
-  def metadata = new InstanceMetadata()
-  // if the node is a ec2 instance using the ec2 plugin
-  def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
-    
-  if (!instanceId) {
-    instanceId = metadata.instanceId()
+  // get the local region if not set by the method
+  def region = config.get('region', Util.getRegion())
+  if (!region) {
+    throw new GroovyRuntimeException("no AWS region found")
+  }
+
+  details.subnet = config.get('subnet')
+  details.securityGroup = config.get('securityGroup')
+
+  if (!details.subnet || !details.securityGroup) {
+    println "looking up networking details to launch selenium containers in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+
+    if (!details.subnet) {
+      details.subnet = instance.subnet()
+    }
+
+    if (!details.securityGroup) {
+      details.securityGroup = instance.securityGroup()
+    }
   }
   
-  def region = config.get('region', metadata.region())
-  
-  def instance = new GetInstanceDetails(region, instanceId)
-  details.subnet = config.get('subnet', instance.subnet())
-  details.securityGroup = config.get('securityGroup', instance.securityGroup())
-  
+  println "looking up ECS details to launch selenium containers in"
   def task = new GetEcsContainerDetails(region)
   details.executionRole = config.get('executionRole', task.executionRole())
   details.cluster = config.get('cluster', task.cluster())
