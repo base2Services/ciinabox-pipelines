@@ -210,7 +210,3 @@ def writeScript(path) {
   def fileName = path.split('/').last()
   writeFile(file: fileName, text: content)
 }
-
-def lookupNetworkDetails(region) {
-  
-}
