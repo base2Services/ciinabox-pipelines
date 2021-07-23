@@ -32,14 +32,27 @@ def call(body) {
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
+    def findings = ''
     try{
-        def run = main(body, stackName, bucketName, fileName)
-        return run
+        findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
         println(e)
         cleanUp(stackName, body.region, bucketName, fileName)
         return 1
     }
+    // Fail the pipeline if insepctor tests did not pass considering passed in threshold
+    def failon = body.get('failon', 'Medium').toLowerCase().capitalize()
+    def passed = checkFail(failon, findings[0])
+    if (passed == false) {
+        throw new GroovyRuntimeException("One or more interpector test(s) above or at ${failon} failed on the AMI")
+    } else if((passed == true) & (findings[1] >= 1)) {
+        println('Inspector failed on some test however they where under the treshold')
+        return findings[1]
+    } else {
+        println('No inspector tests failed')
+        return findings[1]
+    }
+
 }
 
 
@@ -159,23 +172,49 @@ def main(body, stackName, bucketName, fileName) {
     def fullResult = resutlUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-    def testPassed = formatedResults(assessmentArn)
-
+    def findings = formatedResults(assessmentArn)
     cleanUp(stackName, body.region, bucketName, fileName)
+    return findings
+}
 
-    // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
-    def failonfinding = body.get('failonfinding', true)
 
-    if (testPassed[1] >= 1){
-        if (!failonfinding) {
-            println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
-            return testPassed[0]
-        } else {
-            throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
+
+def checkFail(failon, findings){
+    // Make a list of severity levels with >= 1 nFindings
+    def severties = findings.keySet()
+    def severityFindings = []
+    for (s in severties){
+        if (findings[s].toInteger() > 0 ) {
+            severityFindings.add(s)
         }
-    } else {
-        return testPassed
     }
+
+    def validSeverity = ['']
+    switch(failon) {
+        case 'Informational':
+            validSeverity = ['Informational', 'Low', 'Medium', 'High']
+            break
+        case 'Low':
+            validSeverity = ['Low', 'Medium', 'High']
+            break
+        case 'Medium':
+            validSeverity = ['Medium', 'High']
+            break
+        case 'High':
+            validSeverity = ['High']
+            break
+        case 'Never':
+            validSeveritgroovyy = ['']
+            break
+    }
+    def testPassed = true
+    validSeverity.each { severity ->
+        if (severityFindings.contains(severity)){
+            testPassed = false
+        } else {
+        }
+    }
+    return testPassed
 }
 
 
@@ -205,11 +244,12 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
             action: 'delete',
             region: region,
             waitUntilComplete: 'false',
-            )
+        )
+    } finally {
+        cleanBucket(bucketName, region, fileName)
+        destroyBucket(bucketName, region)
+        println('All creted resources are now deleted')
     }
-    cleanBucket(bucketName, region, fileName)
-    destroyBucket(bucketName, region)
-    println('All creted resources are now deleted')
 }
 
 def uploadFile(String bucket, String fileName, String file, String region) {
