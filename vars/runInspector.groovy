@@ -8,7 +8,7 @@ example usage in a pipeline
 runInspector(
      region: 'ap-southeast-2',                      # Required
      amiId: 'ami-0186908e2fdeea8f3'                 # Required
-     failonfinding: 'False',                        # Optional
+     failon: 'Informational|Low|Medium|High|Never', # Optional
      ruleArns: ['ruleARN1', 'ruleARN2']             # Optional
      testTime: '120',                               # Optional
 )
