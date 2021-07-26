@@ -44,12 +44,12 @@ def call(body) {
   def close = config.get('close',false)
   def jobName = env.JOB_NAME.replace("/", " ")
 
-  def alias = "${type} nofication for ${config.environment} environment by ${jobName} build ${env.BUILD_NUMBER}"
+  def alias = "Jenkins - ${type} notification for ${config.environment} environment by ${jobName} build ${env.BUILD_NUMBER}"
   def message = "${type} for ${config.application} in ${config.environment} environment by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
 
   if (type != 'deployment') {
-    alias = "${type} nofication by ${jobName} build ${env.BUILD_NUMBER}"
-    message = "${type} nofication for ${config.application} by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+    alias = "${type} notification by ${jobName} build ${env.BUILD_NUMBER}"
+    message = "${type} notification for ${config.application} by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
   }
 
   raiseAlert(config,alias,type,message,priority)
