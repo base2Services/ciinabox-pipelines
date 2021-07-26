@@ -48,7 +48,7 @@ def call(body) {
   def message = "${type} for ${config.application} in ${config.environment} environment by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
 
   if (type != 'deployment') {
-    alias = "${type} notification by ${jobName} build ${env.BUILD_NUMBER}"
+    alias = "Jenkins - ${type} notification by ${jobName} build ${env.BUILD_NUMBER}"
     message = "${type} notification for ${config.application} by job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
   }
 
