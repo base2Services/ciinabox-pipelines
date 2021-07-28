@@ -38,7 +38,7 @@ def call(body) {
     } catch(Exception e) {
         println(e)
         cleanUp(stackName, body.region, bucketName, fileName)
-        return 1
+        throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
     def failon = body.get('failon', 'Medium').toLowerCase().capitalize()
@@ -209,9 +209,8 @@ def checkFail(failon, findings){
     }
     def testPassed = true
     validSeverity.each { severity ->
-        if (severityFindings.contains(severity)){
+        if (severityFindings.contains(severity)) {
             testPassed = false
-        } else {
         }
     }
     return testPassed
