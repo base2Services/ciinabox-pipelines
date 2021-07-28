@@ -39,6 +39,7 @@ def call(body) {
         findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
+<<<<<<< HEAD
         cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
@@ -337,6 +338,8 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
 >>>>>>> 9b75ef3 (fixed some syntax issues)
     } catch(Exception e) {
         println(e)
+=======
+>>>>>>> cb2e1bc (changed error out message)
         cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
