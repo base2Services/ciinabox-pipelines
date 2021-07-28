@@ -1,13 +1,14 @@
 /***********************************
- lookupAMI DSL
+lookupAMI DSL
 
- Looks up an AMI id by name or from a ssm parameter
+Looks up an AMI id by name or from a ssm parameter
 
- example usage
- lookupAMI(
+example usage
+
+lookupAMI(
   region: 'ap-southeast-2', // (optional, if not set will retrieve the current region)
   amiName: 'ami-name-*', // (conditional, ami name to search for. accepts wildcards. either name or ssm must be set)
-  owner: '12345678912', // (optional, account id that owns the ami. defaults to the current aws account)
+  owner: '12345678912', // (optional, account id that owns the ami)
   tags: ['status':'verifed'], // (optional, filter ami name lookup by tags)
   ssm: '/ssm/path/ami', // (conditional, retrive ami from ssm parameter. either name or ssm must be set)
   env: 'MY_AMI' // (optional, environment variable name. defaults to env["SOURCE_AMI"])
@@ -26,9 +27,6 @@ def call(body) {
   if(!config.region) {
     config.region = Util.getRegion()
   }
-  if(!config.owner) {
-    config.owner = Util.getAccountId()
-  }
   
   if (config.ssm) {
     def parameter = config.ssm
@@ -36,17 +34,21 @@ def call(body) {
     def path = parameter - parameter.substring(parameter.lastIndexOf("/"))
     def params = ssmParameter(action: 'get', parameter: path, region: config.region)
     def resp = params.find {it.name.equals(parameter)}
-    if (resp) { imageId = resp.value }
+    if (resp) { 
+      imageId = resp.value 
+    }
   } else if (config.amiName) {
     echo "looking up ami id by name ${config.amiName} in the ${config.region} region"
-    def resp = lookupAMI(config)
-    imageId = resp.imageId
+    def resp = lookupAMIRequest(config)
+    if (resp) { 
+      imageId = resp.imageId
+    }
   } else {
-    error("one of 'name' or 'ssm' parameters must be supplied")
+    throw new GroovyRuntimeException("one of 'name' or 'ssm' parameters must be supplied")
   }
   
   if (!imageId) {
-    error("unable to find ami from config: ${config}")
+    throw new GroovyRuntimeException("unable to find ami from config: ${config}")
   }
   
   if(imageId) {
@@ -62,7 +64,7 @@ def call(body) {
   }
 }
 
-def lookupAMI(config) {  
+def lookupAMIRequest(config) {  
   def ec2 = AmazonEC2ClientBuilder.standard()
     .withRegion(config.region)
     .build()
@@ -76,25 +78,21 @@ def lookupAMI(config) {
     }
   }
 
-  if(config.amiBranch) {
-    def amiBranch = config.amiBranch.replaceAll("/", "-")
-    filters << new Filter("tag:BranchName").withValues("${amiBranch}","master")
+  def describeImageRequest = new DescribeImagesRequest().withFilters(filters)
+
+  if (config.owner) {
+    describeImageRequest.withOwners([config.owner])
   }
 
-  def imagesList = ec2.describeImages(new DescribeImagesRequest()
-    .withOwners([config.owner])
-    .withFilters(filters)
-  )
+  def imagesList = ec2.describeImages(describeImageRequest)
+
+  ec2 = null
+
   if(imagesList.images.size () > 0) {
     def images = imagesList.images.collect()
-    println "image:${images}"
-    if(config.amiBranch) {
-      images = filterAMIBranch(images, config.amiBranch.replaceAll("/", "-"))
-    }
-    ec2 = null
     return images.get(findNewestImage(images))
   }
-  ec2 = null
+
   return null
 }
 
