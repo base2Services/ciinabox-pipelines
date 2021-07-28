@@ -38,7 +38,7 @@ def call(body) {
     def resp = params.find {it.name.equals(parameter)}
     if (resp) { imageId = resp.value }
   } else if (config.amiName) {
-    echo "looking up ami id by name ${config.name} in the ${config.region} region"
+    echo "looking up ami id by name ${config.amiName} in the ${config.region} region"
     def resp = lookupAMI(config)
     imageId = resp.imageId
   } else {
