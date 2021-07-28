@@ -341,7 +341,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
-    def failon = body.get('failon', 'Medium').toLowerCase().capitalize()
+    def failon = body.get('failon', 'Medium').toString().toLowerCase().capitalize()
     def passed = checkFail(failon, findings[0])
     if (passed == false) {
         throw new GroovyRuntimeException("One or more interpector test(s) above or at ${failon} failed on the AMI")
@@ -506,6 +506,10 @@ def checkFail(failon, findings){
         case 'Never':
             validSeveritgroovyy = ['']
             break
+        default:
+            println('Non-valid failon level given, valid options are \'Informational\', \'Low\', \'Medium\', \'High\' and \'Never.\' Medium is used as the default')
+            validSeverity = ['Medium', 'High']
+
     }
     def testPassed = true
     validSeverity.each { severity ->
