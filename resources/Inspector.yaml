@@ -19,14 +19,24 @@ Parameters:
 Conditions:
   OsCheck:
     Fn::Equals:
-      - Fn::Sub: OS
+      - Fn::Sub: ${os}
       - "Windows"
 
 Resources:
+  testinstanceprofile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+          - Allow_SSM_Connection
+
+
+
   testinstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
+      IamInstanceProfile:
+          Ref: testinstanceprofile
       ImageId:
         Fn::Sub: "${amiId}"
       Tags:
@@ -38,8 +48,11 @@ Resources:
           - Fn::Base64:
               Fn::Join:
                 - ''
-                - - "curl -O https://inspector-agent.amazonaws.com/linux/latest/install\n"
-                  - "AWSAgentInstall.exe"
+                - - "<powershell> \n"
+                  - "Start-Transcript -Path \"C:/UserData.log\" -Append \n"
+                  - "Invoke-WebRequest https://inspector-agent.amazonaws.com/windows/installer/latest/AWSAgentInstall.exe -OutFile C:/AWSAgentInstall.exe \n"
+                  - "Start-Process -FilePath C:/AWSAgentInstall.exe -ArgumentList \"/install /quiet /norestart\" -Wait -NoNewWindow -PassThru \n"
+                  - "</powershell>"
           - Fn::Base64:
               Fn::Join:
                 - ''
@@ -122,6 +135,9 @@ Outputs:
       TemplateArn:
             Value:
                    Fn::GetAtt: [ testtemplate, Arn ]
+      TargetsArn:
+            Value:
+                   Fn::GetAtt: [ testtargetgroup, Arn ]
       InstanceId:
             Value:
                   Ref: testinstance
