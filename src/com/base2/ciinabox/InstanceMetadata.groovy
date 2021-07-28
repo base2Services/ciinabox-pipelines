@@ -5,11 +5,11 @@ import java.net.SocketException
 
 class InstanceMetadata implements Serializable {
   
-  private static String region
-  private static String az
-  private static String accountId
-  private static String instanceId
-  private static boolean isEc2
+  String region
+  String az
+  String accountId
+  String instanceId
+  boolean isEc2
   
   InstanceMetadata() {
     def jsonSlurper = new JsonSlurper()
@@ -30,21 +30,4 @@ class InstanceMetadata implements Serializable {
   def isEc2() {
     return this.isEc2
   }
-  
-  def getRegion() {
-    return this.region
-  }
-  
-  def getAz() {
-    return this.az
-  }
-  
-  def getAccountId() {
-    return this.accountId
-  }
-  
-  def getInstanceId() {
-    return this.instanceId
-  }
-  
 }
