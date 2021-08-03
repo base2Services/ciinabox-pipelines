@@ -25,7 +25,7 @@ if (Test-Path -Path $workdir -PathType Container) {
 }
 
 # override the defaults (SSLv3/TLSv1) to use TLSv1.2
-[System.Net.ServicePointManager]::SecurityProtocol] = (
+[System.Net.ServicePointManager]::SecurityProtocol = (
     [System.Net.ServicePointManager]::SecurityProtocol -bor 
     [System.Net.SecurityProtocolType]::Tls12
 )
