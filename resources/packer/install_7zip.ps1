@@ -25,7 +25,7 @@ if (Test-Path -Path $workdir -PathType Container) {
 }
 
 # Download the installer
-$source = "http://www.7-zip.org/a/7z$version-x64.msi"
+$source = "https://raw.githubusercontent.com/ip7z/a/main/7z$version-x64.msi"
 $destination = "$workdir\7-Zip.msi"
 Write-Host "INFO: Downloading 7-Zip $version msi from $source"
 Invoke-WebRequest $source -OutFile $destination
