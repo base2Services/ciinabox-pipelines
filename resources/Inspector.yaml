@@ -52,10 +52,14 @@ Resources:
     Properties:
       Roles:
 <<<<<<< HEAD
+<<<<<<< HEAD
           - testInstanceRole
     DependsOn: testInstanceRole
 =======
           - Allow_SSM_Connection
+=======
+          - AWSServiceRoleForAmazonSSM
+>>>>>>> fe95909 (change role from custom role to service linked role)
 
 >>>>>>> 2287413 (added some error handling)
 
