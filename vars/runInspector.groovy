@@ -38,6 +38,7 @@ def call(body) {
     try{
         findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
+        println(e)
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
 <<<<<<< HEAD
         cleanUp(stackName, body.region, bucketName, fileName)
