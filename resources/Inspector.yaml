@@ -27,6 +27,9 @@ Conditions:
 
 Resources:
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
   testInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -45,12 +48,58 @@ Resources:
               - "sts:AssumeRole"
 
 
+<<<<<<< HEAD
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+    testinstancerole:
+      Type: AWS:IAM::Role
+      Properties:
+        ManagedPolicyArns: arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        RoleName: testinstancerole
+=======
+  testinstancerole:
+    Type: AWS:IAM::Role
+=======
+  testInstanceRole:
+    Type: AWS::IAM::Role
+>>>>>>> 83c2b8f (fixed some syntax issues)
+    Properties:
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+<<<<<<< HEAD
+      RoleName: testinstancerole
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> eca9adb (fixed some syntax issues)
+=======
+      ssumeRolePolicyDocument:
+=======
+=======
+      RoleName: testInstanceRole
+>>>>>>> 99bda87 (fixed some syntax issues)
+      AssumeRolePolicyDocument:
+>>>>>>> 7d7d8f9 (fixed some syntax issues)
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+>>>>>>> ef0519c (fixed some syntax issues)
+
+>>>>>>> 8956524 (using managed role didn't work, replaced them with a new role resoruce using a managed policy)
+=======
+>>>>>>> f364423 (fixed some syntax issues)
   testinstanceprofile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
+<<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
           - testInstanceRole
@@ -62,6 +111,20 @@ Resources:
 >>>>>>> fe95909 (change role from custom role to service linked role)
 
 >>>>>>> 2287413 (added some error handling)
+=======
+          - testinstancerole
+>>>>>>> 8956524 (using managed role didn't work, replaced them with a new role resoruce using a managed policy)
+=======
+          - testInstanceRole
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 69b516b (fixed some syntax issues)
+=======
+      DependsOn: testInstanceRole
+>>>>>>> f364423 (fixed some syntax issues)
+=======
+    DependsOn: testInstanceRole
+>>>>>>> 31840f5 (fixed some syntax issues)
 
 
   testinstance:
