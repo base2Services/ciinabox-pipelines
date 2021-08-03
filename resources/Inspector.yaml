@@ -23,12 +23,30 @@ Conditions:
       - "Windows"
 
 Resources:
+  testInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+      RoleName: testInstanceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+
   testinstanceprofile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
-          - AWSServiceRoleForAmazonSSM
-
+          - testInstanceRole
+    DependsOn: testInstanceRole
 
 
   testinstance:
