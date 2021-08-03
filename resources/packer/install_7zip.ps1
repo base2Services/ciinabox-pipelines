@@ -24,6 +24,12 @@ if (Test-Path -Path $workdir -PathType Container) {
   New-Item -Path $workdir  -ItemType directory
 }
 
+# override the defaults (SSLv3/TLSv1) to use TLSv1.2
+[System.Net.ServicePointManager]::SecurityProtocol] = (
+    [System.Net.ServicePointManager]::SecurityProtocol -bor 
+    [System.Net.SecurityProtocolType]::Tls12
+)
+
 # Download the installer
 $source = "https://raw.githubusercontent.com/ip7z/a/main/7z$version-x64.msi"
 $destination = "$workdir\7-Zip.msi"
