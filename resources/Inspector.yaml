@@ -27,7 +27,7 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
-          - Allow_SSM_Connection
+          - AWSServiceRoleForAmazonSSM
 
 
 
