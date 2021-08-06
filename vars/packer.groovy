@@ -200,9 +200,13 @@ ${packerTemplate}
   def manifest = readFile(file: 'manifest.json')
   def data = new JsonSlurperClassic().parseText(manifest)
   def build = data['builds'].first()
-  env["${config.role.toUpperCase()}_BAKED_AMI"] = build['artifact_id'].split(':').last()
+  def amiId = build['artifact_id'].split(':').last()
+
+  env["${config.role.toUpperCase()}_BAKED_AMI"] = amiId
   env["${config.role.toUpperCase()}_BAKED_NAME"] = ptb.builder.ami_name
   env["${config.role.toUpperCase()}_BAKED_ID"] = ptb.id
+
+  return [amiId: amiId, name: ptb.builder.ami_name, id: ptb.id]
 }
 
 def writeScript(path) {
