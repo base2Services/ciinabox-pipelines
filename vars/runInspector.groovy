@@ -139,6 +139,7 @@ def main(body, stackName, bucketName, fileName) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       }
 
       // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -168,6 +169,8 @@ def main(body, stackName, bucketName, fileName) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
         } else {
             println("Waited 10 minutes for insance to come up, skipping waiting")
             instancesStatus = 'running'
@@ -178,8 +181,11 @@ def main(body, stackName, bucketName, fileName) {
     def targetsArn = cloudformation(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
 =======
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 =======
       }
 
@@ -206,9 +212,12 @@ def main(body, stackName, bucketName, fileName) {
       // Pull down cloudformaiton stack and bucket hosting cloudformation template
       cloudformation(
 >>>>>>> f9e1474 (fixed some syntax issues)
+<<<<<<< HEAD
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
             stackName: stackName,
             queryType: 'output',
             query: 'TargetsArn',
@@ -680,6 +689,7 @@ def returnOs(String ami) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)//.withFilters(["platform"])
       def response = client.describeImages(request)
@@ -707,6 +717,8 @@ def returnOs(String ami) {
 >>>>>>> 2287413 (added some error handling)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
     def client = AmazonEC2ClientBuilder.standard().build()
     def request = new DescribeImagesRequest().withImageIds(ami)
     def response = client.describeImages(request)
@@ -720,8 +732,11 @@ def returnOs(String ami) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
 =======
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 =======
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)//.withFilters(["platform"])
@@ -744,11 +759,14 @@ def returnOs(String ami) {
             return('Linux')
       }
 >>>>>>> f9e1474 (fixed some syntax issues)
+<<<<<<< HEAD
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 }
 
 
@@ -776,6 +794,7 @@ def formatedResults(arn) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       // // Check if there where Findings
       // def regex = /A total of \d/
       // def findings = (fullResult =~ regex)
@@ -803,6 +822,8 @@ def formatedResults(arn) {
 >>>>>>> 2287413 (added some error handling)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
     def client = AmazonInspectorClientBuilder.standard().build()
     def request = new DescribeAssessmentRunsRequest().withAssessmentRunArns(arn)
     def response = client.describeAssessmentRuns(request)
@@ -820,8 +841,11 @@ def formatedResults(arn) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
 =======
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 =======
       // // Check if there where Findings
       // def regex = /A total of \d/
@@ -844,11 +868,14 @@ def formatedResults(arn) {
             return total_findings
       }
 >>>>>>> f9e1474 (fixed some syntax issues)
+<<<<<<< HEAD
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 }
 
 
@@ -862,9 +889,13 @@ def getRunStatus (String arn) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> adde715 (fixed some syntax issues)
+=======
+=======
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
 
       //
       // // Pull out just the state of the test
@@ -876,6 +907,7 @@ def getRunStatus (String arn) {
       // state = state.substring(0, (length - 1))
       // state = state.replace('State: ', '')
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
 =======
@@ -885,5 +917,8 @@ def getRunStatus (String arn) {
 >>>>>>> 2287413 (added some error handling)
 =======
 >>>>>>> 6f04092 (push out runInspector)
+=======
+>>>>>>> f9e1474 (fixed some syntax issues)
+>>>>>>> d8d6783 (create a manafest file per packer run to avoid caching old runs)
       return state
 }
