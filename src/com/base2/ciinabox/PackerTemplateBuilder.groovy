@@ -158,7 +158,7 @@ class PackerTemplateBuilder implements Serializable {
       "post-processors": [
         [
           type: 'manifest',
-          output: 'manifest.json',
+          output: "${this.id}.manifest.json",
           strip_path: true
         ]
       ]
