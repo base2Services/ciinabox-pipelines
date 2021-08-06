@@ -198,9 +198,28 @@ ${packerTemplate}
   sh "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
   
   def manifest = readFile(file: 'manifest.json')
+
+  println("""
+=================================================
+| Generated packer template                     |
+=================================================
+${manifest}
+=================================================
+    """)
+
   def data = new JsonSlurperClassic().parseText(manifest)
   def build = data['builds'].first()
+
+  println("First Build")
+  println(build)
+
+  println("Artifact Id")
+  println(build['artifact_id'])
+
   def amiId = build['artifact_id'].split(':').last()
+
+  println("Returned AMI")
+  println(amiId)
 
   env["${config.role.toUpperCase()}_BAKED_AMI"] = amiId
   env["${config.role.toUpperCase()}_BAKED_NAME"] = ptb.builder.ami_name
