@@ -315,7 +315,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
     catch (Exception e) {
         println("Unable to delete stack, error: ${e}")
     }
-    try: {
+    try {
         cleanBucket(bucketName, region, fileName)
         destroyBucket(bucketName, region)
         println('All creted resources are now deleted')
