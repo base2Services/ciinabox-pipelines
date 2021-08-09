@@ -197,7 +197,16 @@ ${packerTemplate}
   def debugFlag = (debug) ? '-debug' : ''  
   sh "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
   
-  def manifest = readFile(file: 'manifest.json')
+  def manifest = readFile(file: "${ptb.id}.manifest.json")
+
+  println("""
+=================================================
+| Generated packer template                     |
+=================================================
+${manifest}
+=================================================
+    """)
+
   def data = new JsonSlurperClassic().parseText(manifest)
   def build = data['builds'].first()
   def amiId = build['artifact_id'].split(':').last()
