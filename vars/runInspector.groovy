@@ -21,7 +21,10 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import java.util.concurrent.TimeUnit
@@ -72,6 +75,12 @@ def main(body, stackName, bucketName, fileName) {
 
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
+    if (body.subnetId) {
+        params['subnetId'] = body.vpcId
+    }
+    else {
+        params['subnetId'] = getVpcId()
+    }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
     }
@@ -281,6 +290,38 @@ def checkFail(failon, findings){
         }
     }
     return testPassed
+}
+
+
+def getVpcId() {
+    def client = AmazonEC2ClientBuilder.standard().build()
+    def request = new DescribeVpcsRequest()
+    def response = client.describeVpcs().getVpcs()
+    def defaultVpc = ''
+    def avalible = ''
+    def subnet = ''
+    response.eachWithIndex { item, index ->
+        def status = item.isDefault()
+        if (status == true) {
+            defaultVpc = item.getVpcId()
+            println("Found a default VPC using, ${defaultVpc} for temp instance")
+        } else if (avalible == ''){
+            avalible = item.getVpcId()
+        }
+    }
+    client = AmazonEC2ClientBuilder.standard().build()
+    request = new DescribeSubnetsRequest()
+    response = client.describeSubnets().getSubnets()
+    response.eachWithIndex { item, index ->
+        if ((item.getVpcId() == defaultVpc) & (item.getDefaultForAz() == true) & (subnet == '')) {
+            subnet = item.getSubnetId()
+            println("Found subnet default ${subnet} in default vpc ${defaultVpc} for temp instance")
+        } else if ((item.getVpcId() == avalible) & (!defaultVpc) & (subnet == '')){
+            subnet = item.getSubnetId()
+            println("No default subnet found so using subnet ${subnet} in ${avalible} for temp instance")
+        }
+    }
+    return subnet
 }
 
 

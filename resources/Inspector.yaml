@@ -15,9 +15,9 @@ Parameters:
       Type: String
       Description: The duration for the inespector test in seconds
       Default: '1200'  # 20 mins
-  vpcId:
+  subnetId:
       Type: String
-      Description: The VPC ID for the temporary instance
+      Description: The subnet ID for the temporary instance
 
 Conditions:
   OsCheck:
@@ -136,7 +136,7 @@ Resources:
       ImageId:
         Fn::Sub: "${amiId}"
       SubnetId:
-        Fn::Sub: "${vpcId}"
+        Fn::Sub: "${subnetId}"
       Tags:
         - Key: Inspector
           Value: "True"
