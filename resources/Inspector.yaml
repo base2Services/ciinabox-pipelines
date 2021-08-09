@@ -15,6 +15,9 @@ Parameters:
       Type: String
       Description: The duration for the inespector test in seconds
       Default: '1200'  # 20 mins
+  vpcId:
+      Type: String
+      Description: The VPC ID for the temporary instance
 
 Conditions:
   OsCheck:
@@ -23,6 +26,7 @@ Conditions:
       - "Windows"
 
 Resources:
+<<<<<<< HEAD
   testInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -41,12 +45,19 @@ Resources:
               - "sts:AssumeRole"
 
 
+=======
+>>>>>>> 2287413 (added some error handling)
   testinstanceprofile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
+<<<<<<< HEAD
           - testInstanceRole
     DependsOn: testInstanceRole
+=======
+          - Allow_SSM_Connection
+
+>>>>>>> 2287413 (added some error handling)
 
 
   testinstance:
@@ -57,6 +68,8 @@ Resources:
           Ref: testinstanceprofile
       ImageId:
         Fn::Sub: "${amiId}"
+      SubnetId:
+        Fn::Sub: "${vpcId}"
       Tags:
         - Key: Inspector
           Value: "True"
