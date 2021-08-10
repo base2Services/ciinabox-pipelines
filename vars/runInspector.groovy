@@ -21,9 +21,18 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
+import com.base2.ciinabox.aws.Util
+import com.base2.ciinabox.InstanceMetadata
+import com.base2.ciinabox.GetInstanceDetails
+import com.base2.ciinabox.PackerTemplateBuilder
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurperClassic
 import java.util.concurrent.TimeUnit
 import java.util.*
 
@@ -44,6 +53,7 @@ def call(body) {
     try{
         findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
+        println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
 <<<<<<< HEAD
         cleanUp(stackName, body.region, bucketName, fileName)
@@ -77,6 +87,12 @@ def main(body, stackName, bucketName, fileName) {
 
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
+    if (body.subnetId) {
+        params['subnetId'] = body.vpcId
+    }
+    else {
+        params['subnetId'] = getVpcId(body.region)
+    }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
     }
@@ -289,6 +305,29 @@ def checkFail(failon, findings){
 }
 
 
+def getVpcId(region) {
+    println "looking up networking details to launch packer instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      println(metadata)
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+    return instance.subnet()
+}
+
+
 def getAgentStatus(String arn) {
      def client = AmazonInspectorClientBuilder.standard().build()
      def request = new PreviewAgentsRequest().withPreviewAgentsArn(arn)
@@ -316,11 +355,16 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
             region: region,
             waitUntilComplete: 'false',
         )
-    } finally {
+    }
+    catch (Exception e) {
+        println("Unable to delete stack, error: ${e}")
+    }
+    try {
         cleanBucket(bucketName, region, fileName)
         destroyBucket(bucketName, region)
         println('All creted resources are now deleted')
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
     catch (Exception e) {
         println("Unable to clean/destroy bucket, error: ${e}")
@@ -582,6 +626,11 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
 >>>>>>> 4c7880e (Adding these again after a rebase)
 =======
 >>>>>>> ec93dee (fixed up some stage additions from git)
+=======
+    catch (Exception e) {
+        println("Unable to clean/destroy bucket, error: ${e}")
+    }
+>>>>>>> f1294e5 (fixed some librarys)
 }
 
 def uploadFile(String bucket, String fileName, String file, String region) {
