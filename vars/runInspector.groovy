@@ -27,6 +27,12 @@ import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
+import com.base2.ciinabox.aws.Util
+import com.base2.ciinabox.InstanceMetadata
+import com.base2.ciinabox.GetInstanceDetails
+import com.base2.ciinabox.PackerTemplateBuilder
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurperClassic
 import java.util.concurrent.TimeUnit
 import java.util.*
 
@@ -79,7 +85,7 @@ def main(body, stackName, bucketName, fileName) {
         params['subnetId'] = body.vpcId
     }
     else {
-        params['subnetId'] = getVpcId()
+        params['subnetId'] = getVpcId(body.region)
     }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
@@ -293,35 +299,26 @@ def checkFail(failon, findings){
 }
 
 
-def getVpcId() {
-    def client = AmazonEC2ClientBuilder.standard().build()
-    def request = new DescribeVpcsRequest()
-    def response = client.describeVpcs().getVpcs()
-    def defaultVpc = ''
-    def avalible = ''
-    def subnet = ''
-    response.eachWithIndex { item, index ->
-        def status = item.isDefault()
-        if (status == true) {
-            defaultVpc = item.getVpcId()
-            println("Found a default VPC using, ${defaultVpc} for temp instance")
-        } else if (avalible == ''){
-            avalible = item.getVpcId()
-        }
+def getVpcId(region) {
+    println "looking up networking details to launch packer instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      println(metadata)
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
     }
-    client = AmazonEC2ClientBuilder.standard().build()
-    request = new DescribeSubnetsRequest()
-    response = client.describeSubnets().getSubnets()
-    response.eachWithIndex { item, index ->
-        if ((item.getVpcId() == defaultVpc) & (item.getDefaultForAz() == true) & (subnet == '')) {
-            subnet = item.getSubnetId()
-            println("Found subnet default ${subnet} in default vpc ${defaultVpc} for temp instance")
-        } else if ((item.getVpcId() == avalible) & (!defaultVpc) & (subnet == '')){
-            subnet = item.getSubnetId()
-            println("No default subnet found so using subnet ${subnet} in ${avalible} for temp instance")
-        }
-    }
-    return subnet
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+    return instance.subnet()
 }
 
 
