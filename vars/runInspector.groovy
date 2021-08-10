@@ -42,10 +42,13 @@ def call(body) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 4c7880e (Adding these again after a rebase)
 =======
 >>>>>>> ec93dee (fixed up some stage additions from git)
+=======
+>>>>>>> 6f04092 (push out runInspector)
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
@@ -56,6 +59,9 @@ def call(body) {
         println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6f04092 (push out runInspector)
         cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
@@ -132,6 +138,7 @@ def main(body, stackName, bucketName, fileName) {
             TimeUnit.SECONDS.sleep(5);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       }
 
       // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -159,6 +166,8 @@ def main(body, stackName, bucketName, fileName) {
 =======
 =======
 >>>>>>> adde715 (fixed some syntax issues)
+=======
+>>>>>>> 6f04092 (push out runInspector)
         } else {
             println("Waited 10 minutes for insance to come up, skipping waiting")
             instancesStatus = 'running'
@@ -167,6 +176,7 @@ def main(body, stackName, bucketName, fileName) {
 
     // Query stack for inspector assessment targets arn (must be an output)
     def targetsArn = cloudformation(
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
 =======
@@ -197,6 +207,8 @@ def main(body, stackName, bucketName, fileName) {
       cloudformation(
 >>>>>>> f9e1474 (fixed some syntax issues)
 >>>>>>> adde715 (fixed some syntax issues)
+=======
+>>>>>>> 6f04092 (push out runInspector)
             stackName: stackName,
             queryType: 'output',
             query: 'TargetsArn',
@@ -366,11 +378,15 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6f04092 (push out runInspector)
     catch (Exception e) {
         println("Unable to clean/destroy bucket, error: ${e}")
     }
 }
 
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
     def run = main(body)
@@ -633,6 +649,8 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
 >>>>>>> f1294e5 (fixed some librarys)
 }
 
+=======
+>>>>>>> 6f04092 (push out runInspector)
 def uploadFile(String bucket, String fileName, String file, String region) {
       def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
       client.putObject(bucket, fileName, file)
@@ -662,6 +680,7 @@ def returnOs(String ami) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       def client = AmazonEC2ClientBuilder.standard().build()
       def request = new DescribeImagesRequest().withImageIds(ami)//.withFilters(["platform"])
       def response = client.describeImages(request)
@@ -687,6 +706,8 @@ def returnOs(String ami) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+>>>>>>> 6f04092 (push out runInspector)
     def client = AmazonEC2ClientBuilder.standard().build()
     def request = new DescribeImagesRequest().withImageIds(ami)
     def response = client.describeImages(request)
@@ -697,6 +718,7 @@ def returnOs(String ami) {
     } else {
         return('Linux')
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
@@ -726,6 +748,8 @@ def returnOs(String ami) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+>>>>>>> 6f04092 (push out runInspector)
 }
 
 
@@ -752,6 +776,7 @@ def formatedResults(arn) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       // // Check if there where Findings
       // def regex = /A total of \d/
       // def findings = (fullResult =~ regex)
@@ -777,6 +802,8 @@ def formatedResults(arn) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+>>>>>>> 6f04092 (push out runInspector)
     def client = AmazonInspectorClientBuilder.standard().build()
     def request = new DescribeAssessmentRunsRequest().withAssessmentRunArns(arn)
     def response = client.describeAssessmentRuns(request)
@@ -791,6 +818,7 @@ def formatedResults(arn) {
         println('Test(s) passed')
         return [findings, total_findings]
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 27dcdc6 (runInspector - return the findings in a map and improve error handling  (#159))
@@ -820,6 +848,8 @@ def formatedResults(arn) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+>>>>>>> 6f04092 (push out runInspector)
 }
 
 
@@ -829,6 +859,7 @@ def getRunStatus (String arn) {
         .withAssessmentRunArns(arn)
       def response = client.describeAssessmentRuns(request)
       def state = response.getAssessmentRuns()[0].getState()
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -853,5 +884,7 @@ def getRunStatus (String arn) {
 >>>>>>> adde715 (fixed some syntax issues)
 =======
 >>>>>>> 2287413 (added some error handling)
+=======
+>>>>>>> 6f04092 (push out runInspector)
       return state
 }
