@@ -15,9 +15,19 @@ Parameters:
       Type: String
       Description: The duration for the inespector test in seconds
       Default: '1200'  # 20 mins
+<<<<<<< HEAD
+<<<<<<< HEAD
   subnetId:
       Type: String
       Description: The subnet ID for the temporary instance
+=======
+  vpcId:
+=======
+  subnetId:
+>>>>>>> a0d7927 (fixed some syntax issues)
+      Type: String
+      Description: The VPC ID for the temporary instance
+>>>>>>> 1e54ffd (fixed some werid syntax issue from git rebase)
 
 Conditions:
   OsCheck:
@@ -166,7 +176,15 @@ Resources:
       ImageId:
         Fn::Sub: "${amiId}"
       SubnetId:
+<<<<<<< HEAD
+<<<<<<< HEAD
         Fn::Sub: "${subnetId}"
+=======
+        Fn::Sub: "${vpcId}"
+>>>>>>> 1e54ffd (fixed some werid syntax issue from git rebase)
+=======
+        Fn::Sub: "${subnetId}"
+>>>>>>> a0d7927 (fixed some syntax issues)
       Tags:
         - Key: Inspector
           Value: "True"
