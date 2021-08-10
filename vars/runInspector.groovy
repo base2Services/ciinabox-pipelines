@@ -21,21 +21,9 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
-<<<<<<< HEAD
-import com.amazonaws.services.ec2.model.DescribeVpcsRequest
-=======
->>>>>>> 2287413 (added some error handling)
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.ec2.model.DescribeVpcsRequest
-import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
-import com.base2.ciinabox.aws.Util
-import com.base2.ciinabox.InstanceMetadata
-import com.base2.ciinabox.GetInstanceDetails
-import com.base2.ciinabox.PackerTemplateBuilder
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurperClassic
 import java.util.concurrent.TimeUnit
 import java.util.*
 
@@ -44,8 +32,11 @@ def call(body) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
@@ -53,7 +44,6 @@ def call(body) {
     try{
         findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
-        println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
 <<<<<<< HEAD
         cleanUp(stackName, body.region, bucketName, fileName)
@@ -87,12 +77,6 @@ def main(body, stackName, bucketName, fileName) {
 
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
-    if (body.subnetId) {
-        params['subnetId'] = body.vpcId
-    }
-    else {
-        params['subnetId'] = getVpcId(body.region)
-    }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
     }
@@ -305,194 +289,12 @@ def checkFail(failon, findings){
 }
 
 
-def getVpcId(region) {
-    println "looking up networking details to launch packer instance in"
-
-    // if the node is a ec2 instance using the ec2 plugin
-    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
-
-    // if node name is not an instance id, try getting the instance id from the instance metadata
-    if (!instanceId) {
-      println "retrieving the instance metadata"
-      def metadata = new InstanceMetadata()
-      println(metadata)
-      if (!metadata.isEc2) {
-        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
-      }
-      instanceId = metadata.getInstanceId()
-    }
-
-    // get networking details from the instance
-    def instance = new GetInstanceDetails(region, instanceId)
-    return instance.subnet()
-=======
-    def run = main(body)
-    println(run)
-    if (run instanceof Integer) {
-        return 1
-    } else {
-        return run
-    }
-}
-
-
-def main(body) {
-    def stackName = ''
-    def bucketName = ''
-    def fileName = 'Inspector.yaml'
-    try {
-        // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
-        def template = libraryResource('Inspector.yaml')
-        bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
-        createBucket(bucketName, body.region)
-        println('Created temp bucket to store cloudformaiton template')
-        uploadFile(bucketName, fileName, template, body.region)
-        println('Cloudformaiton uploaded to bucket')
-        def os = returnOs(body.amiId)
-        println("The AMI is using ${os} based operating system")
-
-        // Organise which parameters to send
-        def params = ['amiId': body.amiId, 'os': os]
-        if (body.ruleArns) {
-            params['ruleArns'] = body.ruleArns.join(',')
-        }
-        if (body.testTime) {
-            params['testTime'] = body.testTime
-        } else if (body.ruleArns) {
-            def time = ((20+(body.ruleArns.size()*10))*60)
-            params['testTime'] = time.toString()
-        }
-        stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
-        cloudformation(
-            stackName: stackName,
-            action: 'create',
-            region: body.region,
-            templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
-            waitUntilComplete: 'true',
-            parameters: params
-        )
-        println('Stack uploaded to CloudFormation')
-
-        // Query the stack for instance ID
-        def instanceId = cloudformation(
-                stackName: stackName,
-                queryType: 'output',
-                query: 'InstanceId',
-                region: body.region
-        )
-
-        // Check if instance is actually up, if not wait
-        def instancesStatus = getIstanceStatus(instanceId)
-        def timeout = 0
-        while (instancesStatus != "running") {
-            if (timeout <= 120) { // If the instance isn't up in 10 mins, skip waiting
-                instancesStatus = getIstanceStatus(instanceId)
-                println("Insance is in state: ${instancesStatus}")
-                timeout += 1
-                TimeUnit.SECONDS.sleep(5);
-            } else {
-                println("Waited 10 minutes for insance to come up, skipping waiting")
-                instancesStatus = 'running'
-            }
-        }
-
-        // Query stack for inspector assessment targets arn (must be an output)
-        def targetsArn = cloudformation(
-                stackName: stackName,
-                queryType: 'output',
-                query: 'TargetsArn',
-                region: body.region
-        )
-
-        // Check if the agent is up, if not wait
-        def agentStatus = getAgentStatus(targetsArn)
-        timeout = 0
-        while (agentStatus != 'HEALTHY') {
-            if (timeout <= 120) {
-                agentStatus = getAgentStatus(targetsArn)
-                println("Agent health: ${agentStatus}")
-                timeout += 1
-                TimeUnit.SECONDS.sleep(5);
-            } else {
-                println("Waited 10 minutes for the agent to become healthy, skipping waiting")
-                agentStatus = 'HEALTHY'
-            }
-        }
-
-        // Query stack for inspector assessment template arn (must be an output)
-        def template_arn = cloudformation(
-                stackName: stackName,
-                queryType: 'output',
-                query: 'TemplateArn',
-                region: body.region
-        )
-
-        // Run the inspector test
-        def assessmentArn = assessmentRun(template_arn)
-        println('Inspector test(s) started')
-
-        // Wait for the inspector test to run
-        def runStatus = getRunStatus(assessmentArn)
-        while  (runStatus != "COMPLETED") {
-              runStatus = getRunStatus(assessmentArn)
-              println("Test Run Status: ${runStatus}")
-              TimeUnit.SECONDS.sleep(5);
-        }
-
-        // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
-        def testRunning = true
-        while (testRunning.equals(true)) {
-              def getResults = getResults(assessmentArn).toString()
-              println("Cleanup Status: ${getResults}")
-              if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
-                    testRunning = false
-              }
-        }
-
-        // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
-        getResults = getResults(assessmentArn)
-        def urlRegex = /http.*[^}]/
-        def resutlUrl = (getResults =~ urlRegex)
-        resutlUrl = resutlUrl[0]
-        def fullResult = resutlUrl.toURL().text
-        writeFile(file: 'Inspector_test_reults.html', text: fullResult)
-        archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-        def testPassed = formatedResults(assessmentArn)
-
-        cleanUp(stackName, body.region, bucketName, fileName)
-
-        // Fail the pipeline if insepctor tests did not pass and flag either set to true or not set
-        def failonfinding = body.get('failonfinding', true)
-
-        if (testPassed[1] >= 1){
-            if (!failonfinding) {
-                println("One or more interpector test(s) failed on the AMI however \'failonfinding\' is set to \'False\' and hence the pipeline has not failed")
-                return testPassed[0]
-            } else {
-                throw new GroovyRuntimeException("One or more interpector test(s) failed on the AMI")
-            }
-        } else {
-            return testPassed
-        }
-    } catch(GroovyRuntimeException e) {
-        println(e)
-        return e
-    } catch(Exception e) {
-        println(e)
-        cleanUp('', body.region, bucketName, fileName)
-        return e
-    }
->>>>>>> 2287413 (added some error handling)
-}
-
-
 def getAgentStatus(String arn) {
      def client = AmazonInspectorClientBuilder.standard().build()
      def request = new PreviewAgentsRequest().withPreviewAgentsArn(arn)
      def response = client.previewAgents(request)
      def state = response.getAgentPreviews()[0].getAgentHealth()
      return state
-<<<<<<< HEAD
 }
 
 
@@ -514,15 +316,12 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
             region: region,
             waitUntilComplete: 'false',
         )
-    }
-    catch (Exception e) {
-        println("Unable to delete stack, error: ${e}")
-    }
-    try {
+    } finally {
         cleanBucket(bucketName, region, fileName)
         destroyBucket(bucketName, region)
         println('All creted resources are now deleted')
     }
+<<<<<<< HEAD
     catch (Exception e) {
         println("Unable to clean/destroy bucket, error: ${e}")
     }
@@ -781,9 +580,10 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
     destroyBucket(bucketName, region)
     println('All creted resources are now deleted')
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
 }
 
->>>>>>> 2287413 (added some error handling)
 def uploadFile(String bucket, String fileName, String file, String region) {
       def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
       client.putObject(bucket, fileName, file)

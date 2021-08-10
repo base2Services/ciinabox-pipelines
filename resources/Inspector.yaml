@@ -31,8 +31,11 @@ Resources:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
   testInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -51,6 +54,7 @@ Resources:
               - "sts:AssumeRole"
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -102,10 +106,13 @@ Resources:
 =======
 >>>>>>> 2287413 (added some error handling)
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
   testinstanceprofile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -126,6 +133,8 @@ Resources:
 =======
 =======
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
           - testInstanceRole
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -136,6 +145,7 @@ Resources:
 =======
     DependsOn: testInstanceRole
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 31840f5 (fixed some syntax issues)
 =======
 =======
@@ -143,6 +153,8 @@ Resources:
 
 >>>>>>> 2287413 (added some error handling)
 >>>>>>> 4c7880e (Adding these again after a rebase)
+=======
+>>>>>>> ec93dee (fixed up some stage additions from git)
 
 
   testinstance:
