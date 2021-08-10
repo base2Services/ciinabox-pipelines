@@ -30,6 +30,9 @@ Resources:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 4c7880e (Adding these again after a rebase)
   testInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -48,6 +51,7 @@ Resources:
               - "sts:AssumeRole"
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> 2287413 (added some error handling)
@@ -94,10 +98,15 @@ Resources:
 >>>>>>> 8956524 (using managed role didn't work, replaced them with a new role resoruce using a managed policy)
 =======
 >>>>>>> f364423 (fixed some syntax issues)
+=======
+=======
+>>>>>>> 2287413 (added some error handling)
+>>>>>>> 4c7880e (Adding these again after a rebase)
   testinstanceprofile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -115,6 +124,8 @@ Resources:
           - testinstancerole
 >>>>>>> 8956524 (using managed role didn't work, replaced them with a new role resoruce using a managed policy)
 =======
+=======
+>>>>>>> 4c7880e (Adding these again after a rebase)
           - testInstanceRole
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -124,7 +135,14 @@ Resources:
 >>>>>>> f364423 (fixed some syntax issues)
 =======
     DependsOn: testInstanceRole
+<<<<<<< HEAD
 >>>>>>> 31840f5 (fixed some syntax issues)
+=======
+=======
+          - Allow_SSM_Connection
+
+>>>>>>> 2287413 (added some error handling)
+>>>>>>> 4c7880e (Adding these again after a rebase)
 
 
   testinstance:
