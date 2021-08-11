@@ -327,7 +327,6 @@ def getVpcId(region) {
     if (!instanceId) {
       println "retrieving the instance metadata"
       def metadata = new InstanceMetadata()
-      println(metadata)
       if (!metadata.isEc2) {
         throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
       }
