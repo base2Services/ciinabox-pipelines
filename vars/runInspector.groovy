@@ -77,6 +77,12 @@ def main(body, stackName, bucketName, fileName) {
 
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
+    if (body.subnetId) {
+        params['subnetId'] = body.vpcId
+    }
+    else {
+        params['subnetId'] = getVpcId(body.region)
+    }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
     }
