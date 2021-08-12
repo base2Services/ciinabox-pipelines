@@ -21,9 +21,18 @@ import com.amazonaws.services.simplesystemsmanagement.model.*
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
 import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
+import com.base2.ciinabox.aws.Util
+import com.base2.ciinabox.InstanceMetadata
+import com.base2.ciinabox.GetInstanceDetails
+import com.base2.ciinabox.PackerTemplateBuilder
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurperClassic
 import java.util.concurrent.TimeUnit
 import java.util.*
 
@@ -36,8 +45,8 @@ def call(body) {
     try{
         findings = main(body, stackName, bucketName, fileName)
     } catch(Exception e) {
+        println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
-        cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
@@ -68,6 +77,12 @@ def main(body, stackName, bucketName, fileName) {
 
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
+    if (body.subnetId) {
+        params['subnetId'] = body.vpcId
+    }
+    else {
+        params['subnetId'] = getVpcId(body.region)
+    }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
     }
@@ -178,6 +193,53 @@ def main(body, stackName, bucketName, fileName) {
 }
 
 
+def getVpcId(region) {
+    println "looking up networking details to launch packer instance in"
+
+    // if the node is a ec2 instance using the ec2 plugin
+    def instanceId = env.NODE_NAME.find(/i-[a-zA-Z0-9]*/)
+
+    // if node name is not an instance id, try getting the instance id from the instance metadata
+    if (!instanceId) {
+      println "retrieving the instance metadata"
+      def metadata = new InstanceMetadata()
+      if (!metadata.isEc2) {
+        throw new GroovyRuntimeException("unable to lookup networking details, try specifing (vpcId: subnet: securityGroup: instanceProfile:) in your method")
+      }
+      instanceId = metadata.getInstanceId()
+    }
+
+    // get networking details from the instance
+    def instance = new GetInstanceDetails(region, instanceId)
+    return instance.subnet()
+}
+
+
+def cleanUp(String stackName, String region, String bucketName, String fileName){
+    // Pull down cloudformaiton stack and bucket hosting cloudformation template
+    println('Cleaning up all created resources')
+    try {
+        cloudformation(
+            stackName: stackName,
+            action: 'delete',
+            region: region,
+            waitUntilComplete: 'false',
+        )
+    }
+    catch (Exception e) {
+        println("Unable to delete stack, error: ${e}")
+    }
+    try {
+        cleanBucket(bucketName, region, fileName)
+        destroyBucket(bucketName, region)
+        println('All creted resources are now deleted')
+    }
+    catch (Exception e) {
+        println("Unable to clean/destroy bucket, error: ${e}")
+    }
+}
+
+
 
 def checkFail(failon, findings){
     // Make a list of severity levels with >= 1 nFindings
@@ -238,22 +300,6 @@ def getIstanceStatus(String id) {
     return state
 }
 
-def cleanUp(String stackName, String region, String bucketName, String fileName){
-    // Pull down cloudformaiton stack and bucket hosting cloudformation template
-    println('Cleaning up all created resources')
-    try {
-        cloudformation(
-            stackName: stackName,
-            action: 'delete',
-            region: region,
-            waitUntilComplete: 'false',
-        )
-    } finally {
-        cleanBucket(bucketName, region, fileName)
-        destroyBucket(bucketName, region)
-        println('All creted resources are now deleted')
-    }
-}
 
 def uploadFile(String bucket, String fileName, String file, String region) {
       def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
