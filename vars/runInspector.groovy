@@ -28,6 +28,7 @@ import com.amazonaws.services.inspector.model.DescribeFindingsRequest
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.CreateBucketRequest
 import com.base2.ciinabox.aws.Util
@@ -45,7 +46,6 @@ def call(body) {
     } catch(Exception e) {
         println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
-        cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
@@ -198,7 +198,7 @@ def main(body, stackName, bucketName, fileName) {
 }
 
 
-def getsubnetId(region) {
+def getVpcId(region) {
     println "looking up networking details to launch packer instance in"
 
     // if the node is a ec2 instance using the ec2 plugin
