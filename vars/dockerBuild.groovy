@@ -39,6 +39,7 @@ def call(body) {
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
   }
+  def archTypes = config.get('archTypes', '')
 
   println "config:${config}"
  
@@ -58,7 +59,14 @@ def call(body) {
 
   cliOpts += " ${buildArgs} ${buildDir} "
 
-  sh "docker build ${cliOpts}"
+  if (archTypes.isEmpty()) {
+    sh "docker build ${cliOpts}"
+  } else {
+    cliOpts += " --platform ${archTypes}"
+    sh "docker buildx build ${cliOpts}"
+  }
+
+
   if(tags.size() > 1) {
     tags.each { tag ->
       sh "docker tag ${forceTag} ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
