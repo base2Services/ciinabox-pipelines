@@ -1,8 +1,6 @@
 /***********************************
   packer DSL
-
   uses packer and chef to bake an AMI
-
   packer(
     role: 'my-build', (required, suffixed with a datestamp)
     type: 'linux|windows|windows2012', // (optional, defaults to linux)
@@ -20,7 +18,7 @@
     instanceType: 't3.small', // (optional, default to m5.large)
     ebsVolumeSize: "8", // (optional)
     ebsDeviceName: "/dev/xvda", // (optional, defaults to /dev/xvda)
-    username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user) 
+    username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user)
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
     runList: ['cookbook::recipe'] // (optional, list of recipes if using chef)
@@ -41,13 +39,13 @@ import groovy.json.JsonSlurperClassic
 
 def call(body) {
   def config = body
-  
+
   if(!config.role) {
     throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
 
   def platformType = config.get('type', 'linux')
-  
+
   if (platformType.startsWith('windows')) {
     if (!config.cookbookS3Bucket && !config.cookbookS3Path) {
       throw new GroovyRuntimeException("(cookbookS3Bucket: 'source.cookbooks', cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz') must be supplied when using type: 'windows'")
@@ -55,11 +53,11 @@ def call(body) {
   }
 
   def debug = config.get('debug', false)
-  
+
   if (debug) {
     println('debug enabled')
   }
-  
+
   // get the local region if not set by the method
   def region = config.get('region', Util.getRegion())
   if (!region) {
@@ -106,9 +104,9 @@ def call(body) {
 
     if (!instanceProfile) {
       instanceProfile = instance.instanceProfile()
-    }    
+    }
   }
-  
+
   if (config.ami) {
     sourceAMI = config.ami
   } else if (config.amiLookup) {
@@ -118,11 +116,11 @@ def call(body) {
   } else {
     throw new GroovyRuntimeException("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
-  
+
   if (!sourceAMI) {
     throw new GroovyRuntimeException("Unable to find AMI")
   }
-  
+
   println("""
 =================================================
 | Using the following AWS details to run packer |
@@ -137,8 +135,8 @@ def call(body) {
 | PlatformType: ${platformType}
 =================================================
   """)
-  
-  def ptb = new PackerTemplateBuilder(config.role, platformType)
+
+  def ptb = new PackerTemplateBuilder(config.role, platformType, config.get('winUpdate', false))
   ptb.builder.region = region
   ptb.builder.source_ami = sourceAMI
   ptb.builder.instance_type = instanceType
@@ -146,29 +144,33 @@ def call(body) {
   ptb.builder.vpc_id = vpcId
   ptb.builder.subnet_id = subnet
   ptb.builder.security_group_id = securityGroup
-  
+
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
 
+  if (config.get('winUpdate', false)) {
+      ptb.addWindowsUpdate()
+  }
+
   if (config.runList) {
     ptb.addDownloadCookbookProvisioner(
-      config.get('cookbookS3Bucket'), 
-      config.get('cookbookS3Region', region), 
+      config.get('cookbookS3Bucket'),
+      config.get('cookbookS3Region', region),
       config.get('cookbookS3Path'))
     ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
   }
 
   ptb.addAmamzonConfigProvisioner()
-  
+
   writeScript('packer/download_cookbooks.ps1')
   writeScript('packer/ec2_config_service.ps1')
   writeScript('packer/ec2_launch_config.ps1')
   writeScript('packer/install_7zip.ps1')
   writeScript('packer/setup_winrm.ps1')
-  
+
   def packerTemplate = ptb.toJson()
   def packerPath = config.get('packerPath', '/opt/packer/packer')
-  
+
   if (debug) {
     println("""
 =================================================
@@ -178,25 +180,25 @@ ${packerTemplate}
 =================================================
     """)
   }
-  
+
   writeFile(file: "${ptb.id}.json", text: packerTemplate)
-  
+
   println("""
 =================================================
 | Validating packer template                    |
 =================================================
   """)
   sh "${packerPath} validate ${ptb.id}.json"
-  
+
   println("""
 =================================================
 | Executing packer with the template            |
 =================================================
   """)
-  
-  def debugFlag = (debug) ? '-debug' : ''  
+
+  def debugFlag = (debug) ? '-debug' : ''
   sh "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
-  
+
   def manifest = readFile(file: "${ptb.id}.manifest.json")
 
   println("""
