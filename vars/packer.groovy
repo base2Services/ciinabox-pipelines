@@ -28,6 +28,7 @@
     cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz', // (conditional, required for type: 'windows')
     cookbookS3Region: 'us-east-1', // (optional, defaults to packer region)
     debug: 'true|false', // (optional)
+    winUpdate: 'true|false'  // (optional, whether to perform windows updates on AMI) 
   )
 ************************************/
 import com.base2.ciinabox.aws.Util
