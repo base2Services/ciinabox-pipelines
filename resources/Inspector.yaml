@@ -32,29 +32,6 @@ Resources:
     Properties:
       ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-      RoleName: testInstanceRole
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Principal:
-              Service:
-                - "ec2.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-
-    testinstancerole:
-      Type: AWS:IAM::Role
-      Properties:
-        ManagedPolicyArns: arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-        RoleName: testinstancerole
-
-  testInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
       RoleName: testinstancerole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
