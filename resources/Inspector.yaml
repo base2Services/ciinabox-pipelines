@@ -15,20 +15,76 @@ Parameters:
       Type: String
       Description: The duration for the inespector test in seconds
       Default: '1200'  # 20 mins
+  subnetId:
+      Type: String
+      Description: The subnet ID for the temporary instance
+
 
 Conditions:
   OsCheck:
     Fn::Equals:
-      - Fn::Sub: OS
+      - Fn::Sub: ${os}
       - "Windows"
 
 Resources:
+  testInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+      RoleName: testInstanceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+    testinstancerole:
+      Type: AWS:IAM::Role
+      Properties:
+        ManagedPolicyArns: arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        RoleName: testinstancerole
+
+  testInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+      RoleName: testinstancerole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+  testinstanceprofile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+          - testInstanceRole
+    DependsOn: testInstanceRole
+
+
   testinstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
+      IamInstanceProfile:
+          Ref: testinstanceprofile
       ImageId:
         Fn::Sub: "${amiId}"
+      SubnetId:
+        Fn::Sub: "${subnetId}"
       Tags:
         - Key: Inspector
           Value: "True"
@@ -38,8 +94,11 @@ Resources:
           - Fn::Base64:
               Fn::Join:
                 - ''
-                - - "curl -O https://inspector-agent.amazonaws.com/linux/latest/install\n"
-                  - "AWSAgentInstall.exe"
+                - - "<powershell> \n"
+                  - "Start-Transcript -Path \"C:/UserData.log\" -Append \n"
+                  - "Invoke-WebRequest https://inspector-agent.amazonaws.com/windows/installer/latest/AWSAgentInstall.exe -OutFile C:/AWSAgentInstall.exe \n"
+                  - "Start-Process -FilePath C:/AWSAgentInstall.exe -ArgumentList \"/install /quiet /norestart\" -Wait -NoNewWindow -PassThru \n"
+                  - "</powershell>"
           - Fn::Base64:
               Fn::Join:
                 - ''
@@ -122,6 +181,9 @@ Outputs:
       TemplateArn:
             Value:
                    Fn::GetAtt: [ testtemplate, Arn ]
+      TargetsArn:
+            Value:
+                   Fn::GetAtt: [ testtargetgroup, Arn ]
       InstanceId:
             Value:
                   Ref: testinstance

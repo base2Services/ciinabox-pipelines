@@ -47,6 +47,7 @@ def call(body) {
     } catch(Exception e) {
         println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
+        cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
@@ -78,10 +79,10 @@ def main(body, stackName, bucketName, fileName) {
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
     if (body.subnetId) {
-        params['subnetId'] = body.vpcId
+        params['subnetId'] = body.subnetId
     }
     else {
-        params['subnetId'] = getVpcId(body.region)
+        params['subnetId'] = getsubnetId(body.region)
     }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
@@ -193,7 +194,7 @@ def main(body, stackName, bucketName, fileName) {
 }
 
 
-def getVpcId(region) {
+def getsubnetId(region) {
     println "looking up networking details to launch packer instance in"
 
     // if the node is a ec2 instance using the ec2 plugin
