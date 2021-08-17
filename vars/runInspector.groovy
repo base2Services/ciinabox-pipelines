@@ -13,29 +13,21 @@ runInspector(
      testTime: '120',                               # Optional
 )
 */
-import com.amazonaws.services.inspector.AmazonInspector
+
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
-import com.amazonaws.services.inspector.model.*
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder
-import com.amazonaws.services.simplesystemsmanagement.model.*
+import com.amazonaws.services.inspector.model.PreviewAgentsRequest
+import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
+import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
+import com.amazonaws.services.inspector.model.DescribeAssessmentRunsRequest
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
-import com.amazonaws.services.ec2.model.DescribeVpcsRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.ec2.model.DescribeVpcsRequest
-import com.amazonaws.services.ec2.model.DescribeSubnetsRequest
-import com.amazonaws.services.s3.*
-import com.amazonaws.services.s3.model.*
+import com.amazonaws.services.s3.model.CreateBucketRequest
 import com.base2.ciinabox.aws.Util
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
-import com.base2.ciinabox.PackerTemplateBuilder
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurperClassic
 import java.util.concurrent.TimeUnit
-import java.util.*
-
 
 def call(body) {
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
