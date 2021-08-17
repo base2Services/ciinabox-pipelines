@@ -78,10 +78,10 @@ def main(body, stackName, bucketName, fileName) {
     // Organise which parameters to send
     def params = ['amiId': body.amiId, 'os': os]
     if (body.subnetId) {
-        params['subnetId'] = body.vpcId
+        params['subnetId'] = body.subnetId
     }
     else {
-        params['subnetId'] = getVpcId(body.region)
+        params['subnetId'] = getsubnetId(body.region)
     }
     if (body.ruleArns) {
         params['ruleArns'] = body.ruleArns.join(',')
@@ -193,7 +193,7 @@ def main(body, stackName, bucketName, fileName) {
 }
 
 
-def getVpcId(region) {
+def getsubnetId(region) {
     println "looking up networking details to launch packer instance in"
 
     // if the node is a ec2 instance using the ec2 plugin
