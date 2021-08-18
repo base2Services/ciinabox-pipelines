@@ -76,11 +76,4 @@ def call(body) {
   cliOpts += " ${buildArgs} ${buildDir} "
   sh "docker buildx build ${cliOpts}"
 
-
-  if(cleanup) {
-    tags.each { tag ->
-      sh "docker rmi ${dockerRepo}:${tag}"
-    }
-  }
-
 }
