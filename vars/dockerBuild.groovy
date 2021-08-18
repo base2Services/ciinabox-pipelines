@@ -18,6 +18,7 @@ dockerBuild {
   push = true
   cleanup = true
   pull = true
+  archTypes = 'linux/arm/v7,linux/arm64/v8,linux/amd64'
 }
 ************************************/
 
@@ -39,7 +40,6 @@ def call(body) {
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
   }
-  def archTypes = config.get('archTypes', '')
 
   println "config:${config}"
  
@@ -59,11 +59,11 @@ def call(body) {
 
   cliOpts += " ${buildArgs} ${buildDir} "
 
-  if (archTypes.isEmpty()) {
-    sh "docker build ${cliOpts}"
-  } else {
+  if (config.archTypes) {
     cliOpts += " --platform ${archTypes}"
     sh "docker buildx build ${cliOpts}"
+  } else {
+    sh "docker build ${cliOpts}"
   }
 
 
