@@ -18,7 +18,11 @@ dockerBuild {
   push = true
   cleanup = true
   pull = true
-  archTypes = 'linux/arm/v7,linux/arm64/v8,linux/amd64'
+  archTypes = [
+    'linux/arm/v7',
+    'linux/arm64/v8',
+    'linux/amd64'
+  ]
 }
 ************************************/
 
@@ -60,7 +64,7 @@ def call(body) {
   cliOpts += " ${buildArgs} ${buildDir} "
 
   if (config.archTypes) {
-    cliOpts += " --platform ${archTypes}"
+    cliOpts += " --platform ${config.archTypes.join(',')}"
     sh "docker buildx build ${cliOpts}"
   } else {
     sh "docker build ${cliOpts}"
