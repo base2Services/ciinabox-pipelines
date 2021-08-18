@@ -18,6 +18,11 @@ dockerBuild {
   push = true
   cleanup = true
   pull = true
+  archTypes = [
+    'linux/arm/v7',
+    'linux/arm64/v8',
+    'linux/amd64'
+  ]
 }
 ************************************/
 
@@ -58,7 +63,14 @@ def call(body) {
 
   cliOpts += " ${buildArgs} ${buildDir} "
 
-  sh "docker build ${cliOpts}"
+  if (config.archTypes) {
+    cliOpts += " --platform ${config.archTypes.join(',')}"
+    sh "docker buildx build ${cliOpts}"
+  } else {
+    sh "docker build ${cliOpts}"
+  }
+
+
   if(tags.size() > 1) {
     tags.each { tag ->
       sh "docker tag ${forceTag} ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
