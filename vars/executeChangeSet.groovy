@@ -31,7 +31,7 @@ def call(body) {
   def config = body
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
 
-  if (env["${stackNameUpper}_CHANGESET_NAME"] == 'TRUE') {
+  if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
     echo("Skipping execution changeset as no changes have been detected ...")
   } else {
     apply(config, stackNameUpper)
