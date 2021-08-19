@@ -34,21 +34,32 @@ def call(body) {
   def approveChanges = config.get('approveChanges', false)
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
 
-  createChangeSet(
-    description: config.get('description'),
+  createChangeSetProperties = [
     region: config.region,
     stackName: config.stackName,
-    awsAccountId: config.get('awsAccountId'),
-    role: config.get('role'),
-    roleArn: config.get('roleArn'),
-    maxErrorRetry: config.get('maxErrorRetry'),
-    parameters: config.get('parameters'),
     failOnEmptyChangeSet: failOnEmptyChangeSet,
-    templateUrl: config.templateUrl,
-    tags: config.get('tags'),
-    capabilities: config.get('capabilities'),    
-    nestedStacks: config.get('nestedStacks')
-  )
+    templateUrl: config.templateUrl
+  ]
+
+  optionalCreateChangeSetProperties = [
+    'description',
+    'awsAccountId',
+    'role',
+    'roleArn',
+    'maxErrorRetry',
+    'parameters',
+    'tags',
+    'capabilities',
+    'nestedStacks'
+  ]
+
+  optionalCreateChangeSetProperties.each { property ->
+    if (config[property]) {
+      createChangeSetProperties[property] = config[property]
+    }
+  }
+  
+  createChangeSet(createChangeSetProperties)
 
   if (approveChanges) {
     input(
@@ -56,13 +67,24 @@ def call(body) {
     )
   }
 
-  executeChangeSet(
+  executeChangeSetProperties = [
     region: config.region,
-    stackName: config.stackName,
-    awsAccountId: config.get('awsAccountId'),
-    role: config.get('role'),
-    serviceRole: config.get('roleArn'),
-    maxErrorRetry: config.get('maxErrorRetry')
-  )
+    stackName: config.stackName
+  ]
+
+  optionalExecuteChangeSetProperties = [
+    'awsAccountId',
+    'role',
+    'roleArn',
+    'maxErrorRetry'
+  ]
+
+  optionalExecuteChangeSetProperties.each { property ->
+    if (config[property]) {
+      executeChangeSetProperties[property] = config[property]
+    }
+  }
+
+  executeChangeSet(executeChangeSetProperties)
 
 }
