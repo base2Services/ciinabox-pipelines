@@ -37,8 +37,9 @@ def call(body) {
         input message: 'Do you want to continue deploying despite an empty change-set?', ok: 'Yes'
         apply(config, stackNameUpper)
       }
-    } catch {
+    } catch (Exception timeout) {
           echo "Aborted due to time-out (empty change-set)"
+          return false
     }
     } else {
       apply(config, stackNameUpper)
