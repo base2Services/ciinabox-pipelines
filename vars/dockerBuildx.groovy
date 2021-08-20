@@ -1,5 +1,6 @@
 /***********************************
  Docker Buildx Step DSL
+ THIS STEP REQUIRES CIINABOX2 AND WORKER AMIS FROM 20-08-2021 AND ONWARDS
 
  builds a docker image using docker buildx for multiple arch support
 
@@ -16,7 +17,6 @@ dockerBuildx {
     'nodeVersion':'0.10.33'
   ]
   push = true
-  cleanup = true
   pull = true
   archTypes = [
     'linux/arm/v7',
@@ -35,8 +35,6 @@ def call(body) {
   def buildDir = config.get('dir', '.')
   def dockerfile = config.get('dockerfile', 'Dockerfile')
   def push = config.get('push', false)
-  def cleanup = config.get('cleanup', false)
-  def forceTag = config.get('forcetag','')
   def noCache = config.get('noCache', false)
   def target = config.get('target', false)
   def pull = config.get('pull', false)
