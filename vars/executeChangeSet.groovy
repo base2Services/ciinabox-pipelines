@@ -32,11 +32,18 @@ def call(body) {
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
 
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
-    echo("Skipping execution changeset as no changes have been detected ...")
-  } else {
-    apply(config, stackNameUpper)
+    try {
+      timeout(time: 1, unit: "MINUTES") {
+        input message: 'Do you want to continue deploying despite an empty change-set?', ok: 'Yes'
+        apply(config, stackNameUpper)
+      }
+    } catch {
+          echo "Aborted due to time-out (empty change-set)"
+    }
+    } else {
+      apply(config, stackNameUpper)
+    }
   }
-}
 
 def apply(config, stackNameUpper) {
   
