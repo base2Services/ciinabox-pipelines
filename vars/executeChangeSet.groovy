@@ -34,11 +34,11 @@ def call(body) {
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
     try {
       timeout(time: 1, unit: "MINUTES") {
-        input message: 'Do you want to continue deploying despite an empty change-set?', ok: 'Yes'
+        input message: 'Deploy empty changeset?', ok: 'Yes'
         apply(config, stackNameUpper)
       }
     } catch (Exception timeout) {
-          echo "Aborted due to time-out (empty change-set)"
+          echo "Aborted due to time-out."
           return false
     }
     } else {
