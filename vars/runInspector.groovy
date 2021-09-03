@@ -68,7 +68,7 @@ def main(body, stackName, bucketName, fileName) {
     println("The AMI is using ${os} based operating system")
 
     // Organise which parameters to send
-    def params = ['amiId': body.amiId, 'os': os]
+    def params = ['amiId': body.amiId, 'os': os, 'stackName': stackName[-6..-1]]
     if (body.subnetId) {
         params['subnetId'] = body.subnetId
     }
