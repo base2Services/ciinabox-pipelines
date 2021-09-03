@@ -54,12 +54,8 @@ Resources:
     Properties:
       Roles:
           - Fn::Sub: "testinstancerole${stackName}"
-<<<<<<< HEAD
-    DependsOn: testInstanceRole
-=======
     DependsOn:
         Fn::Sub: "testinstancerole${stackName}"
->>>>>>> bf37ba9 (change resources to contain stack name, allows for multiple of the same resource in the account)
 
 
   testinstance:
