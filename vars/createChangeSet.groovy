@@ -74,6 +74,9 @@ def call(body) {
 
   def changeSetName = config.get('changeSetName', "cs-${UUID.randomUUID().toString()}")
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  // Converting the stackName to a string prevents passing a Groovy encoded string 
+  // to this script, resulting in null being returned when searching for the stack
+  def stackName = config.stackName.toString()
   env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
   
   def clientBuilder = new AwsClientBuilder([
@@ -83,8 +86,8 @@ def call(body) {
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env])
     
-  createChangeSet(clientBuilder, changeSetName, config)
-  def success = wait(clientBuilder, changeSetName, config.stackName, true)
+  createChangeSet(clientBuilder, changeSetName, stackName, config)
+  def success = wait(clientBuilder, changeSetName, stackName, true)
 
   def failOnEmptyChangeSet = config.get('failOnEmptyChangeSet', false)
   // if there were no changes in our changeset
@@ -93,16 +96,16 @@ def call(body) {
     return null
   }
 
-  def stackChanges = getChangeSetDetails(clientBuilder, config.stackName, changeSetName)
+  def stackChanges = getChangeSetDetails(clientBuilder, stackName, changeSetName)
   def changeMap = [
     changeset: changeSetName,
-    stack: config.stackName,
+    stack: stackName,
     region: config.region,
     changes: []
   ]
 
   if (stackChanges) {
-    changeMap.changes << collectChanges(stackChanges, config.stackName)
+    changeMap.changes << collectChanges(stackChanges, stackName)
     def nestedStacks = collectNestedStacks(stackChanges)
 
     def nestedChanges = null
@@ -121,20 +124,20 @@ def call(body) {
         } 
       }
     }
-    printChanges(changeMap.changes,config.stackName)
+    printChanges(changeMap.changes,stackName)
   }
 
   return changeMap
 }
 
 
-def createChangeSet(clientBuilder,changeSetName,config) {
+def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   def cfclient = clientBuilder.cloudformation()
-  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, stackName)
   def changeSetType = cfstack.getChangeSetType()
 
   def request = new CreateChangeSetRequest()
-    .withStackName(config.stackName)
+    .withStackName(stackName)
     .withChangeSetType(changeSetType)
     .withDescription(config.get('description','ciinabox automated change set'))
     .withChangeSetName(changeSetName)
@@ -174,7 +177,7 @@ def createChangeSet(clientBuilder,changeSetName,config) {
     request.withIncludeNestedStacks(true)
   }
 
-  steps.echo "Creating change set ${changeSetName} for stack ${config.stackName} with operation ${changeSetType}"
+  steps.echo "Creating change set ${changeSetName} for stack ${stackName} with operation ${changeSetType}"
 
   try {
     cfclient.createChangeSet(request)

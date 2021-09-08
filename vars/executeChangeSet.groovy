@@ -30,15 +30,18 @@ import java.util.concurrent.Future
 def call(body) {
   def config = body
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  // Converting the stackName to a string prevents passing a Groovy encoded string 
+  // to this script, resulting in null being returned when searching for the stack
+  def stackName = config.stackName.toString()
 
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
     echo("Skipping execution changeset as no changes have been detected ...")
   } else {
-    apply(config, stackNameUpper)
+    apply(config, stackName, stackNameUpper)
   }
 }
 
-def apply(config, stackNameUpper) {
+def apply(config, stackName, stackNameUpper) {
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -49,7 +52,7 @@ def apply(config, stackNameUpper) {
     
   def cfclient = clientBuilder.cloudformation()
 
-  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, stackName)
   def changeSetType = cfstack.getChangeSetType()
   cfStack = null
   cfclient = null
@@ -62,16 +65,16 @@ def apply(config, stackNameUpper) {
   }
 
   echo "Executing change set ${changeSetName}"
-  executeChangeSet(clientBuilder, config.stackName, changeSetName)
-  def success = wait(clientBuilder, config.stackName, changeSetType)
+  executeChangeSet(clientBuilder, stackName, changeSetName)
+  def success = wait(clientBuilder, stackName, changeSetType)
 
   if (!success) {
     cfclient = clientBuilder.cloudformation()
-    def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
+    def events = new CloudformationStackEvents(cfclient, config.region, stackName)
     echo events.getFailedEventsTable()
     events = null
     cfclient = null
-    error "${config.stackName} changeset ${changeSetName} failed to execute."
+    error "${stackName} changeset ${changeSetName} failed to execute."
   }
   
   cfclient = null
