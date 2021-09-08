@@ -35,11 +35,11 @@ def call(body) {
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
     echo("Skipping execution changeset as no changes have been detected ...")
   } else {
-    apply(config, stackNameUpper)
+    apply(config, stackName, stackNameUpper)
   }
 }
 
-def apply(config, stackNameUpper) {
+def apply(config, stackName, stackNameUpper) {
   
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
