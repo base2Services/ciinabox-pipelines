@@ -84,7 +84,7 @@ def call(body) {
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env])
     
-  createChangeSet(clientBuilder, changeSetName, config)
+  createChangeSet(clientBuilder, changeSetName, stackName, config)
   def success = wait(clientBuilder, changeSetName, stackName, true)
 
   def failOnEmptyChangeSet = config.get('failOnEmptyChangeSet', false)
@@ -129,7 +129,7 @@ def call(body) {
 }
 
 
-def createChangeSet(clientBuilder,changeSetName,config) {
+def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   def cfclient = clientBuilder.cloudformation()
   def cfstack = new CloudformationStack(clientBuilder, stackName)
   def changeSetType = cfstack.getChangeSetType()
