@@ -74,6 +74,8 @@ def call(body) {
 
   def changeSetName = config.get('changeSetName', "cs-${UUID.randomUUID().toString()}")
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  // Converting the stackName to a string prevents passing a Groovy encoded string 
+  // to this script, resulting in null being returned when searching for the stack
   def stackName = config.stackName.toString()
   env["${stackNameUpper}_CHANGESET_NAME"] = changeSetName
   

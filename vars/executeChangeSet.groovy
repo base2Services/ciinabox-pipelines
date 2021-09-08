@@ -30,6 +30,8 @@ import java.util.concurrent.Future
 def call(body) {
   def config = body
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  // Converting the stackName to a string prevents passing a Groovy encoded string 
+  // to this script, resulting in null being returned when searching for the stack
   def stackName = config.stackName.toString()
 
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
