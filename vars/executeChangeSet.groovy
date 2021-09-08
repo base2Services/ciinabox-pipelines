@@ -30,6 +30,7 @@ import java.util.concurrent.Future
 def call(body) {
   def config = body
   def stackNameUpper = config.stackName.toUpperCase().replaceAll("-", "_")
+  def stackName = config.stackName.toString()
 
   if (env["${stackNameUpper}_NO_EXECUTE_CHANGESET"] == 'TRUE') {
     echo("Skipping execution changeset as no changes have been detected ...")
@@ -49,7 +50,7 @@ def apply(config, stackNameUpper) {
     
   def cfclient = clientBuilder.cloudformation()
 
-  def cfstack = new CloudformationStack(clientBuilder, config.stackName)
+  def cfstack = new CloudformationStack(clientBuilder, stackName)
   def changeSetType = cfstack.getChangeSetType()
   cfStack = null
   cfclient = null
@@ -62,16 +63,16 @@ def apply(config, stackNameUpper) {
   }
 
   echo "Executing change set ${changeSetName}"
-  executeChangeSet(clientBuilder, config.stackName, changeSetName)
-  def success = wait(clientBuilder, config.stackName, changeSetType)
+  executeChangeSet(clientBuilder, stackName, changeSetName)
+  def success = wait(clientBuilder, stackName, changeSetType)
 
   if (!success) {
     cfclient = clientBuilder.cloudformation()
-    def events = new CloudformationStackEvents(cfclient, config.region, config.stackName)
+    def events = new CloudformationStackEvents(cfclient, config.region, stackName)
     echo events.getFailedEventsTable()
     events = null
     cfclient = null
-    error "${config.stackName} changeset ${changeSetName} failed to execute."
+    error "${stackName} changeset ${changeSetName} failed to execute."
   }
   
   cfclient = null
