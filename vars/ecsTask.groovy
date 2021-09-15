@@ -11,13 +11,16 @@ ecsTask (
   subnets: ['subnet-12345'],
   securityGroup: ['sg-12345'],
   credsDuration: '3600',
-  platformVersion: 'LATEST'
+  platformVersion: 'LATEST',
+  outputLogs: 'false'
 )
 ************************************/
 
 @Grab(group='com.amazonaws', module='aws-java-sdk-ecs', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
 @Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
+@Grab(group='com.amazonaws', module='aws-java-sdk-cloudwatch', version='1.12.67')
+@Grab(group='com.amazonaws', module='aws-java-sdk-logs', version='1.12.67')
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicSessionCredentials
@@ -25,12 +28,20 @@ import com.amazonaws.services.ecs.*
 import com.amazonaws.services.ecs.model.NetworkConfiguration
 import com.amazonaws.services.ecs.model.AwsVpcConfiguration
 import com.amazonaws.services.ecs.model.DescribeTasksRequest
+import com.amazonaws.services.ecs.model.DescribeTaskDefinitionRequest
+import com.amazonaws.services.ecs.model.DescribeTaskDefinitionResult
 import com.amazonaws.services.ecs.model.RunTaskRequest
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.amazonaws.waiters.NoOpWaiterHandler
 import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.services.securitytoken.model.ExpiredTokenException
+import com.amazonaws.services.cloudwatch.model.AmazonCloudWatchException
+import com.amazonaws.services.logs.AWSLogsClientBuilder
+import com.amazonaws.services.logs.AWSLogs
+import com.amazonaws.services.logs.model.GetLogEventsRequest
+import com.amazonaws.services.logs.model.OutputLogEvent
+import com.amazonaws.services.logs.model.GetLogEventsResult
 
 import java.util.concurrent.*
 
@@ -115,6 +126,48 @@ def extendedWait(client, config, startedTasks, descRequest) {
 }
 
 @NonCPS
+def getCloudwatchLogs(client, task, config) {
+
+  DescribeTaskDefinitionRequest request = new DescribeTaskDefinitionRequest().withTaskDefinition(task.taskDefinitionArn);
+  DescribeTaskDefinitionResult taskdef = client.describeTaskDefinition(request);
+
+  for (containerDef in taskdef.taskDefinition.containerDefinitions) {
+
+    def logOptionsMap = [:]
+
+    def logOptions = containerDef.logConfiguration.options
+    def logGroup = logOptions["awslogs-group"]
+    def logStreamPrefix = logOptions["awslogs-stream-prefix"]
+
+    def logStream = logStreamPrefix + "/" + containerDef.name + "/" + task.taskArn.split('/')[2]
+    def awsLogs = setupLogClient(config.region, config.accountId, config.role, config.credsDuration)
+
+    Collection<OutputLogEvent> result = new ArrayList<>();
+
+    String nextToken = null;
+    GetLogEventsResult response;
+
+    while (true) {
+      GetLogEventsRequest logRequest = new GetLogEventsRequest()
+              .withLogGroupName(logGroup)
+              .withLogStreamName(logStream);      
+      
+      if (nextToken != null) logRequest = logRequest.withNextToken(nextToken);
+      
+      response = awsLogs.getLogEvents(logRequest);
+      result.addAll(response.getEvents());
+
+      if (response.getNextForwardToken().equals(nextToken)) break;
+      nextToken = response.getNextForwardToken();
+    }
+
+    return result
+
+  }
+
+}
+
+@NonCPS
 def wait(client, config, startedTasks) {
 
   def describeTasksRequest = new DescribeTasksRequest()
@@ -133,6 +186,13 @@ def wait(client, config, startedTasks) {
       return false
     }
     for (task in taskDescriptions.tasks) {
+      if (config.outputLogs == true) {
+        def logResult = getCloudwatchLogs(client, task, config)
+        println "Task logs:"
+        for (logLine in logResult) {
+          println logLine.message
+        }
+      }
       for (container in task.containers) {
         if (container.exitCode != 0) {
           println "Non zero exit code in container: ${container} of task ${task}"
@@ -162,6 +222,16 @@ def setupECSClient(region, awsAccountId = null, role = null, credsDuration) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
   }
   return cb.build()
+}
+
+@NonCPS
+def setupLogClient(region, awsAccountId = null, role = null, credsDuration) {
+  def AWSLogsClientBuilder builder = AWSLogsClientBuilder.standard().withRegion(region);
+  def logCreds = getCredentials(awsAccountId, region, role, credsDuration)
+  if(logCreds != null) {
+    builder.withCredentials(new AWSStaticCredentialsProvider(logCreds))
+  }
+  return builder.build()
 }
 
 @NonCPS
