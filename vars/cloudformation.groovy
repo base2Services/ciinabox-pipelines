@@ -205,6 +205,7 @@ def queryStackOutput(cf, config){
 @NonCPS
 def queryStackExport(cf, config){
   def result = cf.listExports(new ListExportsRequest())
+  println(result.getExports())
   def export = result.getExports().find { it.getName().equals(config.query) }
 
   if (export == null){
