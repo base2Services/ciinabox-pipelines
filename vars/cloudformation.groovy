@@ -6,8 +6,8 @@ performs cloudformation operations
 example usage
 cloudformation(
   stackName: 'dev',
-  queryType: 'element' | 'output' | 'status' | 'parameter', # either queryType or action should be supplied
-  query: 'mysubstack.logicalname1' | 'outputKey' | 'parameterKey', # depending on queryType
+  queryType: 'element' | 'output' | 'status' | 'parameter' | 'export', # either queryType or action should be supplied
+  query: 'mysubstack.logicalname1' | 'outputKey' | 'parameterKey' | 'export-name', # depending on queryType
   action: 'create'|'update'|'delete'|'exists',
   region: 'ap-southeast-2',
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
