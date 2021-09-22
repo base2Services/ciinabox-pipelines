@@ -6,8 +6,8 @@ performs cloudformation operations
 example usage
 cloudformation(
   stackName: 'dev',
-  queryType: 'element' | 'output' | 'status' | 'parameter', # either queryType or action should be supplied
-  query: 'mysubstack.logicalname1' | 'outputKey' | 'parameterKey', # depending on queryType
+  queryType: 'element' | 'output' | 'status' | 'parameter' | 'export', # either queryType or action should be supplied
+  query: 'mysubstack.logicalname1' | 'outputKey' | 'parameterKey' | 'export-name', # depending on queryType
   action: 'create'|'update'|'delete'|'exists',
   region: 'ap-southeast-2',
   templateUrl: 'https://s3.amazonaws.com/mybucket/cloudformation/app/master.json',
@@ -144,6 +144,8 @@ def handleQueryRequest(cf, config){
       return queryStackElement(cf, config)
     case 'output':
       return queryStackOutput(cf, config)
+    case 'export':
+      return queryStackExport(cf, config)
     case 'status':
       return queryStackStatus(cf, config)
     case 'parameter':
@@ -198,6 +200,18 @@ def queryStackOutput(cf, config){
   } catch (AmazonCloudFormationException ex) {
     throw new GroovyRuntimeException("Couldn't describe stack ${config.stackName}", ex)
   }
+}
+
+@NonCPS
+def queryStackExport(cf, config){
+  def result = cf.listExports(new ListExportsRequest())
+  def export = result.getExports().find { it.getName().equals(config.query.toString()) }
+
+  if (export == null){
+    throw new GroovyRuntimeException("Unable to find cloudformation export ${config.query}")
+  }
+
+  return export.getValue()
 }
 
 
