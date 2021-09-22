@@ -16,10 +16,6 @@ codedeploy(
 ) 
 
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-codedeploy', version='1.11.397')
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
-
 
 import com.amazonaws.auth.*
 import com.amazonaws.regions.*

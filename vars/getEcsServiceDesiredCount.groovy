@@ -14,10 +14,6 @@ example usage
 
 ************************************/
 
-@Grab(group='com.amazonaws', module='aws-java-sdk-ecs', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-iam', version='1.11.359')
-@Grab(group='com.amazonaws', module='aws-java-sdk-sts', version='1.11.359')
-
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicSessionCredentials
 import com.amazonaws.services.ecs.*
