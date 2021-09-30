@@ -10,7 +10,6 @@ withAWSKeyPair(region) {
   """
 }
 ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.198')
 
 import com.amazonaws.services.ec2.*
 import com.amazonaws.services.ec2.model.*
