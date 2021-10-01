@@ -212,9 +212,6 @@ def queryStackExport(cf, config){
     throw new GroovyRuntimeException("Unable to find cloudformation export ${config.query}")
   }
 
-  println("Exports: ${exports}")
-  println("Exports1: ${exports.get(0)}")
-
   if (exports.size == 1){
     return exports.get(0)
   }
