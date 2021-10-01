@@ -197,22 +197,29 @@ def queryStackOutput(cf, config){
 
 @NonCPS
 def queryStackExport(cf, config){
+  def exports = []
   def result = cf.listExports(new ListExportsRequest())
-  def export = result.getExports().find { it.getName().equals(config.query.toString()) }
-
-  exports += result
+  def export = result.getExports().find { it.getName().equals(config.query.toString()) } 
+  export != null && exports << export.getValue()
+  
   while(result.nextToken != null) {
     result = cf.listExports(new ListExportsRequest().withNextToken(result.nextToken));
-    exports += result
+    export = result.getExports().find { it.getName().equals(config.query.toString()) } 
+    export != null && exports << export.getValue()
   }
 
-  def export = exports.find { it.getName().equals(config.query.toString()) }
-
-  if (export == null){
+  if (exports.isEmpty()){
     throw new GroovyRuntimeException("Unable to find cloudformation export ${config.query}")
   }
 
-  return export.getValue()
+  println("Exports: ${exports}")
+  println("Exports1: ${exports.get(0)}")
+
+  if (exports.size == 1){
+    return exports.get(0)
+  }
+
+  return exports
 }
 
 
