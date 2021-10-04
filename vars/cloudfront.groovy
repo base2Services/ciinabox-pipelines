@@ -20,6 +20,13 @@ cloudfront(
 import com.amazonaws.auth.*
 import com.amazonaws.regions.*
 import com.amazonaws.services.cloudfront.*
+import com.amazonaws.services.cloudfront.model.CreateInvalidationRequest
+import com.amazonaws.services.cloudfront.model.CreateInvalidationResult
+import com.amazonaws.services.cloudfront.model.GetInvalidationResult
+import com.amazonaws.services.cloudfront.model.GetInvalidationRequest
+import com.amazonaws.services.cloudfront.model.Paths
+import com.amazonaws.services.cloudfront.model.InvalidationBatch
+import com.amazonaws.services.cloudfront.model.AmazonCloudFrontException
 import com.amazonaws.services.securitytoken.*
 import com.amazonaws.services.securitytoken.model.*
 import com.amazonaws.services.simplesystemsmanagement.*
@@ -34,6 +41,7 @@ import groovy.json.JsonSlurperClassic
 import java.util.concurrent.*
 import java.io.InputStreamReader
 import com.base2.ciinabox.aws.IntrinsicsYamlConstructor
+import java.time.Instant
 
 def call(body) {
   def config = body
@@ -57,10 +65,11 @@ def handleActionRequest(cf, config){
         path += '/*'
       }
 
-      if(invalidateCfCache(cf,config.distribution,path)) {
+      if(invalidateCfCache(cf,config.distribution,path,config)) {
         println "CloudFront Distribution ${config.distribution} cache has been invalidated"
       } else {
         println "CloudFront Distribution ${config.distribution} cache has NOT been invalidated"
+        break
       }
       success = true
       break
@@ -72,42 +81,24 @@ def handleActionRequest(cf, config){
 }
 
 @NonCPS
-def invalidateCfCache(cf, distribution, path) {
+def invalidateCfCache(cf, distribution, path, config) {
   try {
-    def timestamp = New Date();
+    def timestamp = Instant.now().getEpochSecond().toString();
     def paths = new Paths()
-                    .withItems("\"${path.join('", "')}\"")
-                    .withQuantity(path.size);
+                    .withItems(path)
+                    .withQuantity(path.size());
 
-    // debug
-    println "Paths: ${paths}"
-
-    def invalidation_batch = new InvalidationBatch(paths, timestamp.getTime()); // Using unix timestamp as unique ref
-    CreateInvalidationRequest invalidation = new CreateInvalidationRequest(distribution, invalidation_batch);
-    CreateInvalidationResult result = cf.createInvalidation(invalidation);
-
-    // debug
-    println "result: ${result}"
-
-    def invalidationResult = GetInvalidationResult()
-                            .withInvalidation(invalidation)
-                            .toString()
-
-    // debug
-    println "Invalidation result: ${invalidationResult}"
+    def invalidation_batch = new InvalidationBatch(paths, timestamp); // Using unix timestamp as unique ref
+    String invalidationId = cf.createInvalidation(new CreateInvalidationRequest(distribution, invalidation_batch)).getInvalidation().getId();
 
     if(config.waitUntilComplete != true) {
-      return invalidationResult
+      return true
     }
+    def output = cf.waiters().invalidationCompleted().run(new WaiterParameters<GetInvalidationRequest>(new GetInvalidationRequest(distribution, invalidationId)));
+    return true
 
-
-    return result != null
   } catch (AmazonCloudFrontException ex) {
-    if(ex.message.contains("does not exist")) {
-      return false
-    } else {
-      throw ex
-    }
+    throw ex
   }
 }
 
@@ -119,35 +110,16 @@ def setupCfClient(awsAccountId = null, role =  null, maxErrorRetry=10) {
   
   def cb = AmazonCloudFrontClientBuilder.standard()
     .withClientConfiguration(clientConfiguration)
-  def creds = getCredentials(awsAccountId, region, role)
+  def creds = getCredentials(awsAccountId, role)
   if(creds != null) {
     cb.withCredentials(new AWSStaticCredentialsProvider(creds))
   }
   return cb.build()
 }
 
-@NonCPS
-def setupS3Client(region, awsAccountId = null, role =  null) {
-  def cb = AmazonS3ClientBuilder.standard().withRegion(region)
-  def creds = getCredentials(awsAccountId, region, role)
-  if(creds != null) {
-    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
-  }
-  return cb.build()
-}
 
 @NonCPS
-def setupSSMClient(region, awsAccountId = null, role =  null) {
-  def cb = AWSSimpleSystemsManagementClientBuilder.standard().withRegion(region)
-  def creds = getCredentials(awsAccountId, region, role)
-  if(creds != null) {
-    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
-  }
-  return cb.build()
-}
-
-@NonCPS
-def getCredentials(awsAccountId, region, roleName) {
+def getCredentials(awsAccountId, roleName) {
   if(env['AWS_SESSION_TOKEN'] != null) {
     return new BasicSessionCredentials(
       env['AWS_ACCESS_KEY_ID'],
@@ -155,7 +127,7 @@ def getCredentials(awsAccountId, region, roleName) {
       env['AWS_SESSION_TOKEN']
     )
   } else if(awsAccountId != null && roleName != null) {
-    def stsCreds = assumeRole(awsAccountId, region, roleName)
+    def stsCreds = assumeRole(awsAccountId, roleName)
     return new BasicSessionCredentials(
       stsCreds.getAccessKeyId(),
       stsCreds.getSecretAccessKey(),
@@ -167,40 +139,15 @@ def getCredentials(awsAccountId, region, roleName) {
 }
 
 @NonCPS
-def assumeRole(awsAccountId, region, roleName) {
+def assumeRole(awsAccountId, roleName) {
   def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
   def roleSessionName = "sts-session-" + awsAccountId
   println "assuming IAM role ${roleArn}"
   def sts = new AWSSecurityTokenServiceClient()
-  if (!region.equals("us-east-1")) {
-      sts.setEndpoint("sts." + region + ".amazonaws.com")
-  }
   def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
             .withRoleArn(roleArn).withDurationSeconds(3600)
             .withRoleSessionName(roleSessionName))
   return assumeRoleResult.getCredentials()
 }
 
-@NonCPS
-def getSSMParams(ssm, path) {
-  def ssmParams = []
-  def result = ssm.getParametersByPath(new GetParametersByPathRequest()
-    .withPath(path)
-    .withRecursive(false)
-    .withWithDecryption(true)
-    .withMaxResults(10)
-  )
-  ssmParams += result.parameters
-  while(result.nextToken != null) {
-    result = ssm.getParametersByPath(new GetParametersByPathRequest()
-        .withPath(path)
-        .withRecursive(false)
-        .withWithDecryption(true)
-        .withMaxResults(10)
-        .withNextToken(result.nextToken)
-    )
-    ssmParams += result.parameters
-  }
-  return ssmParams
-}
 
