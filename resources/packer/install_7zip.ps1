@@ -26,12 +26,12 @@ if (Test-Path -Path $workdir -PathType Container) {
 
 # override the defaults (SSLv3/TLSv1) to use TLSv1.2
 [System.Net.ServicePointManager]::SecurityProtocol = (
-    [System.Net.ServicePointManager]::SecurityProtocol -bor 
+    [System.Net.ServicePointManager]::SecurityProtocol -bor
     [System.Net.SecurityProtocolType]::Tls12
 )
 
 # Download the installer
-$source = "https://raw.githubusercontent.com/ip7z/a/main/7z$version-x64.msi"
+$source = "https://www.7-zip.org/a/7z1900-x64.msi"
 $destination = "$workdir\7-Zip.msi"
 Write-Host "INFO: Downloading 7-Zip $version msi from $source"
 Invoke-WebRequest $source -OutFile $destination
