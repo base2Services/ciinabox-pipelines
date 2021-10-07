@@ -199,24 +199,20 @@ def queryStackOutput(cf, config){
 def queryStackExport(cf, config){
   def exports = []
   def result = cf.listExports(new ListExportsRequest())
-  def export = result.getExports().find { it.getName().equals(config.query.toString()) } 
-  export != null && exports << export.getValue()
+  exports += result.getExports() 
   
   while(result.nextToken != null) {
     result = cf.listExports(new ListExportsRequest().withNextToken(result.nextToken));
-    export = result.getExports().find { it.getName().equals(config.query.toString()) } 
-    export != null && exports << export.getValue()
+    exports += result.getExports() 
   }
 
-  if (exports.isEmpty()){
+  def export = exports.find { it.getName().equals(config.query.toString()) }
+
+  if (export == null){
     throw new GroovyRuntimeException("Unable to find cloudformation export ${config.query}")
   }
 
-  if (exports.size == 1){
-    return exports.get(0)
-  }
-
-  return exports
+  return export.getValue()
 }
 
 
