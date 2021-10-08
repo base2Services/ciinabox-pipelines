@@ -3,10 +3,10 @@ pipeline {
         string(name: 'JENKINS_HOST',  description: 'Full jenkins host name for cloudwatch identifier')
         string(name: 'AWS_DEFAULT_REGION',  description: 'Default region for SDK to run')
     }
-    // environment {
-    //     JENKINS_HOST = "${params.JENKINS_HOST}"
-    //     AWS_DEFAULT_REGION = "${params.AWS_DEFAULT_REGION}"
-    // }
+    environment {
+        JENKINS_HOST = "${params.JENKINS_HOST}"
+        AWS_DEFAULT_REGION = "${params.AWS_DEFAULT_REGION}"
+    }
 
     agent {
         label 'docker'
