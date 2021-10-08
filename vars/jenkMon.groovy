@@ -1,30 +1,29 @@
+pipeline {
+    parameters {
+        string(name: 'JENKINS_HOST',  description: 'Full jenkins host name for cloudwatch identifier')
+        string(name: 'AWS_DEFAULT_REGION',  description: 'Default region for SDK to run')
+    }
+    environment {
+        JENKINS_HOST = params.JENKINS_HOST
+        AWS_DEFAULT_REGION = params.AWS_DEFAULT_REGION
+    }
 
-def call(body) {
-    def config = body
+    agent {
+        label 'docker'
+    }
 
-    pipeline {
-        environment {
-            JENKINS_HOST = config.jenkinsHost
-            AWS_DEFAULT_REGION = config.region
-        }
+    stages {
 
-        agent {
-            label 'docker'
-        }
-
-        stages {
-
-            stage('Publish Success Metric to CloudWatch') {
-                agent {
-                    docker {
+        stage('Publish Success Metric to CloudWatch') {
+            agent {
+                docker {
                     image 'ghcr.io/base2services/jenkmon'
-                    }
-                }
-                steps {
-                    sh "python /app/jenkmon.py"
                 }
             }
-
+            steps {
+                sh "python /app/jenkmon.py"
+            }
         }
+
     }
 }
