@@ -4,8 +4,8 @@ pipeline {
         string(name: 'AWS_DEFAULT_REGION',  description: 'Default region for SDK to run')
     }
     environment {
-        JENKINS_HOST = params.JENKINS_HOST
-        AWS_DEFAULT_REGION = params.AWS_DEFAULT_REGION
+        JENKINS_HOST = "${params.JENKINS_HOST}"
+        AWS_DEFAULT_REGION = "${params.AWS_DEFAULT_REGION}"
     }
 
     agent {
