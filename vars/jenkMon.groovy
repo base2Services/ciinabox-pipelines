@@ -1,6 +1,11 @@
+import com.base2.ciinabox.aws.Util
+
 pipeline {
     agent {
         label 'docker'
+    }
+    environment {
+        'AWS_DEFAULT_REGION': Util.getRegion())
     }
     stages {
         stage('Publish Success Metric to CloudWatch') {
