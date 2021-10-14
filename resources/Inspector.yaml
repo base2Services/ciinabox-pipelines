@@ -18,6 +18,10 @@ Parameters:
   subnetId:
       Type: String
       Description: The subnet ID for the temporary instance
+  stackName:
+      Type: String
+      Description: The name of the stach wiht UUID to append to resource names
+
 
 
 Conditions:
@@ -32,7 +36,8 @@ Resources:
     Properties:
       ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-      RoleName: testinstancerole
+      RoleName:
+          Fn::Sub: "testinstancerole${stackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -48,8 +53,9 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
-          - testInstanceRole
-    DependsOn: testInstanceRole
+          - Fn::Sub: "testinstancerole${stackName}"
+    DependsOn:
+        Fn::Sub: "testinstancerole${stackName}"
 
 
   testinstance:
@@ -94,7 +100,8 @@ Resources:
   testtargetgroup:
     Type: AWS::Inspector::AssessmentTarget
     Properties:
-        AssessmentTargetName : test-targetgroup
+        AssessmentTargetName:
+            Fn::Sub: "test-targetgroup${stackName}"
         ResourceGroupArn :
           Ref: testresourcegroup
 
@@ -103,7 +110,8 @@ Resources:
     Properties:
       AssessmentTargetArn:
         Fn::GetAtt: [ testtargetgroup, Arn ]
-      AssessmentTemplateName: test-template
+      AssessmentTemplateName:
+          Fn::Sub: "test-template${stackName}"
       DurationInSeconds:
           Fn::Sub: "${testTime}"
       RulesPackageArns:
@@ -146,7 +154,8 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-          - PolicyName: allow-inspector
+          - PolicyName:
+              Fn::Sub: "allow-inspector${stackName}"
             PolicyDocument:
               Version: "2012-10-17"
               Statement:

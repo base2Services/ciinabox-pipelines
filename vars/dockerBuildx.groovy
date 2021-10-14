@@ -1,10 +1,11 @@
 /***********************************
- Docker Build Step DSL
+ Docker Buildx Step DSL
+ THIS STEP REQUIRES CIINABOX2 AND WORKER AMIS FROM 20-08-2021 AND ONWARDS
 
- builds a docker image
+ builds a docker image using docker buildx for multiple arch support
 
 example usage
-dockerBuild {
+dockerBuildx {
   dir = '.'
   repo = 'myrepo'
   image = 'myimage'
@@ -16,8 +17,12 @@ dockerBuild {
     'nodeVersion':'0.10.33'
   ]
   push = true
-  cleanup = true
   pull = true
+  archTypes = [
+    'linux/arm/v7',
+    'linux/arm64/v8',
+    'linux/amd64'
+  ]
 }
 ************************************/
 
@@ -30,8 +35,6 @@ def call(body) {
   def buildDir = config.get('dir', '.')
   def dockerfile = config.get('dockerfile', 'Dockerfile')
   def push = config.get('push', false)
-  def cleanup = config.get('cleanup', false)
-  def forceTag = config.get('forcetag','')
   def noCache = config.get('noCache', false)
   def target = config.get('target', false)
   def pull = config.get('pull', false)
@@ -41,9 +44,8 @@ def call(body) {
   }
 
   println "config:${config}"
- 
-  def cliOpts = "-t ${dockerRepo}:${tags[0]} "
-  cliOpts += "-f ${dockerfile} "
+
+  def cliOpts = "-f ${dockerfile} "
   if(noCache) {
     cliOpts += " --no-cache "
   }
@@ -51,28 +53,25 @@ def call(body) {
   if(target) {
     cliOpts += " --target ${target} "
   }
- 
+
   if(pull) {
     cliOpts += " --pull "
   }
 
-  cliOpts += " ${buildArgs} ${buildDir} "
-  sh "docker build ${cliOpts}"
+  cliOpts += " --platform ${config.archTypes.join(',')}"
 
 
   if(tags.size() > 1) {
     tags.each { tag ->
-      sh "docker tag ${forceTag} ${dockerRepo}:${tags[0]} ${dockerRepo}:${tag}"
+      cliOpts += " -t ${dockerRepo}:${tag} "
     }
   }
+
   if(push) {
-    tags.each { tag ->
-      sh "docker push ${dockerRepo}:${tag}"
-    }
+    cliOpts += " --push "
   }
-  if(cleanup) {
-    tags.each { tag ->
-      sh "docker rmi ${dockerRepo}:${tag}"
-    }
-  }
+
+  cliOpts += " ${buildArgs} ${buildDir} "
+  sh "docker buildx build ${cliOpts}"
+
 }
