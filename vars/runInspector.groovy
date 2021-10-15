@@ -180,7 +180,7 @@ def main(body, stackName, bucketName, fileName) {
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
     def findings = formatedResults(assessmentArn)
-    // cleanUp(stackName, body.region, bucketName, fileName)
+    cleanUp(stackName, body.region, bucketName, fileName)
     return findings
 }
 
