@@ -44,14 +44,15 @@ def call(body) {
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
     def failon = body.get('failon', 'Medium').toString().toLowerCase().capitalize()
     def passed = checkFail(failon, findings[0])
+    env.FAILED_TESTS = findings[1]
     if (passed == false) {
-        throw new GroovyRuntimeException("One or more interpector test(s) above or at ${failon} failed on the AMI")
+        throw new GroovyRuntimeException("Inspector found ${findings[1]} potential vulnerabilities")
     } else if((passed == true) & (findings[1] >= 1)) {
-        println('Inspector failed on some test however they where under the treshold')
-        return findings[1]
+        println('Inspector failed on some test however they where under the threshold')
+        return
     } else {
         println('No inspector tests failed')
-        return findings[1]
+        return
     }
 
 }
