@@ -48,7 +48,7 @@ def call(body) {
     if (passed == false) {
         throw new GroovyRuntimeException("Inspector found ${findings[1]} potential vulnerabilities")
     } else if((passed == true) & (findings[1] >= 1)) {
-        println('Inspector failed on some test however they where under the treshold')
+        println('Inspector failed on some test however they where under the threshold')
         return
     } else {
         println('No inspector tests failed')
