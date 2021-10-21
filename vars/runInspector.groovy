@@ -39,6 +39,7 @@ def call(body) {
     } catch(Exception e) {
         println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
+        cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
