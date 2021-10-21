@@ -159,7 +159,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(5);
+          TimeUnit.SECONDS.sleep(60);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -167,6 +167,7 @@ def main(body, stackName, bucketName, fileName) {
     while (testRunning.equals(true)) {
           def getResults = getResults(assessmentArn).toString()
           println("Cleanup Status: ${getResults}")
+          TimeUnit.SECONDS.sleep(5);
           if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
           }
