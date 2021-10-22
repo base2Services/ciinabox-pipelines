@@ -38,7 +38,12 @@ class PackerTemplateBuilder implements Serializable {
   public void addWindowsUpdate(){
       if (this.type.startsWith('windows')) {
           this.provisioners.push([
-              type: 'windows-update'
+              type: 'windows-update',
+              search_criteria: "IsInstalled=0",
+              filters: [
+                  "exclude:\$_.Title -like '*Preview*'",
+                  "include:\$true"
+              ]
           ])
       }
   }
