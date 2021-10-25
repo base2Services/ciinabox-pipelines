@@ -358,8 +358,13 @@ def formatedResults(arn) {
     def client = AmazonInspectorClientBuilder.standard().build()
     def request = new DescribeAssessmentRunsRequest().withAssessmentRunArns(arn)
     def response = client.describeAssessmentRuns(request)
-    def findings = response.getAssessmentRuns()[0].getFindingCounts()
+    def findings = response.getAssessmentRuns()
+    println("Assessment runs result: ${findings}")
+    findings = findings[0].getFindingCounts()
     def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
+
+    // Check whitelist file for findings to ignore
+
 
     if (total_findings >= 1) {
         println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${findings['High']}\nMedium: ${findings['Medium']}\nLow: ${findings['Low']}\nInformational: ${findings['Informational']}\n****************")
