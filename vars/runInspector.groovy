@@ -385,6 +385,9 @@ def formatedResults(arn, whitelist) {
 
     def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
 
+    // Check whitelist file for findings to ignore
+
+
     if (total_findings >= 1) {
         println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${severities['High']}\nMedium: ${severities['Medium']}\nLow: ${severities['Low']}\nInformational: ${severities['Informational']}\n****************")
         return [severities, total_findings]
