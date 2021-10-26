@@ -45,7 +45,6 @@ def call(body) {
     } catch(Exception e) {
         println("Error: ${e}")
         println("inspector failed to complete it's run, cleaning up resources before erroring out")
-        cleanUp(stackName, body.region, bucketName, fileName)
         throw e
     }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
@@ -170,7 +169,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(60);
+          TimeUnit.SECONDS.sleep(5);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -393,8 +392,14 @@ def formatedResults(arn, whitelist) {
 
     def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
 
-    // Check whitelist file for findings to ignore
+    request = new DescribeFindingsRequest().withAssessmentRunArns(arn)
+    response = client.describeFindings(request)
+    println("DescribeFindingsRequestResponse: ${response}")
+    response = response.getFindings()
+    println("getFindings: ${response}")
 
+
+    def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
 
     if (total_findings >= 1) {
         println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${severities['High']}\nMedium: ${severities['Medium']}\nLow: ${severities['Low']}\nInformational: ${severities['Informational']}\n****************")
