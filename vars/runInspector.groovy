@@ -161,7 +161,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(5);
+          TimeUnit.SECONDS.sleep(120);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -383,12 +383,17 @@ def formatedResults(arn, whitelist) {
 
     def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
 
-    request = new DescribeFindingsRequest().withAssessmentRunArns(arn)
-    response = client.describeFindings(request)
-    println("DescribeFindingsRequestResponse: ${response}")
-    response = response.getFindings()
-    println("getFindings: ${response}")
+    def severities = ['High': 0, 'Medium': 0, 'Low': 0, 'Informational': 0]
 
+    finding_arns.each { finding ->
+        request = new DescribeFindingsRequest().withFindingArns(finding)
+        response = client.describeFindings(request).getFindings()
+        cve = response.id[0]
+        if (!whitelist.contains(cve)) {
+            severities[response.severity[0]] += 1
+        }
+    }
+    print("\nseverities: ${severities}")
 
     def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
 
