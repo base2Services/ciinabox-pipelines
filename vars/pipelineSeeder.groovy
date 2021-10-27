@@ -27,6 +27,7 @@ def call(body) {
         }
         steps {
           script {
+            sh 'printenv | sort'
             dir('pipelines') {
               def dirs = sh(script: 'find . -type d -maxdepth 1', returnStdout: true).split('\n')[1..-1]
               writeFile text: dirs.join('\n').replace('./',''), file: 'dirs.txt'
