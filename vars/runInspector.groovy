@@ -19,6 +19,7 @@ import com.amazonaws.services.inspector.model.PreviewAgentsRequest
 import com.amazonaws.services.inspector.model.StartAssessmentRunRequest
 import com.amazonaws.services.inspector.model.GetAssessmentReportRequest
 import com.amazonaws.services.inspector.model.DescribeAssessmentRunsRequest
+import com.amazonaws.services.inspector.model.ListFindingsRequest
 import com.amazonaws.services.inspector.model.DescribeFindingsRequest
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
 import com.amazonaws.services.ec2.model.DescribeImagesRequest
@@ -160,7 +161,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(5);
+          TimeUnit.SECONDS.sleep(120);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -181,7 +182,7 @@ def main(body, stackName, bucketName, fileName) {
     def fullResult = resutlUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-    def findings = formatedResults(assessmentArn)
+    def findings = formatedResults(assessmentArn, body.whitelist)
     cleanUp(stackName, body.region, bucketName, fileName)
     return findings
 }
@@ -353,18 +354,31 @@ def getResults(String result_arn) {
 }
 
 
-def formatedResults(arn) {
+def formatedResults(arn, whitelist) {
+    def finding_arns = []
+
     def client = AmazonInspectorClientBuilder.standard().build()
-    def request = new DescribeAssessmentRunsRequest().withAssessmentRunArns(arn)
-    def response = client.describeAssessmentRuns(request)
-    def findings = response.getAssessmentRuns()[0].getFindingCounts()
+    def request = new ListFindingsRequest().withAssessmentRunArns(arn)
+    def response = client.listFindings(request)
+    finding_arns += response.findingArns
 
-    request = new DescribeFindingsRequest().withAssessmentRunArns(arn)
-    response = client.describeFindings(request)
-    println("DescribeFindingsRequestResponse: ${response}")
-    response = response.getFindings()
-    println("getFindings: ${response}")
+    while (response.nextToken != null) {
+        request = new ListFindingsRequest().withAssessmentRunArns(arn).withNextToken(response.nextToken)
+        response = client.listFindings(request)
+        finding_arns += response.findingArns
+    }
 
+    def severities = ['High': 0, 'Medium': 0, 'Low': 0, 'Informational': 0]
+
+    finding_arns.each { finding ->
+        request = new DescribeFindingsRequest().withFindingArns(finding)
+        response = client.describeFindings(request).getFindings()
+        cve = response.id[0]
+        if (!whitelist.contains(cve)) {
+            severities[response.severity[0]] += 1
+        }
+    }
+    print("\nseverities: ${severities}")
 
     def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
 
