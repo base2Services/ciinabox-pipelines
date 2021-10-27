@@ -29,7 +29,7 @@ def call(body) {
             branch 'master';
             branch 'main';
             branch 'origin/main';
-            branch 'origin/master;
+            branch 'origin/master';
           }
         }
         steps {
