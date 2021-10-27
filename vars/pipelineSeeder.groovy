@@ -28,8 +28,8 @@ def call(body) {
           anyOf {
             branch 'master';
             branch 'main';
-            branch 'origin/main';
-            branch 'origin/master';
+            expression { env.GIT_BRANCH == 'origin/main'};
+            expression { env.GIT_BRANCH == 'origin/master'};
           }
         }
         steps {
