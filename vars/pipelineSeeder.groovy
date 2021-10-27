@@ -28,6 +28,8 @@ def call(body) {
           anyOf {
             branch 'master';
             branch 'main';
+            branch 'origin/main';
+            branch 'origin/master;
           }
         }
         steps {
