@@ -161,7 +161,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(120);
+          TimeUnit.SECONDS.sleep(60);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -172,6 +172,7 @@ def main(body, stackName, bucketName, fileName) {
           if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
           }
+          TimeUnit.SECONDS.sleep(20);
     }
 
     // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
@@ -218,7 +219,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
             stackName: stackName,
             action: 'delete',
             region: region,
-            waitUntilComplete: 'false',
+            waitUntilComplete: 'true',
         )
     }
     catch (Exception e) {
@@ -380,15 +381,15 @@ def formatedResults(arn, whitelist) {
     }
     print("\nseverities: ${severities}")
 
-    def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
+    def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
 
     if (total_findings >= 1) {
-        println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${findings['High']}\nMedium: ${findings['Medium']}\nLow: ${findings['Low']}\nInformational: ${findings['Informational']}\n****************")
-        return [findings, total_findings]
+        println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${severities['High']}\nMedium: ${severities['Medium']}\nLow: ${severities['Low']}\nInformational: ${severities['Informational']}\n****************")
+        return [severities, total_findings]
     }
     else {
         println('Test(s) passed')
-        return [findings, total_findings]
+        return [severities, total_findings]
     }
 }
 
