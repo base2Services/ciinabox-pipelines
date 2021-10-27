@@ -169,7 +169,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(5);
+          TimeUnit.SECONDS.sleep(60);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -391,15 +391,6 @@ def formatedResults(arn, whitelist) {
     print("\nseverities: ${severities}")
 
     def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
-
-    request = new DescribeFindingsRequest().withAssessmentRunArns(arn)
-    response = client.describeFindings(request)
-    println("DescribeFindingsRequestResponse: ${response}")
-    response = response.getFindings()
-    println("getFindings: ${response}")
-
-
-    def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
 
     if (total_findings >= 1) {
         println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${severities['High']}\nMedium: ${severities['Medium']}\nLow: ${severities['Low']}\nInformational: ${severities['Informational']}\n****************")
