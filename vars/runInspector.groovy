@@ -161,7 +161,7 @@ def main(body, stackName, bucketName, fileName) {
     while  (runStatus != "COMPLETED") {
           runStatus = getRunStatus(assessmentArn)
           println("Test Run Status: ${runStatus}")
-          TimeUnit.SECONDS.sleep(120);
+          TimeUnit.SECONDS.sleep(60);
     }
 
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
@@ -382,20 +382,6 @@ def formatedResults(arn, whitelist) {
     print("\nseverities: ${severities}")
 
     def total_findings = severities['High'] + severities['Low'] + severities['Medium'] + severities['Informational']
-
-    def severities = ['High': 0, 'Medium': 0, 'Low': 0, 'Informational': 0]
-
-    finding_arns.each { finding ->
-        request = new DescribeFindingsRequest().withFindingArns(finding)
-        response = client.describeFindings(request).getFindings()
-        cve = response.id[0]
-        if (!whitelist.contains(cve)) {
-            severities[response.severity[0]] += 1
-        }
-    }
-    print("\nseverities: ${severities}")
-
-    def total_findings = findings['High'] + findings['Low'] + findings['Medium'] + findings['Informational']
 
     if (total_findings >= 1) {
         println("****************\nTest(s) not passed ${total_findings} issue found\nAMI failed insecptor test(s), see insepctor for details via saved file in workspace, AWS CLI or consolet\nFindings by Risk\nHigh: ${severities['High']}\nMedium: ${severities['Medium']}\nLow: ${severities['Low']}\nInformational: ${severities['Informational']}\n****************")
