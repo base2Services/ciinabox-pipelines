@@ -36,7 +36,8 @@ Resources:
     Properties:
       ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-      RoleName: testinstancerole
+      RoleName:
+          Fn::Sub: "testinstancerole${stackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
