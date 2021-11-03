@@ -170,7 +170,6 @@ def main(body, stackName, bucketName, fileName) {
     while (testRunning.equals(true)) {
           def getResults = getResults(assessmentArn).toString()
           println("Cleanup Status: ${getResults}")
-          TimeUnit.SECONDS.sleep(5);
           if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
           }
