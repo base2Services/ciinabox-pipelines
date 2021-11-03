@@ -68,9 +68,11 @@ Resources:
       SubnetId:
         Fn::Sub: "${subnetId}"
       Tags:
-        - Key:
-            Fn::Sub: "Inspector_${stackName}"
+        - Key: "Inspector"
           Value: "True"
+        - Key: "ID"
+          Value:
+              Fn::Sub: "${stackName}"
       UserData:
         Fn::If:
           - OsCheck
@@ -94,9 +96,9 @@ Resources:
     Type: "AWS::Inspector::ResourceGroup"
     Properties:
       ResourceGroupTags:
-        - Key:
-            Fn::Sub: "Inspector_${stackName}"
-          Value: "True"
+        - Key: "ID"
+          Value:
+              Fn::Sub: "${stackName}"
 
   testtargetgroup:
     Type: AWS::Inspector::AssessmentTarget
