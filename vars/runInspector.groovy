@@ -6,12 +6,16 @@ https://docs.aws.amazon.com/inspector/latest/userguide/inspector_rules-arns.html
 
 example usage in a pipeline
 runInspector(
-     region: 'ap-southeast-2',                      # Required
-     amiId: 'ami-0186908e2fdeea8f3'                 # Required
-     failon: 'Informational|Low|Medium|High|Never', # Optional
-     ruleArns: ['ruleARN1', 'ruleARN2']             # Optional
-     testTime: '120',                               # Optional
+    amiId: 'ami-0186908e2fdeea8f3',                 # Required
+    region: 'ap-southeast-2',                       # Required
+    failon: 'Informational|Low|Medium|High|Never',  # Optional
+    ruleArns: ['ruleARN1', 'ruleARN2'],             # Optional
+    testTime: '3600', (in seconds)                  # Optional
+    whitelist: ['CVE-2018-12126', 'CVE-2018-12127'] # Optional
 )
+
+Enviroment Variables Written:
+    env.FAILED_TESTS   --   Number of tests failed
 */
 
 import com.amazonaws.services.inspector.AmazonInspectorClientBuilder
@@ -184,7 +188,7 @@ def main(body, stackName, bucketName, fileName) {
     def fullResult = resutlUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-    def findings = formatedResults(assessmentArn, body.whitelist)
+    def findings = formatedResults(assessmentArn, body.get('whitelist', []))
     cleanUp(stackName, body.region, bucketName, fileName)
     return findings
 }
