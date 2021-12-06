@@ -99,16 +99,18 @@ def main(body, stackName, bucketName, fileName) {
         region: body.region,
         templateUrl: "https://${bucketName}.s3-${body.region}.amazonaws.com/Inspector.yaml",
         waitUntilComplete: 'true',
+        role: 'CiinaboxInspectorPipelineMethod',
         parameters: params
     )
     println('Stack uploaded to CloudFormation')
 
     // Query the stack for instance ID
     def instanceId = cloudformation(
-            stackName: stackName,
-            queryType: 'output',
-            query: 'InstanceId',
-            region: body.region
+        stackName: stackName,
+        queryType: 'output',
+        query: 'InstanceId',
+        role: 'CiinaboxInspectorPipelineMethod',
+        region: body.region
     )
 
     // Check if instance is actually up, if not wait
@@ -128,10 +130,11 @@ def main(body, stackName, bucketName, fileName) {
 
     // Query stack for inspector assessment targets arn (must be an output)
     def targetsArn = cloudformation(
-            stackName: stackName,
-            queryType: 'output',
-            query: 'TargetsArn',
-            region: body.region
+        stackName: stackName,
+        queryType: 'output',
+        query: 'TargetsArn',
+        role: 'CiinaboxInspectorPipelineMethod',
+        region: body.region
     )
 
     // Check if the agent is up, if not wait
@@ -151,10 +154,11 @@ def main(body, stackName, bucketName, fileName) {
 
     // Query stack for inspector assessment template arn (must be an output)
     def template_arn = cloudformation(
-            stackName: stackName,
-            queryType: 'output',
-            query: 'TemplateArn',
-            region: body.region
+        stackName: stackName,
+        queryType: 'output',
+        query: 'TemplateArn',
+        role: 'CiinaboxInspectorPipelineMethod',
+        region: body.region
     )
 
     // Run the inspector test
@@ -225,6 +229,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
             action: 'delete',
             region: region,
             waitUntilComplete: 'true',
+            role: 'CiinaboxInspectorPipelineMethod',
         )
     }
     catch (Exception e) {
