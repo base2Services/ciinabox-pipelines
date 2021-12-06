@@ -133,7 +133,7 @@ Resources:
           - EC2 Instance State-change Notification
         detail:
           instance-id:
-            -  i-0edde676a3e356b94 # This is hard coded because its a test, normally you would pass in the instance(s) you want inspector to run against on the state change
+            - Fn::Sub: "${amiId}"
       State: ENABLED
       Targets:
         - Arn:
