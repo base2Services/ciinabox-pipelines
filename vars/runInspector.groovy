@@ -97,7 +97,7 @@ def main(body, stackName, bucketName, fileName) {
         stackName: stackName,
         action: 'create',
         region: body.region,
-        templateUrl: "https://${bucketName}.s3-ap-southeast-2.amazonaws.com/Inspector.yaml",
+        templateUrl: "https://${bucketName}.s3-${body.region}.amazonaws.com/Inspector.yaml",
         waitUntilComplete: 'true',
         parameters: params
     )
