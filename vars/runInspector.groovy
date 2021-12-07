@@ -115,6 +115,7 @@ def main(body, stackName, bucketName, fileName) {
 
     // Check if instance is actually up, if not wait
     def instancesStatus = getIstanceStatus(instanceId)
+    println("Insance is in state: ${instancesStatus}")
     def timeout = 0
     while (instancesStatus != "running") {
         if (timeout <= 120) { // If the instance isn't up in 10 mins, skip waiting
