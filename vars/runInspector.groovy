@@ -8,7 +8,8 @@ example usage in a pipeline
 runInspector(
     amiId: 'ami-0186908e2fdeea8f3',                 # Required
     region: 'ap-southeast-2',                       # Required
-    role: 'arn_of_role_to_assume'                   # Required
+    role: 'roleName'                                # Required
+    accountId: '0123456789012'                      # Required
     failon: 'Informational|Low|Medium|High|Never',  # Optional
     ruleArns: ['ruleARN1', 'ruleARN2'],             # Optional
     testTime: '3600', (in seconds)                  # Optional
@@ -33,6 +34,9 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.CreateBucketRequest
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicSessionCredentials
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 import java.util.concurrent.TimeUnit
@@ -220,16 +224,18 @@ def main(body, stackName, bucketName, fileName) {
 
 
 
+
 def assumeRole(region, accountId, role) {
+    def roleArn = "arn:aws:iam::" + accountId + ":role/" + role
     def roleSessionName = "sts-session-" + accountId
     def sts = AWSSecurityTokenServiceClientBuilder.standard()
-    .withEndpointConfiguration(new EndpointConfiguration("sts.${region}.amazonaws.com", region))
-    .build()
+        .withEndpointConfiguration(new EndpointConfiguration("sts.${region}.amazonaws.com", region))
+        .build()
 
-    println("Assuming role ${role}")
+    println("Assuming role ${roleArn}")
 
     def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-        .withRoleARN(role)
+        .withRoleArn(roleArn)
         .withRoleSessionName(roleSessionName))
 
     return new BasicSessionCredentials(assumeRoleResult.getCredentials().getAccessKeyId(),
@@ -300,7 +306,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
         println("Unable to delete stack, error: ${e}")
     }
     try {
-        cleanBucket(bucketName, region, fileName)
+        s3.deleteObject(bucketName, fileName)
         s3.deleteBucket(bucketName)
         println('All creted resources are now deleted')
     }
@@ -371,12 +377,6 @@ def getIstanceStatus(String id, client) {
 def createBucket(String name, String region, client) {
       def request = new CreateBucketRequest(name, region)
       client.createBucket(request)
-}
-
-
-def cleanBucket(String bucketName, String region, String fileName, client) {
-      def client = setupS3Client(region, accountId, role)
-      client.deleteObject(bucketName, fileName)
 }
 
 
