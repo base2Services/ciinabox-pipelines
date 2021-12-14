@@ -8,6 +8,7 @@ example usage in a pipeline
 runInspector(
     amiId: 'ami-0186908e2fdeea8f3',                 # Required
     region: 'ap-southeast-2',                       # Required
+    role: 'arn_of_role_to_assume'                   # Required
     failon: 'Informational|Low|Medium|High|Never',  # Optional
     ruleArns: ['ruleARN1', 'ruleARN2'],             # Optional
     testTime: '3600', (in seconds)                  # Optional
@@ -30,12 +31,17 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.CreateBucketRequest
-import com.base2.ciinabox.aws.Util
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.base2.ciinabox.InstanceMetadata
 import com.base2.ciinabox.GetInstanceDetails
 import java.util.concurrent.TimeUnit
 
 def call(body) {
+    def client = setupEC2Client(body.region, body.accountId, body.role)
+    def request = new DescribeImagesRequest().withImageIds(ami)
+    def response = client.describeImages(request)
+
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
@@ -66,13 +72,22 @@ def call(body) {
 
 
 def main(body, stackName, bucketName, fileName) {
+    // Start sessions for insepctor, S3 and EC2
+    def inspector = setupInspectorClient(body.region, body.accountId, body.role)
+    println('Establish inspector client')
+    def s3 = setupEC2Client(body.region, body.accountId, body.role)
+    println('Establish S3 client')
+    def ec2 = setupS3Client(body.region, body.accountId, body.role)
+    println('Establish EC2 client')
+
+
     // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
     def template = libraryResource('Inspector.yaml')
-    createBucket(bucketName, body.region)
+    createBucket(bucketName, body.region, ec2)
     println('Created temp bucket to store cloudformaiton template')
-    uploadFile(bucketName, fileName, template, body.region)
+    s3.putObject(bucketName, fileName, template)
     println('Cloudformaiton uploaded to bucket')
-    def os = returnOs(body.amiId)
+    def os = returnOs(body.amiId, ec2)
     println("The AMI is using ${os} based operating system")
 
     // Organise which parameters to send
@@ -114,12 +129,11 @@ def main(body, stackName, bucketName, fileName) {
     )
 
     // Check if instance is actually up, if not wait
-    def instancesStatus = getIstanceStatus(instanceId)
-    println("Insance is in state: ${instancesStatus}")
+    def instancesStatus = getIstanceStatus(instanceId, ec2)
     def timeout = 0
     while (instancesStatus != "running") {
         if (timeout <= 120) { // If the instance isn't up in 10 mins, skip waiting
-            instancesStatus = getIstanceStatus(instanceId)
+            instancesStatus = getIstanceStatus(instanceId, ec2)
             println("Insance is in state: ${instancesStatus}")
             timeout += 1
             TimeUnit.SECONDS.sleep(5);
@@ -138,12 +152,15 @@ def main(body, stackName, bucketName, fileName) {
         region: body.region
     )
 
+    println("targetsArn: ${targetsArn}")
+    TimeUnit.SECONDS.sleep(120);
+
     // Check if the agent is up, if not wait
-    def agentStatus = getAgentStatus(targetsArn)
+    def agentStatus = getAgentStatus(targetsArn, insepctor)
     timeout = 0
     while (agentStatus != 'HEALTHY') {
         if (timeout <= 120) {
-            agentStatus = getAgentStatus(targetsArn)
+            agentStatus = getAgentStatus(targetsArn, inspector)
             println("Agent health: ${agentStatus}")
             timeout += 1
             TimeUnit.SECONDS.sleep(5);
@@ -163,13 +180,13 @@ def main(body, stackName, bucketName, fileName) {
     )
 
     // Run the inspector test
-    def assessmentArn = assessmentRun(template_arn)
+    def assessmentArn = assessmentRun(template_arn, inspector)
     println('Inspector test(s) started')
 
     // Wait for the inspector test to run
-    def runStatus = getRunStatus(assessmentArn)
+    def runStatus = getRunStatus(assessmentArn, inspector)
     while  (runStatus != "COMPLETED") {
-          runStatus = getRunStatus(assessmentArn)
+          runStatus = getRunStatus(assessmentArn, inspector)
           println("Test Run Status: ${runStatus}")
           TimeUnit.SECONDS.sleep(60);
     }
@@ -177,7 +194,7 @@ def main(body, stackName, bucketName, fileName) {
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
     def testRunning = true
     while (testRunning.equals(true)) {
-          def getResults = getResults(assessmentArn).toString()
+          def getResults = getResults(assessmentArn, inspector).toString()
           println("Cleanup Status: ${getResults}")
           if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
@@ -186,16 +203,62 @@ def main(body, stackName, bucketName, fileName) {
     }
 
     // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
-    getResults = getResults(assessmentArn)
+    getResults = getResults(assessmentArn, inspector)
     def urlRegex = /http.*[^}]/
     def resutlUrl = (getResults =~ urlRegex)
     resutlUrl = resutlUrl[0]
     def fullResult = resutlUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-    def findings = formatedResults(assessmentArn, body.get('whitelist', []))
+    def findings = formatedResults(assessmentArn, body.get('whitelist', []), inspector)
     cleanUp(stackName, body.region, bucketName, fileName)
     return findings
+}
+
+
+
+
+
+
+def assumeRole(region, accountId, role) {
+    def roleSessionName = "sts-session-" + accountId
+    def sts = AWSSecurityTokenServiceClientBuilder.standard()
+    .withEndpointConfiguration(new EndpointConfiguration("sts.${region}.amazonaws.com", region))
+    .build()
+
+    println("Assuming role ${role}")
+
+    def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
+        .withRoleARN(role)
+        .withRoleSessionName(roleSessionName))
+
+    return new BasicSessionCredentials(assumeRoleResult.getCredentials().getAccessKeyId(),
+                                    assumeRoleResult.getCredentials().getSecretAccessKey(),
+                                    assumeRoleResult.getCredentials().getSessionToken())
+}
+
+
+def setupEC2Client(region, accountId, role) {
+    def client = AmazonEC2ClientBuilder.standard().withRegion(region)
+    def creds = assumeRole(region, accountId, role)
+    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    return client.build()
+}
+
+
+def setupInspectorClient(region, accountId, role) {
+    def client = AmazonInspectorClientBuilder.standard().withRegion(region)
+    def creds = assumeRole(region, accountId, role)
+    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    return client.build()
+}
+
+
+def setupS3Client(region, accountId, role) {
+    def client = AmazonS3ClientBuilder.standard().withRegion(region)
+    def creds = assumeRole(region, accountId, role)
+    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    return client.build()
 }
 
 
@@ -238,15 +301,13 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
     }
     try {
         cleanBucket(bucketName, region, fileName)
-        destroyBucket(bucketName, region)
+        s3.deleteBucket(bucketName)
         println('All creted resources are now deleted')
     }
     catch (Exception e) {
         println("Unable to clean/destroy bucket, error: ${e}")
     }
 }
-
-
 
 def checkFail(failon, findings){
     // Make a list of severity levels with >= 1 nFindings
@@ -290,17 +351,16 @@ def checkFail(failon, findings){
 }
 
 
-def getAgentStatus(String arn) {
-     def client = AmazonInspectorClientBuilder.standard().build()
+def getAgentStatus(String arn, client) {
      def request = new PreviewAgentsRequest().withPreviewAgentsArn(arn)
      def response = client.previewAgents(request)
+     println("response: ${response}")
      def state = response.getAgentPreviews()[0].getAgentHealth()
      return state
 }
 
 
-def getIstanceStatus(String id) {
-    def client = AmazonEC2ClientBuilder.standard().build()
+def getIstanceStatus(String id, client) {
     def request = new DescribeInstancesRequest().withInstanceIds(id)
     def response = client.describeInstances(request)
     def state = response.getReservations()[0].getInstances()[0].getState().getName()
@@ -308,33 +368,19 @@ def getIstanceStatus(String id) {
 }
 
 
-def uploadFile(String bucket, String fileName, String file, String region) {
-      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
-      client.putObject(bucket, fileName, file)
-}
-
-
-def createBucket(String name, String region) {
-      def client = AmazonS3ClientBuilder.standard().build()
+def createBucket(String name, String region, client) {
       def request = new CreateBucketRequest(name, region)
       client.createBucket(request)
 }
 
 
-def cleanBucket(String bucketName, String region, String fileName) {
-      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
+def cleanBucket(String bucketName, String region, String fileName, client) {
+      def client = setupS3Client(region, accountId, role)
       client.deleteObject(bucketName, fileName)
 }
 
 
-def destroyBucket(String name, String region) {
-      def client = AmazonS3ClientBuilder.standard().withRegion(region).build()
-      client.deleteBucket(name)
-}
-
-
-def returnOs(String ami) {
-    def client = AmazonEC2ClientBuilder.standard().build()
+def returnOs(String ami, client) {
     def request = new DescribeImagesRequest().withImageIds(ami)
     def response = client.describeImages(request)
     response = response.getImages()[0].getPlatformDetails()
@@ -347,16 +393,14 @@ def returnOs(String ami) {
 }
 
 
-def assessmentRun(String template_arn) {
-    def client = AmazonInspectorClientBuilder.standard().build()
+def assessmentRun(String template_arn, client) {
     def request = new StartAssessmentRunRequest().withAssessmentTemplateArn(template_arn)
     def response = client.startAssessmentRun(request)
     return response.getAssessmentRunArn()
 }
 
 
-def getResults(String result_arn) {
-    def client = AmazonInspectorClientBuilder.standard().build()
+def getResults(String result_arn, client) {
     def request = new GetAssessmentReportRequest()
     .withAssessmentRunArn(result_arn)
     .withReportFileFormat('HTML') // HTML OR PDF
@@ -366,10 +410,9 @@ def getResults(String result_arn) {
 }
 
 
-def formatedResults(arn, whitelist) {
+def formatedResults(arn, whitelist, client) {
     def finding_arns = []
 
-    def client = AmazonInspectorClientBuilder.standard().build()
     def request = new ListFindingsRequest().withAssessmentRunArns(arn)
     def response = client.listFindings(request)
     finding_arns += response.findingArns
@@ -405,8 +448,7 @@ def formatedResults(arn, whitelist) {
 }
 
 
-def getRunStatus (String arn) {
-      def client = AmazonInspectorClientBuilder.standard().build()
+def getRunStatus (String arn, client) {
       def request = new DescribeAssessmentRunsRequest()
         .withAssessmentRunArns(arn)
       def response = client.describeAssessmentRuns(request)
