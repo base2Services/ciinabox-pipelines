@@ -15,6 +15,11 @@
    parameters: [
      'ENVIRONMENT_NAME' : 'dev',
    ],
+   capabilities: [ # define cloudfromation capabilities required by the stack or set value to false to disable the default capabilities
+     'CAPABILITY_IAM',
+     'CAPABILITY_NAMED_IAM',
+     'CAPABILITY_AUTO_EXPAND'
+   ],
    accountId: '1234567890', #the aws account Id you want the stack operation performed in
    role: 'myrole' # the role to assume from the account the pipeline is running from
  )
@@ -27,8 +32,8 @@ def call(body) {
   println("Copying s3://${config.source_bucket}/${config.prefix}/${compiled_template} to local")
 
   sh "aws s3 cp s3://${config.source_bucket}/${config.prefix}/${compiled_template} ${compiled_template}"
-
-  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --capabilities CAPABILITY_IAM --region ${config.region}"
+ 
+  def options = "--template-file ${compiled_template} --stack-name ${config.stackName} --region ${config.region}"
 
   if (config.parameters != null && !config.parameters.empty) {
     options = options.concat(" --parameter-overrides")
@@ -43,6 +48,11 @@ def call(body) {
 
   if (config.noFailOnEmptyChangeset != null && config.noFailOnEmptyChangeset == "true") {
     options = options.concat(" --no-fail-on-empty-changeset")
+  }
+ 
+  def capabilities = config.get('capabilities', ['CAPABILITY_IAM'])
+  if (capabilities) {
+    options = options.concat(" --capabilities ${capabilities.join(' ')}")
   }
 
   println("deploying ${compiled_template} to environment ${config.environment}")
