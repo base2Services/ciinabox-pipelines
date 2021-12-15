@@ -15,7 +15,7 @@
    parameters: [
      'ENVIRONMENT_NAME' : 'dev',
    ],
-   capabilities: [ # define cloudfromation capabilities required by the stack or set value to false to disable the default capabilities
+   capabilities: [ # define cloudformation capabilities required by the stack or set value to false to disable the default capabilities
      'CAPABILITY_IAM',
      'CAPABILITY_NAMED_IAM',
      'CAPABILITY_AUTO_EXPAND'
