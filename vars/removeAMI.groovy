@@ -6,7 +6,6 @@
  example usage
  removeAMI region: 'ap-southeast-2',  amis: ['ami-1234abc','ami-5678def']
  ************************************/
-@Grab(group='com.amazonaws', module='aws-java-sdk-ec2', version='1.11.198')
 
 import com.amazonaws.services.ec2.*
 import com.amazonaws.services.ec2.model.*

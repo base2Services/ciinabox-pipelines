@@ -18,11 +18,18 @@ def call(body) {
   pipeline {
     agent any
     stages {
+      stage('Prepare') {
+        steps {
+          sh 'printenv | sort'
+        }
+      }
       stage('Seed') {
         when {
           anyOf {
             branch 'master';
             branch 'main';
+            expression { env.GIT_BRANCH == 'origin/main'};
+            expression { env.GIT_BRANCH == 'origin/master'};
           }
         }
         steps {
