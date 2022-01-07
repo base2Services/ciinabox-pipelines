@@ -32,7 +32,7 @@ class AwsClientBuilder implements Serializable {
     this.region = config.get('region', null)
     this.awsAccountId = config.get('awsAccountId', null)
     this.role = config.get('role', null)
-    this.maxErrorRetry = config.get('maxErrorRetry', 3)
+    this.maxErrorRetry = config.get('maxErrorRetry', 10)
     this.env = config.get('env', [:])
     this.duration = config.get('duration', 3600)
   }
