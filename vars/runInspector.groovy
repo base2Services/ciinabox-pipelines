@@ -84,7 +84,6 @@ def main(body, stackName, bucketName, fileName) {
     def ec2 = setupS3Client(body.region, body.accountId, body.role)
     println('Establish EC2 client')
 
-
     // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
     def template = libraryResource('Inspector.yaml')
     createBucket(bucketName, body.region, ec2)
@@ -246,24 +245,30 @@ def assumeRole(region, accountId, role) {
 
 def setupEC2Client(region, accountId, role) {
     def client = AmazonEC2ClientBuilder.standard().withRegion(region)
-    def creds = assumeRole(region, accountId, role)
-    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    if (role != null) {
+        def creds = assumeRole(region, accountId, role)
+        client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
     return client.build()
 }
 
 
 def setupInspectorClient(region, accountId, role) {
     def client = AmazonInspectorClientBuilder.standard().withRegion(region)
-    def creds = assumeRole(region, accountId, role)
-    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    if (role != null) {
+        def creds = assumeRole(region, accountId, role)
+        client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
     return client.build()
 }
 
 
 def setupS3Client(region, accountId, role) {
     def client = AmazonS3ClientBuilder.standard().withRegion(region)
-    def creds = assumeRole(region, accountId, role)
-    client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    if (role != null) {
+        def creds = assumeRole(region, accountId, role)
+        client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
     return client.build()
 }
 
