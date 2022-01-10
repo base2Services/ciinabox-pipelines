@@ -74,7 +74,7 @@ class CloudformationStack implements Serializable {
       } catch (AmazonCloudFormationException ex) {
         if(ex.getErrorMessage().contains("does not exist")){
           ok = true
-        } else if(ex.getErrorMessage().contains(" Rate exceeded")) {
+        } else if(ex.getErrorMessage().contains("Rate exceeded")) {
           println("Rate exceeded... trying again")
           sleep(1)
         } else {
