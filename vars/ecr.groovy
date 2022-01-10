@@ -96,6 +96,24 @@ def setRepositoryPolicy(ecr,config) {
         "ecr:BatchCheckLayerAvailability"
       ]
     ]
+    document.Statement << [
+      "Sid": "AllowLambdaPull",
+      "Effect": "Allow",
+      "Principal": [
+        "Service": "lambda.amazonaws.com"
+      ],
+      "Condition": [
+        "StringLike": [
+          "aws:sourceARN":
+            "arn:aws:lambda:*:${accountId}:function:*"
+        ] 
+      ],
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability"
+      ]
+    ]
   }
   def builder = new groovy.json.JsonBuilder(document)
   println "Applying ECR access policy\n${builder.toPrettyString()}"
