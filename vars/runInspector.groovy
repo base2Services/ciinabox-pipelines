@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit
 
 def call(body) {
     def client = setupEC2Client(body.region, body.accountId, body.role)
-    def request = new DescribeImagesRequest().withImageIds(ami)
+    def request = new DescribeImagesRequest().withImageIds(body.amiId)
     def response = client.describeImages(request)
 
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
