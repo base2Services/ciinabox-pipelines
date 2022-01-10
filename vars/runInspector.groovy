@@ -79,14 +79,14 @@ def main(body, stackName, bucketName, fileName) {
     // Start sessions for insepctor, S3 and EC2
     def inspector = setupInspectorClient(body.region, body.accountId, body.role)
     println('Establish inspector client')
-    def s3 = setupEC2Client(body.region, body.accountId, body.role)
-    println('Establish S3 client')
-    def ec2 = setupS3Client(body.region, body.accountId, body.role)
+    def ec2 = setupEC2Client(body.region, body.accountId, body.role)
     println('Establish EC2 client')
+    def s3 = setupS3Client(body.region, body.accountId, body.role)
+    println('Establish S3 client')
 
     // Lunch AMI into cloudformaiton stack with sarrounding infrustructure to support scans
     def template = libraryResource('Inspector.yaml')
-    createBucket(bucketName, body.region, ec2)
+    createBucket(bucketName, body.region, s3)
     println('Created temp bucket to store cloudformaiton template')
     s3.putObject(bucketName, fileName, template)
     println('Cloudformaiton uploaded to bucket')
@@ -159,7 +159,7 @@ def main(body, stackName, bucketName, fileName) {
     TimeUnit.SECONDS.sleep(120);
 
     // Check if the agent is up, if not wait
-    def agentStatus = getAgentStatus(targetsArn, insepctor)
+    def agentStatus = getAgentStatus(targetsArn, inspector)
     timeout = 0
     while (agentStatus != 'HEALTHY') {
         if (timeout <= 120) {
@@ -197,18 +197,18 @@ def main(body, stackName, bucketName, fileName) {
     // This waits for inspector to finish up everything before an actaul result can be returned, this is not waiting for the test to finish
     def testRunning = true
     while (testRunning.equals(true)) {
-          def getResults = getResults(assessmentArn, inspector).toString()
+          def gottenResults = getResults(assessmentArn, inspector).toString()
           println("Cleanup Status: ${getResults}")
-          if ((getResults.contains("WORK_IN_PROGRESS")).equals(false)) {
+          if ((gottenResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
           }
           TimeUnit.SECONDS.sleep(20);
     }
 
     // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
-    getResults = getResults(assessmentArn, inspector)
+    gottenResults = getResults(assessmentArn, inspector)
     def urlRegex = /http.*[^}]/
-    def resutlUrl = (getResults =~ urlRegex)
+    def resutlUrl = (gottenResults =~ urlRegex)
     resutlUrl = resutlUrl[0]
     def fullResult = resutlUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: fullResult)
