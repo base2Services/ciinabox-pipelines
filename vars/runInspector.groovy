@@ -51,15 +51,14 @@ def call(body) {
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
     def findings = ''
-    findings = main(body, stackName, bucketName, fileName)
-    // try{
-    //     findings = main(body, stackName, bucketName, fileName)
-    // } catch(Exception e) {
-    //     println("Error: ${e}")
-    //     println("inspector failed to complete it's run, cleaning up resources before erroring out")
-    //     cleanUp(stackName, body.region, bucketName, fileName, body.accountId, body.role)
-    //     throw e
-    // }
+    try{
+        findings = main(body, stackName, bucketName, fileName)
+    } catch(Exception e) {
+        println("Error: ${e}")
+        println("inspector failed to complete it's run, cleaning up resources before erroring out")
+        cleanUp(stackName, body.region, bucketName, fileName, body.accountId, body.role)
+        throw e
+    }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
     def failon = body.get('failon', 'Medium').toString().toLowerCase().capitalize()
     def passed = checkFail(failon, findings[0])
@@ -222,7 +221,7 @@ def main(body, stackName, bucketName, fileName) {
     inspector = null
     println("Got full result: ${fullResult}")
     print("Type: ${fullResult.getClass()}")
-    writeFile(file: "${stackName}.html", text: 'fullResult', encoding: 'UFT-8')
+    writeFile(file: "${stackName}.html", text: fullResult)
     println('written file')
     archiveArtifacts(artifacts: "${stackName}.html", allowEmptyArchive: true)
     println('Archived results successfully')
