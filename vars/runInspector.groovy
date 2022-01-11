@@ -42,22 +42,24 @@ import com.base2.ciinabox.GetInstanceDetails
 import java.util.concurrent.TimeUnit
 
 def call(body) {
-    def client = setupEC2Client(body.region, body.accountId, body.role)
+    def client = AmazonEC2ClientBuilder.standard().withRegion(body.region).build()
     def request = new DescribeImagesRequest().withImageIds(body.amiId)
     def response = client.describeImages(request)
+    client = null
 
     def stackName = 'InspectorAmiTest' + UUID.randomUUID().toString()
     def bucketName = 'inspectortestbucket' + UUID.randomUUID().toString()
     def fileName = 'Inspector.yaml'
     def findings = ''
-    try{
-        findings = main(body, stackName, bucketName, fileName)
-    } catch(Exception e) {
-        println("Error: ${e}")
-        println("inspector failed to complete it's run, cleaning up resources before erroring out")
-        cleanUp(stackName, body.region, bucketName, fileName)
-        throw e
-    }
+    findings = main(body, stackName, bucketName, fileName)
+    // try{
+    //     findings = main(body, stackName, bucketName, fileName)
+    // } catch(Exception e) {
+    //     println("Error: ${e}")
+    //     println("inspector failed to complete it's run, cleaning up resources before erroring out")
+    //     cleanUp(stackName, body.region, bucketName, fileName, body.accountId, body.role)
+    //     throw e
+    // }
     // Fail the pipeline if insepctor tests did not pass considering passed in threshold
     def failon = body.get('failon', 'Medium').toString().toLowerCase().capitalize()
     def passed = checkFail(failon, findings[0])
@@ -79,7 +81,9 @@ def main(body, stackName, bucketName, fileName) {
     // Start sessions for insepctor, S3 and EC2
     def inspector = setupInspectorClient(body.region, body.accountId, body.role)
     println('Establish inspector client')
-    def ec2 = setupEC2Client(body.region, body.accountId, body.role)
+    // def ec2 = setupEC2Client(body.region, body.accountId, body.role)
+    def ec2 = AmazonEC2ClientBuilder.standard().withRegion(body.region)
+    ec2 = ec2.build()
     println('Establish EC2 client')
     def s3 = setupS3Client(body.region, body.accountId, body.role)
     println('Establish S3 client')
@@ -198,7 +202,7 @@ def main(body, stackName, bucketName, fileName) {
     def testRunning = true
     while (testRunning.equals(true)) {
           def gottenResults = getResults(assessmentArn, inspector).toString()
-          println("Cleanup Status: ${getResults}")
+          println("Cleanup Status: ${gottenResults}")
           if ((gottenResults.contains("WORK_IN_PROGRESS")).equals(false)) {
                 testRunning = false
           }
@@ -206,15 +210,25 @@ def main(body, stackName, bucketName, fileName) {
     }
 
     // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
-    gottenResults = getResults(assessmentArn, inspector)
+    def gottenResults = getResults(assessmentArn, inspector)
+    println('Gotten results')
     def urlRegex = /http.*[^}]/
     def resutlUrl = (gottenResults =~ urlRegex)
+    println('Got URL')
     resutlUrl = resutlUrl[0]
     def fullResult = resutlUrl.toURL().text
-    writeFile(file: 'Inspector_test_reults.html', text: fullResult)
-    archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
+    ec2 = null
+    s3 = null
+    inspector = null
+    println("Got full result: ${fullResult}")
+    print("Type: ${fullResult.getClass()}")
+    writeFile(file: "${stackName}.html", text: 'fullResult', encoding: 'UFT-8')
+    println('written file')
+    archiveArtifacts(artifacts: "${stackName}.html", allowEmptyArchive: true)
+    println('Archived results successfully')
     def findings = formatedResults(assessmentArn, body.get('whitelist', []), inspector)
-    cleanUp(stackName, body.region, bucketName, fileName)
+    println('got findings')
+    cleanUp(stackName, body.region, bucketName, fileName, body.accountId, body.role)
     return findings
 }
 
@@ -243,14 +257,14 @@ def assumeRole(region, accountId, role) {
 }
 
 
-def setupEC2Client(region, accountId, role) {
-    def client = AmazonEC2ClientBuilder.standard().withRegion(region)
-    if (role != null) {
-        def creds = assumeRole(region, accountId, role)
-        client.withCredentials(new AWSStaticCredentialsProvider(creds))
-    }
-    return client.build()
-}
+// def setupEC2Client(region, accountId, role) {
+//     def client = AmazonEC2ClientBuilder.standard().withRegion(region)
+//     if (role != null) {
+//         def creds = assumeRole(region, accountId, role)
+//         client.withCredentials(new AWSStaticCredentialsProvider(creds))
+//     }
+//     return client.build()
+// }
 
 
 def setupInspectorClient(region, accountId, role) {
@@ -295,7 +309,7 @@ def getsubnetId(region) {
 }
 
 
-def cleanUp(String stackName, String region, String bucketName, String fileName){
+def cleanUp(String stackName, String region, String bucketName, String fileName, String accountId, String role){
     // Pull down cloudformaiton stack and bucket hosting cloudformation template
     println('Cleaning up all created resources')
     try {
@@ -311,6 +325,7 @@ def cleanUp(String stackName, String region, String bucketName, String fileName)
         println("Unable to delete stack, error: ${e}")
     }
     try {
+        s3 = setupS3Client(region, accountId, role)
         s3.deleteObject(bucketName, fileName)
         s3.deleteBucket(bucketName)
         println('All creted resources are now deleted')
