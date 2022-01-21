@@ -21,6 +21,8 @@
     username: 'ec2-user|centos|ubuntu', // (optional, defaults to ec2-user)
     chefVersion: '12.20.3', // (optional, default to latest)
     chefJSON: '{"build_number": 1.0.3}', // (optional)
+    useCinc: true, (optional, default is false)
+    cincVersion: '15', // (optional, default to latest)
     runList: ['cookbook::recipe'] // (optional, list of recipes if using chef)
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
@@ -122,6 +124,10 @@ def call(body) {
     throw new GroovyRuntimeException("Unable to find AMI")
   }
 
+  if ((config.ebsVolumeSize && !config.ebsVolumeSize) || (!config.ebsVolumeSize && config.ebsVolumeSize)) {
+    throw new GroovyRuntimeException("Supply both ebs Volume Size and DeviceName")
+  }
+
   println("""
 =================================================
 | Using the following AWS details to run packer |
@@ -145,6 +151,9 @@ def call(body) {
   ptb.builder.vpc_id = vpcId
   ptb.builder.subnet_id = subnet
   ptb.builder.security_group_id = securityGroup
+  if (config.ebsDeviceName && config.ebsVolumeSize) {
+    ptb.addBlockDevice(config.ebsDeviceName, config.ebsVolumeSize) 
+  }
 
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
@@ -158,7 +167,11 @@ def call(body) {
       config.get('cookbookS3Bucket'),
       config.get('cookbookS3Region', region),
       config.get('cookbookS3Path'))
-    ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+    if (config.get('useCinc', false)) {
+      ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('cincVersion'), true)
+    } else {
+      ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
+    }
   }
 
   ptb.addAmamzonConfigProvisioner()
