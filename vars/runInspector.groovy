@@ -214,11 +214,10 @@ def main(body, stackName, bucketName, fileName) {
     println('Got URL')
     resutlUrl = resutlUrl[0]
     def fullResult = resutlUrl.toURL().text
+    // Need to clear these as the sessions are not serializable
     ec2 = null
     s3 = null
     inspector = null
-    println("Got full result: ${fullResult}")
-    print("Type: ${fullResult.getClass()}")
     writeFile(file: "${stackName}.html", text: fullResult)
     println('Written inspector report')
     archiveArtifacts(artifacts: "${stackName}.html", allowEmptyArchive: true)
