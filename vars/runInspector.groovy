@@ -80,9 +80,7 @@ def main(body, stackName, bucketName, fileName) {
     // Start sessions for insepctor, S3 and EC2
     def inspector = setupInspectorClient(body.region, body.accountId, body.role)
     println('Establish inspector client')
-    // def ec2 = setupEC2Client(body.region, body.accountId, body.role)
-    def ec2 = AmazonEC2ClientBuilder.standard().withRegion(body.region)
-    ec2 = ec2.build()
+    def ec2 = setupEC2Client(body.region, body.accountId, body.role)
     println('Establish EC2 client')
     def s3 = setupS3Client(body.region, body.accountId, body.role)
     println('Establish S3 client')
@@ -222,11 +220,11 @@ def main(body, stackName, bucketName, fileName) {
     println("Got full result: ${fullResult}")
     print("Type: ${fullResult.getClass()}")
     writeFile(file: "${stackName}.html", text: fullResult)
-    println('written file')
+    println('Written inspector report')
     archiveArtifacts(artifacts: "${stackName}.html", allowEmptyArchive: true)
     println('Archived results successfully')
+    inspector = setupInspectorClient(body.region, body.accountId, body.role)
     def findings = formatedResults(assessmentArn, body.get('whitelist', []), inspector)
-    println('got findings')
     cleanUp(stackName, body.region, bucketName, fileName, body.accountId, body.role)
     return findings
 }
@@ -256,14 +254,14 @@ def assumeRole(region, accountId, role) {
 }
 
 
-// def setupEC2Client(region, accountId, role) {
-//     def client = AmazonEC2ClientBuilder.standard().withRegion(region)
-//     if (role != null) {
-//         def creds = assumeRole(region, accountId, role)
-//         client.withCredentials(new AWSStaticCredentialsProvider(creds))
-//     }
-//     return client.build()
-// }
+def setupEC2Client(region, accountId, role) {
+    def client = AmazonEC2ClientBuilder.standard().withRegion(region)
+    if (role != null) {
+        def creds = assumeRole(region, accountId, role)
+        client.withCredentials(new AWSStaticCredentialsProvider(creds))
+    }
+    return client.build()
+}
 
 
 def setupInspectorClient(region, accountId, role) {
@@ -311,6 +309,7 @@ def getsubnetId(region) {
 def cleanUp(String stackName, String region, String bucketName, String fileName, String accountId, String role){
     // Pull down cloudformaiton stack and bucket hosting cloudformation template
     println('Cleaning up all created resources')
+    def s3 = setupS3Client(region, accountId, role)
     try {
         cloudformation(
             stackName: stackName,
