@@ -66,14 +66,23 @@ class CloudformationStack implements Serializable {
     def stacks = []
     
     def client = clientBuilder.cloudformation()
-    try {
-      stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
-    } catch (AmazonCloudFormationException ex) {
-      if(!ex.getErrorMessage().contains("does not exist")){
-        throw ex
+    def ok = false
+    while(!ok) {
+      try {
+        stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
+        ok = true 
+      } catch (AmazonCloudFormationException ex) {
+        if(ex.getErrorMessage().contains("does not exist")){
+          ok = true
+        } else if(ex.getErrorMessage().contains("Rate exceeded")) {
+          println("Rate exceeded... trying again")
+          sleep(1)
+        } else {
+          throw ex;
+        }
+      } finally {
+        client = null
       }
-    } finally {
-      client = null
     }
     
     if(templateUrl != null) {
