@@ -60,7 +60,7 @@ class PackerTemplateBuilder implements Serializable {
   public void addBlockDevice(String deviceName, String volumeSize) {
     def block_device_mapping = [
       device_name: deviceName,
-      volume_size: ebsVolumeSize,
+      volume_size: volumeSize,
       delete_on_termination: true,
       volume_type: "gp2"
     ]
@@ -68,7 +68,7 @@ class PackerTemplateBuilder implements Serializable {
     this.builder.launch_block_device_mappings = [block_device_mapping]
   }
 
-  public void addChefSoloProvisioner(List runList, String json, String version) {
+  public void addChefSoloProvisioner(List runList, String json, String version, Boolean useCinc=false) {
     def chefProvisioner = [
       type: 'chef-solo',
       chef_license: 'accept-silent',
@@ -78,7 +78,6 @@ class PackerTemplateBuilder implements Serializable {
     if (json) {
       chefProvisioner.json = json
     }
-
     if (version) {
       chefProvisioner.version = version
     }
@@ -93,6 +92,14 @@ class PackerTemplateBuilder implements Serializable {
           "New-Item c:/chef/environments -type directory -force"
         ]
       ])
+      if (useCinc) {
+        if(version) {
+          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install -version ' + chefProvisioner.version + '"'
+        } else {
+          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install"'
+        }
+        chefProvisioner.execute_command = 'C:/cinc-project/cinc/bin/chef-solo.bat --no-color -c C:/Windows/Temp/packer-chef-solo/solo.rb -j C:/Windows/Temp/packer-chef-solo/node.json'
+      }
     } else {
       chefProvisioner.remote_cookbook_paths = ["/etc/chef/cookbooks"]
       this.provisioners.push([
@@ -112,6 +119,9 @@ class PackerTemplateBuilder implements Serializable {
         source: '{{pwd}}/environments',
         destination: '/etc/chef'
       ])
+      if (useCinc) {
+        chefProvisioner.install_command = "curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s -- -v " + chefProvisioner.version
+      }
     }
 
     this.provisioners.push(chefProvisioner)
