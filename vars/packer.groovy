@@ -7,6 +7,7 @@
     ami: 'ami-1234', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
     amiLookup: 'amzn-ami-hvm-2017.03.*', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
     amiLookupFilterTags: ['key':'value'], // (optional, filter amis when using amiLookup by specifying tags)
+    amiLookupFilters: ['architecture':'x86_64'], // (optional, filter amis when using amiLookup using aws AMI filter keys. see aws docs for filter keys)
     amiLookupSSM: '/aws/path', // (conditional, one of ami or amiLookup or amiLookupSSM must be supplied)
     region: 'ap-southeast-2', // (optional, will use jenkins region)
     az: 'a', // (optional, will use jenkins az)
@@ -113,7 +114,12 @@ def call(body) {
   if (config.ami) {
     sourceAMI = config.ami
   } else if (config.amiLookup) {
-    sourceAMI = lookupAMI(region: region, amiName: config.amiLookup, tags: config.get('amiLookupFilterTags',[:]))
+    sourceAMI = lookupAMI(
+      region: region,
+      amiName: config.amiLookup,
+      tags: config.get('amiLookupFilterTags', [:]),
+      filters: config.get('amiLookupFilters', [:])
+    )
   } else if (config.amiLookupSSM) {
     sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
