@@ -19,7 +19,8 @@ verifyAMIv2(
   subnet: 'subnet-1234', // (optional, will lookup)
   securityGroup: 'sg-1234', // (optional, will lookup)
   instanceProfile: 'packer', // (optional, will lookup)
-  instanceType: 't3.small' // (optional, default to m5.large)
+  instanceType: 't3.small', // (optional, default to m5.large)
+  provisioner: 'chef | cinc' // (optional, set the kitchen provisioner. defaults to chef)
 )
 ************************************/
 import com.base2.ciinabox.aws.Util
@@ -30,11 +31,11 @@ def call(body) {
   def config = body
   
   if (!config.role) {
-    error("(role: 'MyRole') option must be provided")
+    throw new GroovyRuntimeException("(role: 'MyRole') option must be provided")
   }
   
   if (!config.cookbook) {
-    error("(cookbook: 'mycookbook') option must be provided")
+    throw new GroovyRuntimeException("(cookbook: 'mycookbook') option must be provided")
   }
   
   def sourceAMI = null
@@ -46,11 +47,11 @@ def call(body) {
   } else if (config.amiLookupSSM) {
     sourceAMI = lookupAMI(region: region, ssm: config.amiLookupSSM)
   } else {
-    error("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
+    throw new GroovyRuntimeException("no ami supplied. must supply one of (ami: 'ami-1234', amiLookup: 'my-baked-ami-*', amiLookupSSM: '/my/baked/ami')")
   }
   
   if (!sourceAMI) {
-    error("Unable to find AMI")
+    throw new GroovyRuntimeException("Unable to find AMI")
   }
   
   def suite = config.get('suite', config.role)
@@ -128,13 +129,7 @@ def call(body) {
         "Role": config.role
       ]
     ],
-    provisioner: [
-      solo_rb: [
-        chef_license: 'accept'
-      ],
-      name: 'chef_solo',
-      always_update_cookbooks: false
-    ],
+    provisioner: [],
     verifier: [
       name: 'inspec',
       sudo: true,
@@ -156,7 +151,32 @@ def call(body) {
     ],
     suites: []
   ]
-  
+
+  def provisioner = config.get('provisioner', 'chef')
+
+  switch(provisioner) {
+    case 'chef':
+      kitchenYaml.provisioner = [
+        solo_rb: [
+          chef_license: 'accept'
+        ],
+        name: 'chef_solo',
+        always_update_cookbooks: false
+      ]
+    break
+    case 'cinc':
+      kitchenYaml.provisioner = [
+        name: 'chef_zero',
+        product_name: 'cinc',
+        download_url: 'https://omnitruck.cinc.sh/install.sh',
+        always_update_cookbooks: false
+      ]
+    break
+    default:
+      throw new GroovyRuntimeException("${provisioner} is a unsuported provisioner. Must be one of 'chef | cinc'")
+    break
+  }
+
   def inspec_suite =[name: suite]
   
   if (config.runlist) {
@@ -180,7 +200,7 @@ def call(body) {
       kitchenYaml.transport.username = 'ubuntu'
       break
     default:
-      error("${config.type} is a unsuported type. Must be one of 'amzn-linux | centos | ubuntu'")
+      throw new GroovyRuntimeException("${config.type} is a unsuported type. Must be one of 'amzn-linux | centos | ubuntu'")
   }
   
   withAWSKeyPair(region) {
