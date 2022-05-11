@@ -10,6 +10,7 @@ lookupAMI(
   amiName: 'ami-name-*', // (conditional, ami name to search for. accepts wildcards. either name or ssm must be set)
   owner: '12345678912', // (optional, account id that owns the ami)
   tags: ['status':'verifed'], // (optional, filter ami name lookup by tags)
+  filters: ['architecture', 'x86_64'], // (optional, add additional ami lookup filters, see aws docs for filter keys)
   ssm: '/ssm/path/ami', // (conditional, retrive ami from ssm parameter. either name or ssm must be set)
   env: 'MY_AMI' // (optional, environment variable name. defaults to env["SOURCE_AMI"])
 )
@@ -75,6 +76,12 @@ def lookupAMIRequest(config) {
   if(config['tags']) {
     config.tags.each { key, value ->
       filters << new Filter("tag:${key}").withValues("${value}")
+    }
+  }
+
+  if (config.filters) {
+    config.filters.each { key, value ->
+      filters << new Filter(key).withValues(value)
     }
   }
 
