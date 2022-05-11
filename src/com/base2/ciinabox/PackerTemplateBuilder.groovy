@@ -92,15 +92,18 @@ class PackerTemplateBuilder implements Serializable {
           "New-Item c:/chef/environments -type directory -force"
         ]
       ])
+
       if (useCinc) {
         if(version) {
-          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install -version ' + chefProvisioner.version + '"'
+          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install -version ' + version + '"'
         } else {
           chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install"'
         }
         chefProvisioner.execute_command = 'C:/cinc-project/cinc/bin/chef-solo.bat --no-color -c C:/Windows/Temp/packer-chef-solo/solo.rb -j C:/Windows/Temp/packer-chef-solo/node.json'
       }
+
     } else {
+      // linux
       chefProvisioner.remote_cookbook_paths = ["/etc/chef/cookbooks"]
       this.provisioners.push([
         type: 'shell',
@@ -109,18 +112,24 @@ class PackerTemplateBuilder implements Serializable {
           "sudo chmod -R 777 /etc/chef"
         ]
       ])
+
       this.provisioners.push([
         type: 'file',
         source: '{{pwd}}/cookbooks',
         destination: '/etc/chef'
       ])
+
       this.provisioners.push([
         type: 'file',
         source: '{{pwd}}/environments',
         destination: '/etc/chef'
       ])
+
       if (useCinc) {
-        chefProvisioner.install_command = "curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s -- -v " + chefProvisioner.version
+        chefProvisioner.install_command = "curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s --"
+        if (version) {
+          chefProvisioner.install_command += " -v ${version}"
+        }
       }
     }
 
