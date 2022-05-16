@@ -208,10 +208,11 @@ def main(body, stackName, bucketName, fileName, runId) {
 
     // Get the results of the test, write to jenkins and fromated the result to check if the test(s) passed
     htmlAssessmentResult = getResults(assessmentArn, 'HTML')
-    def htmlAssessment = htmlAssessmentResult.getURL().toURL().text
+    def htmlAssessmentUrl = htmlAssessmentResult.getUrl()
+    def htmlAssessment = htmlAssessmentUrl.toURL().text
     writeFile(file: 'Inspector_test_reults.html', text: htmlAssessment)
     archiveArtifacts(artifacts: 'Inspector_test_reults.html', allowEmptyArchive: true)
-    
+
     // format the results to send to slack and display to the console
     def findings = formatedResults(assessmentArn, body.get('whitelist', []))
 
