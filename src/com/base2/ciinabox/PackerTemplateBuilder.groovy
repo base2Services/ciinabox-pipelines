@@ -7,14 +7,12 @@ class PackerTemplateBuilder implements Serializable {
   String id
   String date
   String type
-  Boolean winUpdate
   Map builder = [:]
   ArrayList provisioners = []
 
-  PackerTemplateBuilder(String name, String type = 'linux', Boolean winUpdate) {
+  PackerTemplateBuilder(String name, String type = 'linux') {
     this.id = 'bake-' + UUID.randomUUID().toString()
     this.type = type
-    this.winUpdate = winUpdate
     def now = new Date()
     this.date = now.format("yyyy-MM-dd't'HH-mm-ss.SSS'z'", TimeZone.getTimeZone('UTC'))
     def amiName = "${name}-${this.date}"
@@ -180,6 +178,19 @@ class PackerTemplateBuilder implements Serializable {
       ])
     }
 
+  }
+
+  public void addAmamzonEc2LaunchV2Provisioner() {
+    if (this.type.equals('windows')) {
+      this.provisioners.push([
+        type: 'powershell',
+        inline: ["& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' reset"]
+      ])
+      this.provisioners.push([
+        type: 'powershell',
+        inline: ["& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep"]
+      ])
+    }
   }
 
   public String toJson() {
