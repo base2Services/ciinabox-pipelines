@@ -94,10 +94,12 @@ class PackerTemplateBuilder implements Serializable {
       ])
 
       if (useCinc) {
+        def cincInstallCommand = '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; . { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install'
+
         if(version) {
-          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install -version ' + version + '"'
+          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c "' + cincInstallCommand + ' -version ' + version + '"'
         } else {
-          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c ". { iwr -useb https://omnitruck.cinc.sh/install.ps1 } | iex; install"'
+          chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c "' + cincInstallCommand + '"'
         }
         chefProvisioner.execute_command = 'C:/cinc-project/cinc/bin/chef-solo.bat --no-color -c C:/Windows/Temp/packer-chef-solo/solo.rb -j C:/Windows/Temp/packer-chef-solo/node.json'
       }
