@@ -31,7 +31,8 @@
     cookbookS3Path: 'chef/0.1.0/cookbooks.tar.gz', // (conditional, required for type: 'windows')
     cookbookS3Region: 'us-east-1', // (optional, defaults to packer region)
     debug: 'true|false', // (optional)
-    winUpdate: 'true|false'  // (optional, whether to perform windows updates on AMI) 
+    winUpdate: true|false,  // (optional, whether to perform windows updates on AMI) 
+    ec2LaunchV2: true|false
   )
 ************************************/
 import com.base2.ciinabox.aws.Util
@@ -149,7 +150,7 @@ def call(body) {
 =================================================
   """)
 
-  def ptb = new PackerTemplateBuilder(config.role, platformType, config.get('winUpdate', false))
+  def ptb = new PackerTemplateBuilder(config.role, platformType)
   ptb.builder.region = region
   ptb.builder.source_ami = sourceAMI
   ptb.builder.instance_type = instanceType
@@ -164,7 +165,7 @@ def call(body) {
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
 
-  if (config.get('winUpdate', false)) {
+  if (config.winUpdate) {
       ptb.addWindowsUpdate()
   }
 
@@ -180,7 +181,11 @@ def call(body) {
     }
   }
 
-  ptb.addAmamzonConfigProvisioner()
+  if (config.ec2LaunchV2) {
+    ptb.addAmamzonEc2LaunchV2Provisioner()
+  } else {
+    ptb.addAmamzonConfigProvisioner()
+  }
 
   writeScript('packer/download_cookbooks.ps1')
   writeScript('packer/ec2_config_service.ps1')
