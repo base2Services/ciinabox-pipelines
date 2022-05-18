@@ -32,7 +32,8 @@
     cookbookS3Region: 'us-east-1', // (optional, defaults to packer region)
     debug: 'true|false', // (optional)
     winUpdate: true|false,  // (optional, whether to perform windows updates on AMI) 
-    ec2LaunchV2: true|false
+    ec2LaunchV2: true|false, // (optional, set to true if windows ami is using EC2 Launch V2 package)
+    uninstallCinc: true|false // (optional, uninstall the cinc installation after the cinc provisioner)
   )
 ************************************/
 import com.base2.ciinabox.aws.Util
@@ -179,6 +180,10 @@ def call(body) {
     } else {
       ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
     }
+  }
+
+  if (config.uninstallCinc) {
+    ptb.addUninstallCincProvisioner()
   }
 
   if (config.ec2LaunchV2) {

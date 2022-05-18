@@ -193,6 +193,21 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
+  public void addUninstallCincProvisioner() {
+    if (this.type.equals('windows')) {
+      this.provisioners.push([
+        type: 'powershell',
+        inline: [
+          "Write-Output \"Uninstalling Cinc ...\""
+          "\$cinc = Get-WmiObject -Class Win32_Product -Filter \"Vendor = 'Cinc Software, Inc.'\""
+          "\$cinc.Uninstall()",
+          "Write-Output \"removing c:/chef directory\"",
+          "Remove-Item -Recurse -Force c:/chef"
+        ]
+      ])
+    }
+  }
+
   public String toJson() {
     Map template = [
       builders: [],
