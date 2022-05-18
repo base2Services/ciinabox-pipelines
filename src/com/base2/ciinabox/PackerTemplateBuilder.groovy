@@ -194,7 +194,7 @@ class PackerTemplateBuilder implements Serializable {
   }
 
   public void addUninstallCincProvisioner() {
-    if (this.type.equals('windows')) {
+    if (this.type.startsWith('windows')) {
       this.provisioners.push([
         type: 'powershell',
         script: 'uninstall_cinc.ps1'
