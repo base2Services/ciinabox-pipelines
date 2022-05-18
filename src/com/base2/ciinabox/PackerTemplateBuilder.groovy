@@ -193,6 +193,15 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
+  public void addUninstallCincProvisioner() {
+    if (this.type.startsWith('windows')) {
+      this.provisioners.push([
+        type: 'powershell',
+        script: 'uninstall_cinc.ps1'
+      ])
+    }
+  }
+
   public String toJson() {
     Map template = [
       builders: [],
