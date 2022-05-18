@@ -197,13 +197,7 @@ class PackerTemplateBuilder implements Serializable {
     if (this.type.equals('windows')) {
       this.provisioners.push([
         type: 'powershell',
-        inline: [
-          "Write-Output \"Uninstalling Cinc ...\""
-          "\$cinc = Get-WmiObject -Class Win32_Product -Filter \"Vendor = 'Cinc Software, Inc.'\""
-          "\$cinc.Uninstall()",
-          "Write-Output \"removing c:/chef directory\"",
-          "Remove-Item -Recurse -Force c:/chef"
-        ]
+        script: 'uninstall_cinc.ps1'
       ])
     }
   }

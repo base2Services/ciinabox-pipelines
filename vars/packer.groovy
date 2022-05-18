@@ -197,6 +197,7 @@ def call(body) {
   writeScript('packer/ec2_launch_config.ps1')
   writeScript('packer/install_7zip.ps1')
   writeScript('packer/setup_winrm.ps1')
+  writeScript('packer/uninstall_cinc.ps1')
 
   def packerTemplate = ptb.toJson()
   def packerPath = config.get('packerPath', '/opt/packer/packer')
