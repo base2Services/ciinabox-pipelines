@@ -157,7 +157,7 @@ def call(body) {
 
   ptb.addCommunicator(config.get('username', 'ec2-user'))
 
-  def ansibleInstallCommand = ["amazon-linux-extras install ansible2 -y"]
+  def ansibleInstallCommand = ["sudo amazon-linux-extras install ansible2 -y"]
 
   ptb.addAnsibleInstallProvisioner(ansibleInstallCommand)
   ptb.addAnsibleLocalProvisioner(config.playbook)
