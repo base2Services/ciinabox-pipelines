@@ -136,7 +136,7 @@ class PackerTemplateBuilder implements Serializable {
     this.provisioners.push(chefProvisioner)
   }
 
-  public void addAnsibleInstallProvisioner(String installCommand, String playbookDirectory) {
+  public void addAnsibleInstallProvisioner(ArrayList installCommand, String playbookDirectory) {
     this.provisioners.push([
       type: 'shell',
       inline: [
