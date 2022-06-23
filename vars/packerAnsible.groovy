@@ -22,7 +22,11 @@
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
     debug: 'true|false', // (optional)
-    playbook: 'playbook.yaml', (required, the ansible playbook)
+    runList: ['playbook.yaml'], (required, The playbook files to be executed by ansible)
+    playbookDir: ['playbooks/'], (required, An array of directories of playbook files on your local system. These will be uploaded to the remote machine under playbook_directory/playbooks.)
+    amiPlaybookDirectory: '/opt/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /opt/ansible)
+    cleanPlaybookPirectory: true|false, (optional, delete the contentents of the playbook_directory after executing ansible. this if false by default)
+    extraArguments: ["--extra-vars", "Region=ap-southeast-2"]
     ansibleInstallCommand: ["pip install anisble"] (optional, defaults to installing ansible on amazon linux)
   )
 ************************************/
@@ -40,8 +44,12 @@ def call(body) {
     throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
 
-  if(!config.playbook) {
-    throw new GroovyRuntimeException("ansible playbook file must be supplied")
+  if(!config.runList) {
+    throw new GroovyRuntimeException("ansible playbook run list must be supplied")
+  }
+
+  if(!config.playbookDir) {
+    throw new GroovyRuntimeException("a local directory of ansible playbooks to be supplied")
   }
 
   def platformType = config.get('type', 'linux')
@@ -155,7 +163,8 @@ def call(body) {
     ptb.addBlockDevice(config.ebsDeviceName, config.ebsVolumeSize) 
   }
 
-  ptb.addCommunicator(config.get('username', 'ec2-user'))
+  def sshUser = config.get('username', 'ec2-user')
+  ptb.addCommunicator(sshUser)
 
   def ansibleInstallCommand = ["sudo amazon-linux-extras install ansible2 -y"]
 
@@ -163,8 +172,15 @@ def call(body) {
     ansibleInstallCommand = config.ansibleInstallCommand
   }
 
-  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand)
-  ptb.addAnsibleLocalProvisioner(config.playbook)
+  def ansiblePlaybookDirectory = config.get('amiPlaybookDirectory', '/opt/ansible')
+  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand, ansiblePlaybookDirectory, sshUser)
+  ptb.addAnsibleLocalProvisioner(
+    config.runList,
+    config.playbookDir,
+    ansiblePlaybookDirectory,
+    config.cleanPlaybookDirectory,
+    config.extraArguments
+  )
 
   def packerTemplate = ptb.toJson()
   def packerPath = config.get('packerPath', '/opt/packer/packer')
