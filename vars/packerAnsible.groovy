@@ -177,8 +177,8 @@ def call(body) {
     config.runList,
     config.playbookDir,
     ansiblePlaybookDirectory,
-    config.cleanPlaybookDirectory,
-    config.extraArguments
+    config.get('cleanPlaybookDirectory', false),
+    config.get('extraArguments', [])
   )
 
   def packerTemplate = ptb.toJson()
