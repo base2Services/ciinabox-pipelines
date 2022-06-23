@@ -22,11 +22,11 @@
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
     debug: 'true|false', // (optional)
-    run_list: ['playbook.yaml'], (required, The playbook files to be executed by ansible)
-    playbooks: ['playbooks/'], (required, An array of directories of playbook files on your local system. These will be uploaded to the remote machine under playbook_directory/playbooks.)
-    ami_playbook_directory: '/etc/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /etc/ansible)
-    clean_playbook_directory: true|false, (optional, delete the contentents of the playbook_directory after executing ansible. this if false by default)
-    extra_arguments: ["--extra-vars", "Region=ap-southeast-2"]
+    runList: ['playbook.yaml'], (required, The playbook files to be executed by ansible)
+    playbookDir: ['playbooks/'], (required, An array of directories of playbook files on your local system. These will be uploaded to the remote machine under playbook_directory/playbooks.)
+    amiPlaybookDirectory: '/etc/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /etc/ansible)
+    cleanPlaybookPirectory: true|false, (optional, delete the contentents of the playbook_directory after executing ansible. this if false by default)
+    extraArguments: ["--extra-vars", "Region=ap-southeast-2"]
     ansibleInstallCommand: ["pip install anisble"] (optional, defaults to installing ansible on amazon linux)
   )
 ************************************/
@@ -44,12 +44,12 @@ def call(body) {
     throw new GroovyRuntimeException("(role: 'my-build') must be supplied")
   }
 
-  if(!config.run_list) {
+  if(!config.runList) {
     throw new GroovyRuntimeException("ansible playbook run list must be supplied")
   }
 
-  if(!config.playbooks) {
-    throw new GroovyRuntimeException("a local directory of ansible playbooks be supplied")
+  if(!config.playbookDir) {
+    throw new GroovyRuntimeException("a local directory of ansible playbooks to be supplied")
   }
 
   def platformType = config.get('type', 'linux')
@@ -171,14 +171,14 @@ def call(body) {
     ansibleInstallCommand = config.ansibleInstallCommand
   }
 
-  def ansiblePlaybookDirectory = config.get('ami_playbook_directory', '/etc/ansible')
+  def ansiblePlaybookDirectory = config.get('amiPlaybookDirectory', '/etc/ansible')
   ptb.addAnsibleInstallProvisioner(ansibleInstallCommand, ansiblePlaybookDirectory)
   ptb.addAnsibleLocalProvisioner(
-    config.run_list,
-    config.playbooks,
+    config.runList,
+    config.playbookDir,
     ansiblePlaybookDirectory,
-    config.clean_playbook_directory,
-    config.extra_arguments
+    config.cleanPlaybookDirectory,
+    config.extraArguments
   )
 
   def packerTemplate = ptb.toJson()

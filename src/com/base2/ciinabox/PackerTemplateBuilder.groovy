@@ -150,20 +150,14 @@ class PackerTemplateBuilder implements Serializable {
     ])
   }
 
-  public void addAnsibleLocalProvisioner(ArrayList playbookFiles, ArrayList playbookPaths, String playbookDir, Boolean cleanPlaybookDirectory, ArrayList extraArguments) {
+  public void addAnsibleLocalProvisioner(ArrayList playbookFiles, ArrayList playbookDir, String amiPlaybookDirectory, Boolean cleanPlaybookDirectory, ArrayList extraArguments) {
     Map provisioner = [
       type: 'ansible-local',
-      playbook_files: playbookFiles
+      playbook_files: playbookFiles,
+      playbook_dir: playbookDir,
+      staging_directory: amiPlaybookDirectory
     ]
-
-    if (playbookPaths) {
-      provisioner['playbook_paths'] = playbookPaths
-    }
-
-    if (playbookDir) {
-      provisioner['staging_directory'] = playbookDir
-    }
-
+    
     if (cleanPlaybookDirectory) {
       provisioner['clean_staging_directory'] = cleanPlaybookDirectory
     }
