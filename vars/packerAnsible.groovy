@@ -22,7 +22,11 @@
     amiTags: ['key': 'value'], // (optional, provide tags to the baked AMI)
     packerPath: '/opt/packer/packer', // (optional, defaults to the path in base2/bakery docker image)
     debug: 'true|false', // (optional)
-    playbook: 'playbook.yaml', (required, the ansible playbook)
+    playbook_files: ['playbook.yaml'], (required, The playbook files to be executed by ansible)
+    playbook_paths: ['playbooks/'], (optional, An array of directories of playbook files on your local system. These will be uploaded to the remote machine under playbook_directory/playbooks.)
+    playbook_directory: '/etc/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /etc/ansible)
+    clean_playbook_directory: true|false, (optional, delete the contentents of the playbook_directory after executing ansible. this if false by default)
+    extra_arguments: ["--extra-vars", "Region=ap-southeast-2"]
     ansibleInstallCommand: ["pip install anisble"] (optional, defaults to installing ansible on amazon linux)
   )
 ************************************/
@@ -163,8 +167,15 @@ def call(body) {
     ansibleInstallCommand = config.ansibleInstallCommand
   }
 
-  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand)
-  ptb.addAnsibleLocalProvisioner(config.playbook)
+  def ansiblePlaybookDirectory = config.get('playbook_directory', '/etc/ansible')
+  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand, ansiblePlaybookDirectory)
+  ptb.addAnsibleLocalProvisioner(
+    config.playbook_files,
+    config.playbook_paths,
+    ansiblePlaybookDirectory,
+    config.clean_playbook_directory,
+    config.extra_arguments
+  )
 
   def packerTemplate = ptb.toJson()
   def packerPath = config.get('packerPath', '/opt/packer/packer')

@@ -136,20 +136,43 @@ class PackerTemplateBuilder implements Serializable {
     this.provisioners.push(chefProvisioner)
   }
 
-  public void addAnsibleInstallProvisioner(String installCommand) {
-     Map provisioner = [
+  public void addAnsibleInstallProvisioner(String installCommand, String playbookDirectory) {
+    this.provisioners.push([
+      type: 'shell',
+      inline: [
+        "sudo mkdir -p ${playbookDirectory}",
+        "sudo chmod -R 755 ${playbookDirectory}"
+      ]
+    ])
+    this.provisioners.push([
       type: 'shell',
       inline: installCommand
-     ]
-     this.provisioners.push(provisioner)
+    ])
   }
 
-  public void addAnsibleLocalProvisioner(String playbook) {
-     Map provisioner = [
+  public void addAnsibleLocalProvisioner(ArrayList playbookFiles, ArrayList playbookPaths, String playbookDir, Boolean cleanPlaybookDirectory, ArrayList extraArguments) {
+    Map provisioner = [
       type: 'ansible-local',
-      playbook_file: playbook
-     ]
-     this.provisioners.push(provisioner)
+      playbook_files: playbookFiles
+    ]
+
+    if (playbookPaths) {
+      provisioner['playbook_paths'] = playbookPaths
+    }
+
+    if (playbookDir) {
+      provisioner['staging_directory'] = playbookDir
+    }
+
+    if (cleanPlaybookDirectory) {
+      provisioner['clean_staging_directory'] = cleanPlaybookDirectory
+    }
+
+    if (extraArguments) {
+      provisioner['extra_arguments'] = extraArguments
+    }
+    
+    this.provisioners.push(provisioner)
   }
 
   public void addDownloadCookbookProvisioner(String bucket, String region, String path, String script = 'download_cookbooks.ps1') {
