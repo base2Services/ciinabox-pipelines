@@ -141,7 +141,7 @@ class PackerTemplateBuilder implements Serializable {
       type: 'shell',
       inline: [
         "sudo mkdir -p ${playbookDirectory}",
-        "sudo chmod -R 755 ${playbookDirectory}"
+        "sudo chmod -R 777 ${playbookDirectory}"
       ]
     ])
     this.provisioners.push([
