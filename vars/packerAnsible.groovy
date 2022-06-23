@@ -24,7 +24,7 @@
     debug: 'true|false', // (optional)
     runList: ['playbook.yaml'], (required, The playbook files to be executed by ansible)
     playbookDir: ['playbooks/'], (required, An array of directories of playbook files on your local system. These will be uploaded to the remote machine under playbook_directory/playbooks.)
-    amiPlaybookDirectory: '/etc/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /etc/ansible)
+    amiPlaybookDirectory: '/opt/ansible', (optional, set the AMI playbook directory where the playbooks are stored. defaults to /opt/ansible)
     cleanPlaybookPirectory: true|false, (optional, delete the contentents of the playbook_directory after executing ansible. this if false by default)
     extraArguments: ["--extra-vars", "Region=ap-southeast-2"]
     ansibleInstallCommand: ["pip install anisble"] (optional, defaults to installing ansible on amazon linux)
@@ -163,7 +163,8 @@ def call(body) {
     ptb.addBlockDevice(config.ebsDeviceName, config.ebsVolumeSize) 
   }
 
-  ptb.addCommunicator(config.get('username', 'ec2-user'))
+  def sshUser = config.get('username', 'ec2-user')
+  ptb.addCommunicator(sshUser)
 
   def ansibleInstallCommand = ["sudo amazon-linux-extras install ansible2 -y"]
 
@@ -171,8 +172,8 @@ def call(body) {
     ansibleInstallCommand = config.ansibleInstallCommand
   }
 
-  def ansiblePlaybookDirectory = config.get('amiPlaybookDirectory', '/etc/ansible')
-  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand, ansiblePlaybookDirectory)
+  def ansiblePlaybookDirectory = config.get('amiPlaybookDirectory', '/opt/ansible')
+  ptb.addAnsibleInstallProvisioner(ansibleInstallCommand, ansiblePlaybookDirectory, sshUser)
   ptb.addAnsibleLocalProvisioner(
     config.runList,
     config.playbookDir,

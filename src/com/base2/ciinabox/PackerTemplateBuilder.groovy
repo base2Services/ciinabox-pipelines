@@ -136,12 +136,13 @@ class PackerTemplateBuilder implements Serializable {
     this.provisioners.push(chefProvisioner)
   }
 
-  public void addAnsibleInstallProvisioner(ArrayList installCommand, String playbookDirectory) {
+  public void addAnsibleInstallProvisioner(ArrayList installCommand, String playbookDirectory, String sshUser) {
     this.provisioners.push([
       type: 'shell',
       inline: [
         "sudo mkdir -p ${playbookDirectory}",
-        "sudo chmod -R 777 ${playbookDirectory}"
+        "sudo chmod 755 ${playbookDirectory}",
+        "sudo chown ${sshUser}:${sshUser} ${playbookDirectory}"
       ]
     ])
     this.provisioners.push([
