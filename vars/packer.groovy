@@ -163,6 +163,10 @@ def call(body) {
     ptb.addBlockDevice(config.ebsDeviceName, config.ebsVolumeSize) 
   }
 
+  if (config.amiTags) {
+    ptb.addAmiTags(config.amiTags)
+  }
+
   ptb.addCommunicator(config.get('username', 'ec2-user'))
   ptb.addInstall7zipProvisioner()
 
