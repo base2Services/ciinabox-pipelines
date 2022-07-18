@@ -163,6 +163,10 @@ def call(body) {
     ptb.addBlockDevice(config.ebsDeviceName, config.ebsVolumeSize) 
   }
 
+  if (config.amiTags) {
+    ptb.addAmiTags(config.amiTags)
+  }
+
   def sshUser = config.get('username', 'ec2-user')
   ptb.addCommunicator(sshUser)
 

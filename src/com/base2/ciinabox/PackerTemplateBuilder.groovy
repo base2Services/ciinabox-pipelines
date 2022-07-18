@@ -33,6 +33,10 @@ class PackerTemplateBuilder implements Serializable {
     ]
   }
 
+  public void addAmiTags(Map tags) {
+    this.builder.tags += tags 
+  }
+
   public void addWindowsUpdate(){
       if (this.type.startsWith('windows')) {
           this.provisioners.push([
