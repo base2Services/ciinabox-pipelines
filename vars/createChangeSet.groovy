@@ -223,7 +223,7 @@ def wait(clientBuilder, changeSetName, stackName, verbose) {
   } catch (WaiterUnrecoverableException ex) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
-      if (changeset.getStatusReason().contains("The submitted information didn't contain changes.")) {
+      if (changeset.getStatusReason().contains("The submitted information didn't contain changes.") || changeset.getStatusReason().contains("No updates are to be performed.")) {
         steps.echo("WARNING: No changes were detected when creating the changeset")
         def deleteRequest =  new DeleteChangeSetRequest()
             .withStackName(stackName)
