@@ -143,7 +143,7 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     .withChangeSetName(changeSetName)
 
   if (config.capabilities == null) {
-    request.withCapabilities(['CAPABILITY_IAM','CAPABILITY_NAMED_IAM'])
+    request.withCapabilities(['CAPABILITY_IAM','CAPABILITY_NAMED_IAM','CAPABILITY_AUTO_EXPAND'])
   } else if (config.capabilities) {
     request.withCapabilities(config.capabilities)
   }
