@@ -60,7 +60,7 @@ def handleDBCluster(client, config) {
 
   // create a cluster snapshot
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource)
-  
+  def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   // query for the newly taken snapshot and only return once it's available
   /*while available == false 
     def describe_request = new DescribeDBClusterSnapshotsRequest()
