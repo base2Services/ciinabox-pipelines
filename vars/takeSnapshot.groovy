@@ -64,7 +64,7 @@ def handleDBCluster(client, config) {
 
   // create a cluster snapshot
   LocalDate localDate = LocalDate.now()
-  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-hhmm")
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
   String formattedString = localDate.format(formatter)
   println(config.resource)
   String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
