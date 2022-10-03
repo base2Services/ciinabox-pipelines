@@ -89,7 +89,7 @@ def handleDBCluster(client, config) {
       error("Unable to find ${snapshot_identifier}")
       break
     }
-    sleep(10000)
+    Thread.sleep(10000)
   }
   if(snapshot_status == "available") {
     env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
