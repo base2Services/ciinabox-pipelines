@@ -1,6 +1,6 @@
 /***********************************
 takeSnapshot DSL
-Take RDS/DBCluster/Redshift/EBS? snapshots
+Take RDS/DBCluster/Redshift snapshots
 example usage
   takeSnapshot(
     type: 'redshift|rds|dbcluster',
@@ -13,6 +13,7 @@ example usage
 ************************************/
 
 import com.amazonaws.services.redshift.model.DescribeClusterSnapshotsRequest
+import com.amazonaws.services.redshift.model.CreateClusterSnapshotRequest
 import com.amazonaws.services.redshift.model.SnapshotSortingEntity
 import com.amazonaws.services.redshift.model.SortByOrder
 import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
@@ -44,6 +45,11 @@ def call(body) {
     role: config.get('role', null)
   ])
 
+  LocalDateTime localDate = LocalDateTime.now()
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
+  String formattedString = localDate.format(formatter)
+  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
+
   if(config.type.toLowerCase() == 'redshift') {
     def client = clientBuilder.redshift()
     handleRedshift(client, config)
@@ -63,12 +69,7 @@ def call(body) {
 def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
-  LocalDateTime localDate = LocalDateTime.now()
-  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
-  String formattedString = localDate.format(formatter)
-
   // create a cluster snapshot
-  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier(snapshot_identifier)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
@@ -79,7 +80,7 @@ def handleDBCluster(client, config) {
     def describe_request = new DescribeDBClusterSnapshotsRequest()
       .withDBClusterSnapshotIdentifier(snapshot_identifier)  
 
-    def snapshotsResult =  client.describeDBClusterSnapshots(describe_request)
+    def snapshotsResult = client.describeDBClusterSnapshots(describe_request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
 
     if(snapshots.size() > 0) {
@@ -93,61 +94,81 @@ def handleDBCluster(client, config) {
       env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
       env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
       echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+    } else {
+      Thread.sleep(10000)
     }
-    Thread.sleep(10000)
   }  
 }
 
 @NonCPS
 def handleRds(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def sortBy = config.get('snapshot', 'latest')
 
-  def request = new DescribeDBSnapshotsRequest()
-    .withDBInstanceIdentifier(config.resource)
+  // create an RDS instance snapshot
+  def create_request = new CreateDBSnapshotRequest().withDBInstanceIdentifier(config.resource).withDBSnapshotIdentifier(snapshot_identifier)
+  def create_snapshot_result = client.createDBSnapshot(create_request)
+  echo("Snapshot ${snapshot_identifier} created")
 
-  
+  // query for the newly taken snapshot and only return once it's available
+  String snapshot_status = ""
+  while(snapshot_status != "available") {
+    def describe_request = new DescribeDBSnapshotsRequest()
+      .withDBInstanceIdentifier(config.resource)
+    
+    def snapshotsResult = client.describeDBSnapshots(describe_request)
+    def snapshots = snapshotsResult.getDBSnapshots()
 
-  def snapshotsResult = client.describeDBSnapshots(request)
-  def snapshots = snapshotsResult.getDBSnapshots()
-
-  if(snapshots.size() > 0) {
-    if(sortBy.toLowerCase() == 'latest') {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      env[outputName] = sorted_snaps.get(0).getDBSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getDBSnapshotArn()
-      echo("Latest snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+    if(snapshots.size() > 0) {
+      snapshot_status = snapshots.get(0).getStatus()
+      echo("Snapshot is ${snapshot_status}")
     } else {
-      error("currently only snapshot 'latest' is supported")
+      error("Unable to find ${snapshot_identifier}")
+      break
     }
-  } else {
-    error("unable to find RDS snapshots for resource ${config.resource}")
+    if(snapshot_status == "available") {
+      env[outputName] = snapshots.get(0).getDBSnapshotIdentifier()
+      env["${outputName}_ARN"] = snapshots.get(0).getDBSnapshotArn()
+      echo("Latest snapshot found for ${config.resource} is ${snapshots.get(0).getDBSnapshotIdentifier()} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+    } else {
+      Thread.sleep(10000)
+    }
   }
 }
 
 @NonCPS
 def handleRedshift(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def snapshot = config.get('snapshot', 'latest')
 
-  def request = new DescribeClusterSnapshotsRequest()
-    .withClusterIdentifier(config.resource)
-    .withSortingEntities(new SnapshotSortingEntity()
-      .withAttribute(SnapshotAttributeToSortBy.CREATE_TIME)
-      .withSortOrder(SortByOrder.DESC)
-    )
+  // create a Redshift cluster snapshot
+  def create_request = new CreateClusterSnapshotRequest().withClusterIdentifier(config.resource).withSnapshotIdentifier(snapshot_identifier)
+  def create_snapshot_result = client.createClusterSnapshot(create_request)
+  echo("Snapshot ${snapshot_identifier} created")
 
-  
-  def snapshots = client.describeClusterSnapshots(request)
-  if(snapshot.toLowerCase() == 'latest') {
+  // query for the newly taken snapshot and only return once it's available
+  String snapshot_status = ""
+  while(snapshot_status != "available") {
+    def describe_request = new DescribeClusterSnapshotsRequest()
+      .withClusterIdentifier(config.resource)
+      .withSortingEntities(new SnapshotSortingEntity()
+        .withAttribute(SnapshotAttributeToSortBy.CREATE_TIME)
+        .withSortOrder(SortByOrder.DESC)
+      )
+    def snapshots = client.describeClusterSnapshots(describe_request)
+    
     if(snapshots.getSnapshots().size() > 0) {
+      snapshot_status = snapshots.get(0).getStatus()
+      echo("Snapshot is ${snapshot_status}")
+    } else {
+      error("Unable to find ${snapshot_identifier}")
+      break
+    }
+    if(snapshot_status == "available") {
       env[outputName] = snapshots.getSnapshots().get(0).getSnapshotIdentifier()
       env["${outputName}_OWNER"] = snapshots.getSnapshots().get(0).getOwnerAccount()
       env["${outputName}_CLUSTER_ID"] = snapshots.getSnapshots().get(0).getClusterIdentifier()
+      echo("Latest snapshot found for ${config.resource} is ${snapshots.get(0).getSnapshotIdentifier()} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
     } else {
-      error("unable to find redshift snapshots for resource ${config.resource}")
+      Thread.sleep(10000)
     }
-  } else {
-    error("currently only snapshot 'latest' is supported")
   }
 }
