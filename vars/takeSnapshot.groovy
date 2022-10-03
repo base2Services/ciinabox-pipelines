@@ -89,15 +89,13 @@ def handleDBCluster(client, config) {
       error("Unable to find ${snapshot_identifier}")
       break
     }
+    if(snapshot_status == "available") {
+      env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
+      env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
+      echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+    }
     Thread.sleep(10000)
-  }
-  if(snapshot_status == "available") {
-    env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
-    env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
-    echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
-  } else {
-    echo("An error occurred somewhere")
-  }
+  }  
 }
 
 @NonCPS
