@@ -59,8 +59,11 @@ def handleDBCluster(client, config) {
   //def sortBy = config.get('snapshot', 'latest')
 
   // create a cluster snapshot
+  LocalDate localDate = LocalDate.now()
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd")
+  String formattedString = localDate.format(formatter)
   println(config.resource)
-  def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource)
+  def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier("${config.resource}-${formattedString}")
   println(create_request)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   // query for the newly taken snapshot and only return once it's available
