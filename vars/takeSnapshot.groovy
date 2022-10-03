@@ -24,11 +24,9 @@ import com.amazonaws.services.rds.model.CreateDBSnapshotRequest
 import com.amazonaws.services.rds.model.CreateDBClusterSnapshotRequest
 
 import com.base2.ciinabox.aws.AwsClientBuilder
-import groovy.time.*
-import java.time.LocalTime
-import java.time.LocalDate
+
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatter
 
 def call(body) {
   def config = body
@@ -61,18 +59,17 @@ def call(body) {
 @NonCPS
 def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  //def sortBy = config.get('snapshot', 'latest')
 
-  // create a cluster snapshot
   LocalDateTime localDate = LocalDateTime.now()
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
   String formattedString = localDate.format(formatter)
-  println(config.resource)
+
+  // create a cluster snapshot
   String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier(snapshot_identifier)
-  println(create_request)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
+
   // query for the newly taken snapshot and only return once it's available
   String snapshot_status = ""
   while(snapshot_status != "available") {
