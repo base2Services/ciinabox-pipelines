@@ -59,6 +59,7 @@ def handleDBCluster(client, config) {
   //def sortBy = config.get('snapshot', 'latest')
 
   // create a cluster snapshot
+  println(config.resource)
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   // query for the newly taken snapshot and only return once it's available
