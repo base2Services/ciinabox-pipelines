@@ -64,28 +64,39 @@ def handleDBCluster(client, config) {
 
   // create a cluster snapshot
   LocalDate localDate = LocalDate.now()
-  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-hhmm")
   String formattedString = localDate.format(formatter)
   println(config.resource)
-  def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier("${config.resource}-${formattedString}")
+  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
+  def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier(snapshot_identifier)
   println(create_request)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
+  echo("Snapshot ${snapshot_identifier} created")
   // query for the newly taken snapshot and only return once it's available
-  /*while available == false 
+  String snapshot_status = ""
+  while(snapshot_status != "available") {
     def describe_request = new DescribeDBClusterSnapshotsRequest()
-      .withDBClusterSnapshotIdentifier(create_request.)  
+      .withDBClusterSnapshotIdentifier(snapshot_identifier)  
 
-    def snapshotsResult =  client.describeDBClusterSnapshots(request)
+    def snapshotsResult =  client.describeDBClusterSnapshots(describe_request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
 
     if(snapshots.size() > 0) {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      env[outputName] = sorted_snaps.get(0).getDBClusterSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getSourceDBClusterSnapshotArn()
-      echo("Latest DBCluster snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBClusterSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+      snapshot_status = snapshots.get(0).getStatus()
+      echo("Snapshot is ${snapshot_status}")
     } else {
-      error("unable to find DBCluster snapshots for resource ${config.resource}")
-    }*/
+      error("Unable to find ${snapshot_identifier}")
+      break
+    }
+    sleep(10000)
+  }
+  if(snapshot_status == "available") {
+    env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
+    env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
+    echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+  } else {
+    echo("An error occurred somewhere")
+  }
 }
 
 @NonCPS
