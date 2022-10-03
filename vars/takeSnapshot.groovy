@@ -27,6 +27,7 @@ import com.base2.ciinabox.aws.AwsClientBuilder
 import groovy.time.*
 import java.time.LocalTime
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter;
 
 def call(body) {
@@ -63,7 +64,7 @@ def handleDBCluster(client, config) {
   //def sortBy = config.get('snapshot', 'latest')
 
   // create a cluster snapshot
-  LocalDate localDate = LocalDate.now()
+  LocalDateTime localDate = LocalDateTime.now()
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
   String formattedString = localDate.format(formatter)
   println(config.resource)
