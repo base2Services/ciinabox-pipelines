@@ -146,9 +146,10 @@ def handleRedshift(client, config) {
         .withAttribute(SnapshotAttributeToSortBy.CREATE_TIME)
         .withSortOrder(SortByOrder.DESC)
       )
-    def snapshots = client.describeClusterSnapshots(describe_request)
+    def snapshotsResult = client.describeClusterSnapshots(describe_request)
+    def snapshots = snapshotsResult.getSnapshots()
     
-    if(snapshots.getSnapshots().size() > 0) {
+    if(snapshots.size() > 0) {
       snapshot_status = snapshots.get(0).getStatus()
       echo("Snapshot is ${snapshot_status}")
     } else {
@@ -156,9 +157,9 @@ def handleRedshift(client, config) {
       break
     }
     if(snapshot_status == "available") {
-      env[outputName] = snapshots.getSnapshots().get(0).getSnapshotIdentifier()
-      env["${outputName}_OWNER"] = snapshots.getSnapshots().get(0).getOwnerAccount()
-      env["${outputName}_CLUSTER_ID"] = snapshots.getSnapshots().get(0).getClusterIdentifier()
+      env[outputName] = snapshots.get(0).getSnapshotIdentifier()
+      env["${outputName}_OWNER"] = snapshots.get(0).getOwnerAccount()
+      env["${outputName}_CLUSTER_ID"] = snapshots.get(0).getClusterIdentifier()
       echo("Latest snapshot found for ${config.resource} is ${snapshots.get(0).getSnapshotIdentifier()} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
     } else {
       Thread.sleep(10000)
