@@ -106,7 +106,7 @@ def handleRds(client, config) {
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeDBSnapshotsRequest()
-      .withDBInstanceIdentifier(config.resource)
+      .withDBInstanceIdentifier(snapshot_identifier)
     
     def snapshotsResult = client.describeDBSnapshots(describe_request)
     def snapshots = snapshotsResult.getDBSnapshots()
@@ -139,7 +139,7 @@ def handleRedshift(client, config) {
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeClusterSnapshotsRequest()
-      .withClusterIdentifier(config.resource)
+      .withClusterIdentifier(snapshot_identifier)
       .withSortingEntities(new SnapshotSortingEntity()
         .withAttribute(SnapshotAttributeToSortBy.CREATE_TIME)
         .withSortOrder(SortByOrder.DESC)
