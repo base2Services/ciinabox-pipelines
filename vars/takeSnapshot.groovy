@@ -26,7 +26,6 @@ import com.amazonaws.services.rds.model.CreateDBClusterSnapshotRequest
 import com.base2.ciinabox.aws.AwsClientBuilder
 
 import java.time.LocalTime
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -122,7 +121,7 @@ def handleRds(client, config) {
     if(snapshot_status == "available") {
       env[outputName] = snapshots.get(0).getDBSnapshotIdentifier()
       env["${outputName}_ARN"] = snapshots.get(0).getDBSnapshotArn()
-      echo("Latest snapshot found for ${config.resource} is ${snapshots.get(0).getDBSnapshotIdentifier()} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+      echo("RDS snapshot created for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
     } else {
       Thread.sleep(10000)
     }
@@ -159,7 +158,7 @@ def handleRedshift(client, config) {
       env[outputName] = snapshots.get(0).getSnapshotIdentifier()
       env["${outputName}_OWNER"] = snapshots.get(0).getOwnerAccount()
       env["${outputName}_CLUSTER_ID"] = snapshots.get(0).getClusterIdentifier()
-      echo("Latest snapshot found for ${config.resource} is ${snapshots.get(0).getSnapshotIdentifier()} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+      echo("Redshift snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
     } else {
       Thread.sleep(10000)
     }
