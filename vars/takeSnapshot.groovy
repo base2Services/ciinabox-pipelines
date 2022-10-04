@@ -48,7 +48,6 @@ def call(body) {
   LocalDateTime localDate = LocalDateTime.now()
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
   String formattedString = localDate.format(formatter)
-  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
 
   if(config.type.toLowerCase() == 'redshift') {
     def client = clientBuilder.redshift()
@@ -68,6 +67,7 @@ def call(body) {
 @NonCPS
 def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
 
   // create a cluster snapshot
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier(snapshot_identifier)
@@ -103,6 +103,7 @@ def handleDBCluster(client, config) {
 @NonCPS
 def handleRds(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
 
   // create an RDS instance snapshot
   def create_request = new CreateDBSnapshotRequest().withDBInstanceIdentifier(config.resource).withDBSnapshotIdentifier(snapshot_identifier)
@@ -138,6 +139,7 @@ def handleRds(client, config) {
 @NonCPS
 def handleRedshift(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+  String snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
 
   // create a Redshift cluster snapshot
   def create_request = new CreateClusterSnapshotRequest().withClusterIdentifier(config.resource).withSnapshotIdentifier(snapshot_identifier)
