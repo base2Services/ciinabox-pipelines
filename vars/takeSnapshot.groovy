@@ -32,10 +32,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-localDate = LocalDateTime.now()
-formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
-formattedString = localDate.format(formatter)
-
 def call(body) {
   def config = body
 
@@ -43,6 +39,9 @@ def call(body) {
     error("type must be specified for takeSnapshot()")
   }
 
+  LocalDateTime localDate = LocalDateTime.now()
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
+  String formattedString = localDate.format(formatter)
   snapshot_identifier = "${config.resource}-ondemand-${formattedString}"
 
   def clientBuilder = new AwsClientBuilder([
