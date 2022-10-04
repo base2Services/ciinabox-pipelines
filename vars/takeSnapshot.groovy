@@ -25,7 +25,6 @@ import com.amazonaws.services.rds.model.CreateDBClusterSnapshotRequest
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 
-import java.time.LocalTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -106,7 +105,7 @@ def handleRds(client, config) {
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeDBSnapshotsRequest()
-      .withDBInstanceIdentifier(snapshot_identifier)
+      .withDBSnapshotIdentifier(snapshot_identifier)
     
     def snapshotsResult = client.describeDBSnapshots(describe_request)
     def snapshots = snapshotsResult.getDBSnapshots()
@@ -139,11 +138,8 @@ def handleRedshift(client, config) {
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeClusterSnapshotsRequest()
-      .withClusterIdentifier(snapshot_identifier)
-      .withSortingEntities(new SnapshotSortingEntity()
-        .withAttribute(SnapshotAttributeToSortBy.CREATE_TIME)
-        .withSortOrder(SortByOrder.DESC)
-      )
+      .withSnapshotIdentifier(snapshot_identifier)
+
     def snapshotsResult = client.describeClusterSnapshots(describe_request)
     def snapshots = snapshotsResult.getSnapshots()
     
