@@ -18,7 +18,6 @@ import com.amazonaws.services.redshift.model.SnapshotSortingEntity
 import com.amazonaws.services.redshift.model.SortByOrder
 import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
 
-// start with RDS snapshots
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
 import com.amazonaws.services.rds.model.CreateDBSnapshotRequest
@@ -69,12 +68,10 @@ def call(body) {
 def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
-  // create a cluster snapshot
   def create_request = new CreateDBClusterSnapshotRequest().withDBClusterIdentifier(config.resource).withDBClusterSnapshotIdentifier(snapshot_identifier)
   def create_snapshot_result = client.createDBClusterSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
 
-  // query for the newly taken snapshot and only return once it's available
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeDBClusterSnapshotsRequest()
@@ -104,12 +101,10 @@ def handleDBCluster(client, config) {
 def handleRds(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
-  // create an RDS instance snapshot
   def create_request = new CreateDBSnapshotRequest().withDBInstanceIdentifier(config.resource).withDBSnapshotIdentifier(snapshot_identifier)
   def create_snapshot_result = client.createDBSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
 
-  // query for the newly taken snapshot and only return once it's available
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeDBSnapshotsRequest()
@@ -139,12 +134,10 @@ def handleRds(client, config) {
 def handleRedshift(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
-  // create a Redshift cluster snapshot
   def create_request = new CreateClusterSnapshotRequest().withClusterIdentifier(config.resource).withSnapshotIdentifier(snapshot_identifier)
   def create_snapshot_result = client.createClusterSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
 
-  // query for the newly taken snapshot and only return once it's available
   String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeClusterSnapshotsRequest()
