@@ -1,3 +1,20 @@
+/***********************************
+shareSnapshot DSL
+
+share a DBCluster snapshot with the specified account
+
+example usage
+  lookupSnapshot(
+    type: 'dbcluster',
+    accountId: env.DEV_ACCOUNT,
+    region: env.REGION,
+    role: env.ROLE,
+    snapshotId: 'env.SNAPSHOT_ID',
+    shareAccountId: env.SHARE_ACCOUNT_ID
+  )
+
+************************************/
+
 import com.amazonaws.services.rds.model.ModifyDBClusterSnapshotAttributeRequest
 
 def call(body) {
@@ -23,7 +40,7 @@ def call(body) {
 
 def handleDBCluster(client, config){
     def request = new ModifyDBClusterSnapshotAttributeRequest()
-        .withDBClusterSnapshotIdentifier(config.snapshotId).withAttributeName("restore").withValuesToAdd(config.accountId)
+        .withDBClusterSnapshotIdentifier(config.snapshotId).withAttributeName("restore").withValuesToAdd(config.shareAccountId)
     
     client.modifyDBClusterSnapshotAttribute(request);
 }
