@@ -16,6 +16,7 @@ example usage
 ************************************/
 
 import com.amazonaws.services.rds.model.ModifyDBClusterSnapshotAttributeRequest
+import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
   def config = body
