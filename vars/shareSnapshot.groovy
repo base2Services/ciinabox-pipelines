@@ -4,8 +4,8 @@ shareSnapshot DSL
 share a DBCluster snapshot with the specified account
 
 example usage
-  lookupSnapshot(
-    type: 'dbcluster',
+  shareSnapshot(
+    type: 'rds|dbcluster',
     accountId: env.DEV_ACCOUNT,
     region: env.REGION,
     role: env.ROLE,
@@ -16,6 +16,7 @@ example usage
 ************************************/
 
 import com.amazonaws.services.rds.model.ModifyDBClusterSnapshotAttributeRequest
+import com.amazonaws.services.rds.model.ModifyDBSnapshotAttributeRequest
 import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
@@ -34,8 +35,10 @@ def call(body) {
   if (config.type.toLowerCase() == 'dbcluster') {
     def client = clientBuilder.rds()
     handleDBCluster(client, config)
+  } else if {
+    handleDBInstance(client, config)
   } else {
-    error("shareSnapshot() doesn't support share of type ${config.type}")
+    throw new GroovyRuntimeException("shareSnapshot() doesn't support share of type ${config.type}")
   }
 }
 
@@ -44,4 +47,11 @@ def handleDBCluster(client, config){
         .withDBClusterSnapshotIdentifier(config.snapshotId).withAttributeName("restore").withValuesToAdd(config.shareAccountId)
     
     client.modifyDBClusterSnapshotAttribute(request);
+}
+
+def handleDBInstance(client, config){
+    def request = new ModifyDBSnapshotAttributeRequest()
+        .withDBSnapshotIdentifier(config.snapshotId).withAttributeName("restore").withValuesToAdd(config.shareAccountId)
+    
+    client.modifyDBSnapshotAttribute(request);
 }
