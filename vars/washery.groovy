@@ -21,7 +21,7 @@ washery(
     databases: ['mydb', 'anotherdb'] // (optional list of databases to dump, defaults to all databases)
     taskCPU: '1024' // // (optional, provide if overidding default task cpu value)
     taskMemory: '1024' // // (optional, provide if overidding default task memory value)
-    resetUserPasswordParameter: 'pas' // // (optional, path to user password SSM parameter)
+    resetUserPasswordParameter: '/path/password' // // (optional, path to user password SSM parameter)
 )
 ************************************/
 
