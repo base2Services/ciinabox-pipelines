@@ -19,6 +19,9 @@ washery(
     saveSnapshot: true|false, // (optional, defaults to true. Determines if a snapshot is taken of the scrubbed database)
     containerImage: 'ghcr.io/base2services/washery:v2', // (optional, the docker image to run in fargate, defaults to ghcr.io/base2services/washery:v2)
     databases: ['mydb', 'anotherdb'] // (optional list of databases to dump, defaults to all databases)
+    taskCPU: '1024' // // (optional, provide if overidding default task cpu value)
+    taskMemory: '1024' // // (optional, provide if overidding default task memory value)
+    resetUserPasswordParameter: '/path/password' // // (optional, path to user password SSM parameter)
 )
 ************************************/
 
@@ -48,6 +51,16 @@ def call(body) {
 
     if (config.saveSnapshot) {
         opts = "${opts} -S washery-scrubbed-${timestamp}"
+    }
+    
+    if (config.taskCPU) {
+        opts = "${opts} -p ${config.taskCPU}"
+    }
+    if (config.taskMemory) {
+        opts = "${opts} -N ${config.taskMemory}"
+    }
+    if (config.resetUserPasswordParameter) {
+        opts = "${opts} -P ${config.resetUserPasswordParameter}"
     }
 
     if (config.instanceSize) {

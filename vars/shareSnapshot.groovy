@@ -35,7 +35,7 @@ def call(body) {
   if (config.type.toLowerCase() == 'dbcluster') {
     def client = clientBuilder.rds()
     handleDBCluster(client, config)
-  } else if {
+  } else if (config.type.toLowerCase() == 'rds') {
     handleDBInstance(client, config)
   } else {
     throw new GroovyRuntimeException("shareSnapshot() doesn't support share of type ${config.type}")
