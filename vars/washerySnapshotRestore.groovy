@@ -83,15 +83,17 @@ def call(body) {
             accountId: config.accountId,
             role: config.role
         )
-            
         def path = config.resetMasterPassword - config.resetMasterPassword.substring(config.resetMasterPassword.lastIndexOf("/")) 
-            password = ssmParameter(
+
+        ssmParams = ssmParameter(
             action: 'get',
             parameter: path,
             region: config.region,
             accountId: config.accountId,
             role: config.role
         )
+
+        password = getSSMParamValue(ssmParams, config.resetMasterPassword)
 
         println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
@@ -101,6 +103,16 @@ def call(body) {
 
         "$passwordResetHandler"(client, resourceId, password)
     }
+}
+
+def getSSMParamValue(ssmParams, name) {
+    def value = null
+    ssmParams.each { p ->
+        if(p.name == name) {
+            value = p.value
+        }
+    }
+    return value
 }
 
 def handleDbClusterPasswordReset(client, clusterId, password) {
