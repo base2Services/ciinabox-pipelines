@@ -103,7 +103,6 @@ def assumeRole(awsAccountId, region, roleName) {
 @NonCPS
 def getSSMParams(ssm, path) {
   def ssmParams = []
-  println "Getting ssm params for path: ${path}"
   def result = ssm.getParametersByPath(new GetParametersByPathRequest()
     .withPath(path)
     .withRecursive(false)
@@ -121,7 +120,5 @@ def getSSMParams(ssm, path) {
     )
     ssmParams += result.parameters
   }
-  def len = ssmParams.length()
-  println "param len: ${len}"
   return ssmParams
 }
