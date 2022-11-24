@@ -83,8 +83,8 @@ def call(body) {
             accountId: config.accountId,
             role: config.role
         )
-
-        def path = config.resetMasterPassword - config.resetMasterPassword.substring(parameter.lastIndexOf("/"))
+            
+        def path = config.resetMasterPassword - config.resetMasterPassword.substring(config.resetMasterPassword.lastIndexOf("/")) 
             password = ssmParameter(
             action: 'get',
             parameter: path,
