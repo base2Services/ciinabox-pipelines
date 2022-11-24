@@ -52,6 +52,9 @@ def call(body) {
     } else {
         throw new GroovyRuntimeException("washerySnapshotRestore() doesn't support type ${config.type}")
     }
+    
+    println "Parameter name:" "${config.snapshotParameterName}"
+    println "snapshot ARN: ${snapshotArn}"
 
     autoApproveChangeSet = config.get('autoApproveChangeSet', false)
 
