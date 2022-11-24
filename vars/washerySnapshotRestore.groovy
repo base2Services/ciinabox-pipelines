@@ -71,7 +71,7 @@ def call(body) {
             role: config.role
         )
         def password = ssmParameter(
-            action: 'get'
+            action: 'get',
             parameter: config.snapshotParameterName,
             region: config.region,
             accountId: config.accountId,
