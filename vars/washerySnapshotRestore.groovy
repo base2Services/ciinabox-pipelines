@@ -10,6 +10,7 @@ example usage
     role: env.ROLE,
     type: 'rds|dbcluster',
     snapshot: env.WASHERY_FINAL_SNAPSHOT, // the snapshot id of the snapshot created by washery
+    snapshotAccountId: env.DEV_ACCOUNT, // account where the snapshot exists in
     resetMasterPassword: '/db/password', // rest the master password to the value in this ssm parameter
     stackName: 'dev', // name of the cloudformation stack with the RDS you are restoring
     snapshotParameterName: 'SnapshotID', // name of the RDS snapshot cloudformation parameter
