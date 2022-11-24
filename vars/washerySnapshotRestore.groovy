@@ -37,11 +37,11 @@ def call(body) {
 
     if (config.type.toLowerCase() == 'rds') {
         def client = clientBuilder.rds()
-        def shapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:snapshot:${config.snapshot}"
+        def snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:snapshot:${config.snapshot}"
         def passwordResetHandler = "handleDbClusterPasswordReset"
     } else if (config.type.toLowerCase() == 'dbcluster') {
         def client = clientBuilder.rds()
-        def shapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:cluster-snapshot:${config.snapshot}"
+        def snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:cluster-snapshot:${config.snapshot}"
         def passwordResetHandler = "handleDbInstancePasswordReset"
     } else {
         throw new GroovyRuntimeException("washerySnapshotRestore() doesn't support type ${config.type}")
@@ -56,7 +56,7 @@ def call(body) {
         awsAccountId: config.accountId,
         role: config.role,
         parameters: [ 
-            config.snapshotParameterName : shapshotArn
+            "${config.snapshotParameterName}" : shapshotArn
         ],
         approveChanges: autoApproveChangeSet,
         nestedStacks: true
