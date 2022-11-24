@@ -59,7 +59,7 @@ def call(body) {
         awsAccountId: config.accountId,
         role: config.role,
         parameters: [ 
-            "${config.snapshotParameterName}" : shapshotArn
+            "${config.snapshotParameterName}" : snapshotArn
         ],
         approveChanges: autoApproveChangeSet,
         nestedStacks: true
