@@ -123,7 +123,7 @@ def handleDbClusterPasswordReset(client, clusterId, password) {
     client.modifyDBCluster(modifyDBClusterRequest)
 
     println "password has been reset, waiting for the change to be applied to the rds cluster"
-    waitTillDbClusterAvailable(client, clusterId)
+    //waitTillDbClusterAvailable(client, clusterId)
 }
 
 def waitTillDbClusterAvailable(client, clusterId) {
@@ -155,7 +155,7 @@ def handleDbInstancePasswordReset(client, instanceId, password) {
     client.modifyDBInstance(modifyDBInstanceRequest)
 
     println "password has been reset, waiting for the change to be applied to the rds instance"
-    waitTillDbInstanceAvailable(client, instanceId)
+    //waitTillDbInstanceAvailable(client, instanceId)
 }
 
 def waitTillDbInstanceAvailable(client, instanceId) {
