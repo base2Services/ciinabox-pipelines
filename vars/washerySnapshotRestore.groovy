@@ -73,7 +73,7 @@ def call(body) {
         nestedStacks: true
     )
 
-    if (config.resetMasterPassword && config.resourceIdExportName && config.snapshotParameterName) {
+    if (config.resetMasterPassword && config.resourceIdExportName) {
         def resourceId = cloudformation(
             queryType: 'export',
             query: config.resourceIdExportName,
@@ -83,13 +83,13 @@ def call(body) {
         )
         def password = ssmParameter(
             action: 'get',
-            parameter: config.snapshotParameterName,
+            parameter: config.resetMasterPassword,
             region: config.region,
             accountId: config.accountId,
             role: config.role
         )
 
-        println "resetting the ${config.type} master password with the value found in parameter ${config.snapshotParameterName}"
+        println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
         "$passwordResetHandler"(client, resourceId, password)
     }
