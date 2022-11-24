@@ -34,6 +34,7 @@ def call(body) {
     def client = null
     def snapshotArn = null
     def passwordResetHandler = null
+    def snapshotAccountId = config.get('snapshotAccountId', config.accountId)
 
     def clientBuilder = new AwsClientBuilder([
         region: config.region,
@@ -43,11 +44,11 @@ def call(body) {
 
     if (config.type.toLowerCase() == 'rds') {
         client = clientBuilder.rds()
-        snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:snapshot:${config.snapshot}"
+        snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:snapshot:${config.snapshot}"
         passwordResetHandler = "handleDbInstancePasswordReset"
     } else if (config.type.toLowerCase() == 'dbcluster') {
         client = clientBuilder.rds()
-        snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:cluster-snapshot:${config.snapshot}"
+        snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:cluster-snapshot:${config.snapshot}"
         passwordResetHandler = "handleDbClusterPasswordReset"
     } else {
         throw new GroovyRuntimeException("washerySnapshotRestore() doesn't support type ${config.type}")
