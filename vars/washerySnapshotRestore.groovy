@@ -35,6 +35,8 @@ def call(body) {
     def client = null
     def snapshotArn = null
     def passwordResetHandler = null
+    def resourceId = null
+    def password = null
     def snapshotAccountId = config.get('snapshotAccountId', config.accountId)
 
     def clientBuilder = new AwsClientBuilder([
@@ -91,6 +93,7 @@ def call(body) {
 
         println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
+        println "${password}"
         println "client: ${client}"
         println "resource: ${resourceId}"
 
