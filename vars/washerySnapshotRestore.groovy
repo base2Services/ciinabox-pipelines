@@ -76,14 +76,14 @@ def call(body) {
     )
 
     if (config.resetMasterPassword && config.resourceIdExportName) {
-        def resourceId = cloudformation(
+            resourceId = cloudformation(
             queryType: 'export',
             query: config.resourceIdExportName,
             region: config.region,
             accountId: config.accountId,
             role: config.role
         )
-        def password = ssmParameter(
+            password = ssmParameter(
             action: 'get',
             parameter: config.resetMasterPassword,
             region: config.region,
@@ -93,7 +93,9 @@ def call(body) {
 
         println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
-        println "${password}"
+        if (password){
+            print("password exists")
+        }
         println "client: ${client}"
         println "resource: ${resourceId}"
 
