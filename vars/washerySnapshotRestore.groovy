@@ -31,6 +31,9 @@ import com.amazonaws.waiters.WaiterParameters
 
 def call(body) {
     def config = body
+    def client = null
+    def snapshotArn = null
+    def passwordResetHandler = null
 
     def clientBuilder = new AwsClientBuilder([
         region: config.region,
