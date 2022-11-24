@@ -25,6 +25,9 @@ import com.amazonaws.services.rds.model.DescribeDBClustersRequest
 import com.amazonaws.services.rds.model.ModifyDBInstanceRequest
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest
 import com.base2.ciinabox.aws.AwsClientBuilder
+import java.util.concurrent.Future
+import com.amazonaws.waiters.NoOpWaiterHandler
+import com.amazonaws.waiters.WaiterParameters
 
 def call(body) {
     def config = body
