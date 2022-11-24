@@ -97,7 +97,7 @@ def call(body) {
 
         println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
-        print("${password}")
+
         println "client: ${client}"
         println "resource: ${resourceId}"
 
