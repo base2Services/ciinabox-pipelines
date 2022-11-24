@@ -91,6 +91,9 @@ def call(body) {
 
         println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
 
+        println "client: ${client}"
+        println "resource: ${resourceId}"
+
         "$passwordResetHandler"(client, resourceId, password)
     }
 }
