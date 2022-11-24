@@ -44,7 +44,7 @@ def call(body) {
     if (config.type.toLowerCase() == 'rds') {
         client = clientBuilder.rds()
         snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:snapshot:${config.snapshot}"
-        passwordResetHandler = "handleDbInstancePasswordReset"`
+        passwordResetHandler = "handleDbInstancePasswordReset"
     } else if (config.type.toLowerCase() == 'dbcluster') {
         client = clientBuilder.rds()
         snapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:cluster-snapshot:${config.snapshot}"
