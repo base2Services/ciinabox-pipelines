@@ -10,6 +10,7 @@ example usage
     role: env.ROLE,
     type: 'rds|dbcluster',
     snapshot: env.WASHERY_FINAL_SNAPSHOT, // the snapshot id of the snapshot created by washery
+    snapshotAccountId: env.DEV_ACCOUNT, // account where the snapshot exists in
     resetMasterPassword: '/db/password', // rest the master password to the value in this ssm parameter
     stackName: 'dev', // name of the cloudformation stack with the RDS you are restoring
     snapshotParameterName: 'SnapshotID', // name of the RDS snapshot cloudformation parameter
@@ -25,9 +26,18 @@ import com.amazonaws.services.rds.model.DescribeDBClustersRequest
 import com.amazonaws.services.rds.model.ModifyDBInstanceRequest
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest
 import com.base2.ciinabox.aws.AwsClientBuilder
+import java.util.concurrent.Future
+import com.amazonaws.waiters.NoOpWaiterHandler
+import com.amazonaws.waiters.WaiterParameters
 
 def call(body) {
     def config = body
+    def client = null
+    def snapshotArn = null
+    def passwordResetHandler = null
+    def resourceId = null
+    def password = null
+    def snapshotAccountId = config.get('snapshotAccountId', config.accountId)
 
     def clientBuilder = new AwsClientBuilder([
         region: config.region,
@@ -36,16 +46,19 @@ def call(body) {
     ])
 
     if (config.type.toLowerCase() == 'rds') {
-        def client = clientBuilder.rds()
-        def shapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:snapshot:${config.snapshot}"
-        def passwordResetHandler = "handleDbClusterPasswordReset"
+        client = clientBuilder.rds()
+        snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:snapshot:${config.snapshot}"
+        passwordResetHandler = "handleDbInstancePasswordReset"
     } else if (config.type.toLowerCase() == 'dbcluster') {
-        def client = clientBuilder.rds()
-        def shapshotArn = "arn:aws:rds:${config.region}:${config.accountId}:cluster-snapshot:${config.snapshot}"
-        def passwordResetHandler = "handleDbInstancePasswordReset"
+        client = clientBuilder.rds()
+        snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:cluster-snapshot:${config.snapshot}"
+        passwordResetHandler = "handleDbClusterPasswordReset"
     } else {
         throw new GroovyRuntimeException("washerySnapshotRestore() doesn't support type ${config.type}")
     }
+    
+    println "Parameter name: ${config.snapshotParameterName}"
+    println "snapshot ARN: ${snapshotArn}"
 
     autoApproveChangeSet = config.get('autoApproveChangeSet', false)
 
@@ -56,32 +69,50 @@ def call(body) {
         awsAccountId: config.accountId,
         role: config.role,
         parameters: [ 
-            config.snapshotParameterName : shapshotArn
+            "${config.snapshotParameterName}" : snapshotArn
         ],
         approveChanges: autoApproveChangeSet,
         nestedStacks: true
     )
 
-    if (config.resetMasterPassword && config.resourceIdExportName && config.snapshotParameterName) {
-        def resourceId = cloudformation(
+    if (config.resetMasterPassword && config.resourceIdExportName) {
+            resourceId = cloudformation(
             queryType: 'export',
             query: config.resourceIdExportName,
             region: config.region,
             accountId: config.accountId,
             role: config.role
         )
-        def password = ssmParameter(
-            action: 'get'
-            parameter: config.snapshotParameterName,
+        def path = config.resetMasterPassword - config.resetMasterPassword.substring(config.resetMasterPassword.lastIndexOf("/")) 
+
+        ssmParams = ssmParameter(
+            action: 'get',
+            parameter: path,
             region: config.region,
             accountId: config.accountId,
             role: config.role
         )
 
-        println "resetting the ${config.type} master password with the value found in parameter ${config.snapshotParameterName}"
+        password = getSSMParamValue(ssmParams, config.resetMasterPassword)
+
+        println "resetting the ${config.type} master password with the value found in parameter ${config.resetMasterPassword}"
+
+
+        println "client: ${client}"
+        println "resource: ${resourceId}"
 
         "$passwordResetHandler"(client, resourceId, password)
     }
+}
+
+def getSSMParamValue(ssmParams, name) {
+    def value = null
+    ssmParams.each { p ->
+        if(p.name == name) {
+            value = p.value
+        }
+    }
+    return value
 }
 
 def handleDbClusterPasswordReset(client, clusterId, password) {
@@ -92,7 +123,7 @@ def handleDbClusterPasswordReset(client, clusterId, password) {
     client.modifyDBCluster(modifyDBClusterRequest)
 
     println "password has been reset, waiting for the change to be applied to the rds cluster"
-    waitTillDbClusterAvailable(client, clusterId)
+    //waitTillDbClusterAvailable(client, clusterId)
 }
 
 def waitTillDbClusterAvailable(client, clusterId) {
@@ -124,7 +155,7 @@ def handleDbInstancePasswordReset(client, instanceId, password) {
     client.modifyDBInstance(modifyDBInstanceRequest)
 
     println "password has been reset, waiting for the change to be applied to the rds instance"
-    waitTillDbInstanceAvailable(client, instanceId)
+    //waitTillDbInstanceAvailable(client, instanceId)
 }
 
 def waitTillDbInstanceAvailable(client, instanceId) {
