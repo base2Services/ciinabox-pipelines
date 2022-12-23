@@ -116,8 +116,7 @@ def wait(clientBuilder, stackName, changeSetType) {
         count++
         if (count > 1) {
           echo "initialising new client and waiter"
-          def cfclient = clientBuilder.cloudformation()
-          def waiter = null
+          cfclient = clientBuilder.cloudformation()
           echo "created client"
           switch(changeSetType) {
             case 'CREATE':
