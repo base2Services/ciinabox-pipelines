@@ -115,8 +115,10 @@ def wait(clientBuilder, stackName, changeSetType) {
         Thread.sleep(10000)
         count++
         if (count > 1) {
+          echo "initialising new client and waiter"
           def cfclient = clientBuilder.cloudformation()
           def waiter = null
+          echo "created client"
           switch(changeSetType) {
             case 'CREATE':
               waiter = cfclient.waiters().stackCreateComplete()
@@ -125,6 +127,7 @@ def wait(clientBuilder, stackName, changeSetType) {
               waiter = cfclient.waiters().stackUpdateComplete()
               break
           }
+          echo "created waiter"
         }
 
       } catch(InterruptedException ex) {
