@@ -18,6 +18,7 @@ executeChangeSet(
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.CloudformationStack
 import com.base2.ciinabox.aws.CloudformationStackEvents
+import com.amazonaws.auth.AWSStaticCredentialsProvider
 
 import com.amazonaws.services.cloudformation.model.ExecuteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
@@ -92,7 +93,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
 
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
-  def creds = getCredentials()
+  def creds = cfclient.getCredentials()
   def waiter = null
   switch(changeSetType) {
     case 'CREATE':
