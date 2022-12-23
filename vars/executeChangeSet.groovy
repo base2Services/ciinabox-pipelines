@@ -92,6 +92,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
 
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
+  def creds = getCredentials()
   def waiter = null
   switch(changeSetType) {
     case 'CREATE':
@@ -111,6 +112,10 @@ def wait(clientBuilder, stackName, changeSetType) {
       try {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
+        echo "${creds}"
+        echo "about to refresh creds"
+        creds.refresh()
+        echo "${creds}"
       } catch(InterruptedException ex) {
           // suppress and continue
       }
