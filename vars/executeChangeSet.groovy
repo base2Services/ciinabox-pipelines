@@ -114,7 +114,7 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
-        if count > 1 {
+        if (count > 1) {
           def cfclient = clientBuilder.cloudformation()
           def waiter = null
           switch(changeSetType) {
