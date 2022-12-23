@@ -93,8 +93,8 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
 
 def wait(clientBuilder, stackName, changeSetType) {
   def cfclient = clientBuilder.cloudformation()
-  def creds = cfclient.getCredentials()
   def waiter = null
+  def count = 0
   switch(changeSetType) {
     case 'CREATE':
       waiter = cfclient.waiters().stackCreateComplete()
@@ -113,10 +113,20 @@ def wait(clientBuilder, stackName, changeSetType) {
       try {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
-        echo "${creds}"
-        echo "about to refresh creds"
-        creds.refresh()
-        echo "${creds}"
+        count++
+        if count > 1 {
+          def cfclient = clientBuilder.cloudformation()
+          def waiter = null
+          switch(changeSetType) {
+            case 'CREATE':
+              waiter = cfclient.waiters().stackCreateComplete()
+              break
+            default:
+              waiter = cfclient.waiters().stackUpdateComplete()
+              break
+          }
+        }
+
       } catch(InterruptedException ex) {
           // suppress and continue
       }
