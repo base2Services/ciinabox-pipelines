@@ -18,7 +18,6 @@ executeChangeSet(
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.CloudformationStack
 import com.base2.ciinabox.aws.CloudformationStackEvents
-import com.amazonaws.auth.AWSStaticCredentialsProvider
 
 import com.amazonaws.services.cloudformation.model.ExecuteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
@@ -114,7 +113,7 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
-        checkClientTimeout(count,1, clientBuilder) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+        checkClientTimeout(count,1, clientBuilder, changeSetType) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
 
       } catch(InterruptedException ex) {
           // suppress and continue
@@ -139,7 +138,7 @@ def wait(clientBuilder, stackName, changeSetType) {
   return true
 }
 
-def checkClientTimeout(count, limit, clientBuilder){
+def checkClientTimeout(count, limit, clientBuilder, changeSetType){
   if (count > limit) {
     echo "initialising new client and waiter"
     cfclient = clientBuilder.cloudformation()
