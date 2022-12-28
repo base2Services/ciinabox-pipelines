@@ -113,6 +113,7 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
+        echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
         if (count > 1) {
           cfclient = updateClient(clientBuilder) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
@@ -144,16 +145,22 @@ def wait(clientBuilder, stackName, changeSetType) {
 }
 
 def updateClient(clientBuilder){
-  return clientBuilder.cloudformation()
+  echo "Updating Client"
+  def cfclient = clientBuilder.cloudformation()
+  echo "Created new client - ${cfclient}"
+  return cfclient
 }
 
 def updateWaiter(cfclient, changeSetType){
+  echo "Updating Waiter"
   switch(changeSetType) {
     case 'CREATE':
-      return cfclient.waiters().stackCreateComplete()
-      break
+      def waiter = cfclient.waiters().stackCreateComplete()
+      echo "Created new waiter - ${waiter}"
+      return waiter
     default:
-      return cfclient.waiters().stackUpdateComplete()
-      break
+      def waiter = cfclient.waiters().stackUpdateComplete()
+      echo "Created new waiter - ${waiter}"
+      return waiter
   }
 }
