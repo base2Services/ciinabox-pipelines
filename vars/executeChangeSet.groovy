@@ -115,11 +115,13 @@ def wait(clientBuilder, stackName, changeSetType) {
         count++
         echo "${cfclient}"
         echo "${waiter}"
+        // Initialise new client and waiter if count exceeds set timeout value
         if (count > 1) {
           cfclient = updateClient(clientBuilder) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
           waiter = updateWaiter(cfclient,changeSetType)
           echo "New Client ${cfclient}"
           echo "New Waiter ${waiter}"
+          count = 0
         }
 
       } catch(InterruptedException ex) {
