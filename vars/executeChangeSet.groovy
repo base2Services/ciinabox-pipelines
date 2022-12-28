@@ -113,7 +113,9 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
+        echo "Wait - ${cfclient}"
         checkClientTimeout(count,1, clientBuilder, changeSetType) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+        echo "Wait - ${cfclient}"
 
       } catch(InterruptedException ex) {
           // suppress and continue
@@ -139,6 +141,7 @@ def wait(clientBuilder, stackName, changeSetType) {
 }
 
 def checkClientTimeout(count, limit, clientBuilder, changeSetType){
+  //Limit = Iterations in 10's of seconds eg : 300 = 3000 seconds / 50 mins
   if (count > limit) {
     echo "initialising new client and waiter"
     cfclient = clientBuilder.cloudformation()
@@ -152,6 +155,7 @@ def checkClientTimeout(count, limit, clientBuilder, changeSetType){
         break
     }
     echo "created waiter"
+    echo "Check - ${cfclient}"
   }
   else {
     echo "client still valid"
