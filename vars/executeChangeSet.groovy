@@ -150,7 +150,7 @@ def updateClient(clientBuilder){
   return clientBuilder.cloudformation()
 }
 
-def updateWaiter(cfclient, changesetType){
+def updateWaiter(cfclient, changeSetType){
   switch(changeSetType) {
     case 'CREATE':
       waiter = cfclient.waiters().stackCreateComplete()
