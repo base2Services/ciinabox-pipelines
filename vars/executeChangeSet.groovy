@@ -144,20 +144,16 @@ def wait(clientBuilder, stackName, changeSetType) {
 }
 
 def updateClient(clientBuilder){
-  cfclient = clientBuilder.cloudformation()
-  echo "Created waiter ${cfclient}"
-  return cfclient
+  return clientBuilder.cloudformation()
 }
 
 def updateWaiter(cfclient, changeSetType){
   switch(changeSetType) {
     case 'CREATE':
-      waiter = cfclient.waiters().stackCreateComplete()
+      return cfclient.waiters().stackCreateComplete()
       break
     default:
-      waiter = cfclient.waiters().stackUpdateComplete()
+      return cfclient.waiters().stackUpdateComplete()
       break
   }
-  echo "Created waiter ${waiter}"
-  return waiter
 }
