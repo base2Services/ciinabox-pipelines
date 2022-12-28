@@ -18,6 +18,7 @@ executeChangeSet(
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.CloudformationStack
 import com.base2.ciinabox.aws.CloudformationStackEvents
+import com.amazonaws.auth.AWSStaticCredentialsProvider
 
 import com.amazonaws.services.cloudformation.model.ExecuteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
@@ -113,15 +114,19 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
-        echo "${cfclient}"
-        echo "${waiter}"
-        // Initialise new client and waiter if count exceeds set timeout value
         if (count > 1) {
-          cfclient = updateClient(clientBuilder) //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
-          waiter = updateWaiter(cfclient,changeSetType)
-          echo "New Client ${cfclient}"
-          echo "New Waiter ${waiter}"
-          count = 0
+          echo "initialising new client and waiter"
+          cfclient = clientBuilder.cloudformation()
+          echo "created client"
+          switch(changeSetType) {
+            case 'CREATE':
+              waiter = cfclient.waiters().stackCreateComplete()
+              break
+            default:
+              waiter = cfclient.waiters().stackUpdateComplete()
+              break
+          }
+          echo "created waiter"
         }
 
       } catch(InterruptedException ex) {
@@ -145,22 +150,4 @@ def wait(clientBuilder, stackName, changeSetType) {
   }
   
   return true
-}
-
-def updateClient(clientBuilder){
-  echo "Initialising new client"
-  return clientBuilder.cloudformation()
-}
-
-def updateWaiter(cfclient, changeSetType){
-  switch(changeSetType) {
-    case 'CREATE':
-      waiter = cfclient.waiters().stackCreateComplete()
-      break
-    default:
-      waiter = cfclient.waiters().stackUpdateComplete()
-      break
-  }
-  echo "Created waiter"
-  return waiter
 }
