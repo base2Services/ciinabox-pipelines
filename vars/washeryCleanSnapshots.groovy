@@ -16,7 +16,7 @@ def call(body) {
     def client = clientBuilder.rds()
 
     listInstanceWasherySnapshots(client)
-    listClusterWasherySnapshots(client)
+    // listClusterWasherySnapshots(client)
 }
 
 
@@ -30,32 +30,27 @@ def listInstanceWasherySnapshots(client){
     def snapshots = snapshotsResult.getDBSnapshots()
 
     if(snapshots.size() > 0) {
-        def sorted_snaps = snapshots.sort{it.getSnapshotCreateTime()}
-        echo "${sorted_snaps}"
-
-        for (int i = 0; i < sorted_snaps.size(); i++) {
-            if (sorted_snaps[i].getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                echo "${sorted_snaps[i]}"
-            }
+        snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+        for (int i = 0; i < snapshots.size(); i++) {
+                echo "${snapshots[i]}"
         }
     }
-
 }
 
-def listClusterWasherySnapshots(client){
+// def listClusterWasherySnapshots(client){
 
-    def request = new DescribeDBClusterSnapshotsRequest()
-            .withSnapshotType("manual")
+//     def request = new DescribeDBClusterSnapshotsRequest()
+//             .withSnapshotType("manual")
     
-    def snapshotsResult = client.describeDBClusterSnapshots(request)
-    def snapshots = snapshotsResult.getDBClusterSnapshots()
+//     def snapshotsResult = client.describeDBClusterSnapshots(request)
+//     def snapshots = snapshotsResult.getDBClusterSnapshots()
 
-    if(snapshots.size() > 0) {
-        def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-        for (int i = 0; i < sorted_snaps.size(); i++) {
-            if (sorted_snaps[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                echo "${sorted_snaps[i]}"
-            }
-        }
-    }
-}
+//     if(snapshots.size() > 0) {
+//         def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+//         for (int i = 0; i < sorted_snaps.size(); i++) {
+//             if (sorted_snaps[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
+//                 echo "${sorted_snaps[i]}"
+//             }
+//         }
+//     }
+// }
