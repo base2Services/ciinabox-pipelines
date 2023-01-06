@@ -2,6 +2,7 @@
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
+import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
 
 def call(body) {
     def config = body
@@ -14,11 +15,14 @@ def call(body) {
 
     def client = clientBuilder.rds()
 
-    listWasherySnapshots(client)
+    listInstanceWasherySnapshots(client)
+    listClusterWasherySnapshots(client)
 }
 
 
-def listWasherySnapshots(client){
+def listInstanceWasherySnapshots(client){
+    
+    //RDS Instance
     def request = new DescribeDBSnapshotsRequest()
             .withSnapshotType("manual")
     
@@ -28,4 +32,19 @@ def listWasherySnapshots(client){
     for (int i = 0; i < snapshots.size(); i++) {
         echo "${i}: ${snapshots[i]}}"
     }
+
+}
+
+def listClusterWasherySnapshots(client){
+
+    def request = new DescribeDBClusterSnapshotsRequest()
+            .withSnapshotType("manual")
+    
+    def snapshotsResult = client.describeDBClusterSnapshots(request)
+    def snapshots = snapshotsResult.getDBClusterSnapshots()
+
+    for (int i = 0; i < snapshots.size(); i++) {
+        echo "${i}: ${snapshots[i]}}"
+    }
+
 }
