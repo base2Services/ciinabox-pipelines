@@ -29,9 +29,12 @@ def listInstanceWasherySnapshots(client){
     def snapshotsResult = client.describeDBSnapshots(request)
     def snapshots = snapshotsResult.getDBSnapshots()
 
-    for (int i = 0; i < snapshots.size(); i++) {
-        if (snapshots[i].getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
-            echo snapshots[i].getDBSnapshotIdentifier()
+    if(snapshots.size() > 0) {
+        def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+        for (int i = 0; i < sorted_snaps.size(); i++) {
+            if (sorted_snaps[i].getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
+                echo "${sorted_snaps[i]}"
+            }
         }
     }
 
@@ -45,10 +48,12 @@ def listClusterWasherySnapshots(client){
     def snapshotsResult = client.describeDBClusterSnapshots(request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
 
-    for (int i = 0; i < snapshots.size(); i++) {
-        if (snapshots[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
-            echo snapshots[i].getDBClusterSnapshotIdentifier()
+    if(snapshots.size() > 0) {
+        def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+        for (int i = 0; i < sorted_snaps.size(); i++) {
+            if (sorted_snaps[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
+                echo "${sorted_snaps[i]}"
+            }
         }
     }
-
 }
