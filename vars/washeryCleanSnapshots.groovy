@@ -30,7 +30,7 @@ def listInstanceWasherySnapshots(client){
     def snapshots = snapshotsResult.getDBSnapshots()
 
     for (int i = 0; i < snapshots.size(); i++) {
-        echo "${i}: ${snapshots[i]}}"
+        echo snapshot[i].getDBSnapshotIdentifier()
     }
 
 }
@@ -44,7 +44,7 @@ def listClusterWasherySnapshots(client){
     def snapshots = snapshotsResult.getDBClusterSnapshots()
 
     for (int i = 0; i < snapshots.size(); i++) {
-        echo "${i}: ${snapshots[i]}}"
+        echo snapshot[i].getDBClusterSnapshotIdentifier()
     }
 
 }
