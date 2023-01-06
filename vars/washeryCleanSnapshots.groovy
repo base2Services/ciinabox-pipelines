@@ -7,9 +7,9 @@ def call(body) {
     def config = body
    
     def clientBuilder = new AwsClientBuilder([
-    region: config.region,
-    awsAccountId: config.accountId,
-    role: config.role
+        region: config.region,
+        awsAccountId: config.accountId,
+        role: config.role
     ])  
 
     def client = clientBuilder.rds()
@@ -19,10 +19,13 @@ def call(body) {
 
 
 def listWasherySnapshots(client){
-    def describeDBSnapshotsRequest = new DescribeDBSnapshotsRequest()
+    def request = new DescribeDBSnapshotsRequest()
             .withSnapshotType("manual")
     
-    def val = client.describeDBSnapshots(describeDBSnapshotsRequest)
+    def snapshotsResult = client.describeDBSnapshots(request)
+    def snapshots = snapshotsResult.getDBSnapshots()
 
-    echo val
+    for (int i = 0; i < snapshots.size(); i++) {
+        echo "${i}: ${snapshots[i]}}"
+    }
 }
