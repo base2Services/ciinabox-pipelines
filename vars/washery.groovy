@@ -108,6 +108,6 @@ def call(body) {
     }
 
     if (config.dumpBucket) {
-        env['WASHERY_S3_DUMP'] = "s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}"
+        env['WASHERY_S3_DUMP'] = "s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}.sql"
     }
 }
