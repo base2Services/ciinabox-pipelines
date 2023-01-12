@@ -46,7 +46,7 @@ def call(body) {
     }
 
     if (config.dumpBucket) {
-        opts = "${opts} -o s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}"
+        opts = "${opts} -o s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}.sql"
     }
 
     if (config.saveSnapshot) {
