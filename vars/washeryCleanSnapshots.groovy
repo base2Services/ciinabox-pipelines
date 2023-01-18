@@ -30,10 +30,7 @@ def listInstanceWasherySnapshots(client){
     def snapshots = snapshotsResult.getDBSnapshots()
 
     if(snapshots.size() > 0) {
-        sorted_snaps = snapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-        for (int i = 0; i < sorted_snaps.size(); i++) {
-                echo "${sorted_snaps[i]}"
-        }
+        snapshots = snapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
         for (int i = 0; i < snapshots.size(); i++) {
                 echo "${snapshots[i]}"
         }
