@@ -36,13 +36,13 @@ def listInstanceWasherySnapshots(client){
         snapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
         for (int i = 0; i < snapshots.size(); i++) {
             if (snapshots[i].getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                washerySnapshots.add(snapshots[i])
+                sortedWasherySnapshots.add(snapshots[i])
             }
         }
     }
 
-    for (int i = 0; i < washerySnapshots.size(); i++) {
-        echo "${washerySnapshots[i]}"
+    for (int i = 0; i < sortedWasherySnapshots.size(); i++) {
+        echo "${sortedWasherySnapshots[i]}"
     }
 
 }
@@ -61,7 +61,7 @@ def listClusterWasherySnapshots(client){
        snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
        for (int i = 0; i < snapshots.size(); i++) {
             if (snapshots[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                washerySnapshots.add(snapshots[i])
+                sortedWasherySnapshots.add(snapshots[i])
             }
        }
     }
