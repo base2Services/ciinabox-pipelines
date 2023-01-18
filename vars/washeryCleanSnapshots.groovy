@@ -20,8 +20,6 @@ import com.amazonaws.services.rds.model.DeleteDBClusterSnapshotRequest
 
 def call(body) {
     def config = body
-    def snapshotRetainCount = config.snapshotRetainCount
-
     def clientBuilder = new AwsClientBuilder([
         region: config.region,
         awsAccountId: config.accountId,
@@ -30,9 +28,8 @@ def call(body) {
 
     def client = clientBuilder.rds()
 
-
-    cleanInstanceWasherySnapshots(client)
-    cleanClusterWasherySnapshots(client)
+    cleanInstanceWasherySnapshots(client, config.snapshotRetainCount)
+    cleanClusterWasherySnapshots(client, config.snapshotRetainCount)
 }
 
 
