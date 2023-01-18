@@ -68,9 +68,13 @@ def listClusterWasherySnapshots(client){
 
     //Delete snapshot's until only 3 remain
     while (sortedWasherySnapshots.size() > 3){
-        current_snapshot = sortedWasherySnapshots.shift()
+
+        //Get oldest snapshot and remove it
+        current_snapshot = sortedWasherySnapshots.get(0)
+        sortedWasherySnapshots.remove(0)
         snapshot_identifier = current_snapshot.getDBClusterSnapshotIdentifier()
         
+        //Send delete request
         def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBClusterSnapshot(delete_request)
 
