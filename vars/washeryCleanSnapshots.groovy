@@ -76,29 +76,35 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
     
     def snapshotsResult = client.describeDBClusterSnapshots(request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
-    def sortedWasherySnapshots = []
+    def washerySnapshots = []
     
-    //Retrieve snapshots prefixed with `washery-scrubbed` and sort them into a new list
+    //Retrieve snapshots prefixed with `washery-scrubbed`
     if(snapshots.size() > 0) {
-       snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
        for (int i = 0; i < snapshots.size(); i++) {
             if (snapshots[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                sortedWasherySnapshots.add(snapshots[i])
+                washerySnapshots.add(snapshots[i])
             }
        }
+
+        //Sort washery snapshots based on snapshot create time
+        washerySnapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+        for (int i = 0; i < washerySnapshots.size(); i++) {
+            echo "${washerySnapshots[i]}"
+        }
     }
+
 
     //Delete snapshot's until only the snapshotRetainCount amount remains
-    while (sortedWasherySnapshots.size() > snapshotRetainCount){
+    // while (washerySnapshots.size() > snapshotRetainCount){
 
-        //Get oldest snapshot and remove it
-        current_snapshot = sortedWasherySnapshots.get(0)
-        sortedWasherySnapshots.remove(0)
-        snapshot_identifier = current_snapshot.getDBClusterSnapshotIdentifier()
+    //     //Get oldest snapshot and remove it
+    //     current_snapshot = washerySnapshots.get(0)
+    //     washerySnapshots.remove(0)
+    //     snapshot_identifier = current_snapshot.getDBClusterSnapshotIdentifier()
         
-        //Send delete request
-        def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
-        def response = client.deleteDBClusterSnapshot(delete_request)
-        echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
-    }
+    //     //Send delete request
+    //     def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+    //     def response = client.deleteDBClusterSnapshot(delete_request)
+    //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+    // }
 }
