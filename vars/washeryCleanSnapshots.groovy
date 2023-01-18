@@ -77,7 +77,6 @@ def listClusterWasherySnapshots(client){
         //Send delete request
         def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBClusterSnapshot(delete_request)
-
-        echo response
+        echo "Deleted Snapshot - ${snapshot_identifier}"
     }
 }
