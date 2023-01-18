@@ -1,4 +1,16 @@
+/***********************************
+washeryCleanSnapshots DSL
 
+Cleans old washery snapshots from RDS Snapshot storage
+
+example usage
+executeChangeSet(
+  region: 'us-east-1', // (required, aws region to deploy the stack)
+  accountId: env.DEV_ACCOUNT_ID,
+  role: env.CIINABOXV2_ROLE, // IAM role to assume
+  snapshotRetainCount: 3 // The number of washery snapshots to keep stored
+)
+************************************/
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
@@ -8,7 +20,8 @@ import com.amazonaws.services.rds.model.DeleteDBClusterSnapshotRequest
 
 def call(body) {
     def config = body
-   
+    def snapshotRetainCount = config.snapshotRetainCount
+
     def clientBuilder = new AwsClientBuilder([
         region: config.region,
         awsAccountId: config.accountId,
@@ -17,12 +30,13 @@ def call(body) {
 
     def client = clientBuilder.rds()
 
+
     cleanInstanceWasherySnapshots(client)
     cleanClusterWasherySnapshots(client)
 }
 
 
-def cleanInstanceWasherySnapshots(client){
+def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     
     //RDS Instance
     def request = new DescribeDBSnapshotsRequest()
@@ -41,8 +55,8 @@ def cleanInstanceWasherySnapshots(client){
         }
     }
 
-    //Delete snapshot's until only 3 remain
-    while (sortedWasherySnapshots.size() > 3){
+    //Delete snapshot's until only the snapshotRetainCount amount remains
+    while (sortedWasherySnapshots.size() > snapshotRetainCount){
 
         //Get oldest snapshot and remove it
         current_snapshot = sortedWasherySnapshots.get(0)
@@ -57,7 +71,7 @@ def cleanInstanceWasherySnapshots(client){
 
 }
 
-def cleanClusterWasherySnapshots(client){
+def cleanClusterWasherySnapshots(client, snapshotRetainCount){
 
     //RDS Cluster
     def request = new DescribeDBClusterSnapshotsRequest()
@@ -77,8 +91,8 @@ def cleanClusterWasherySnapshots(client){
        }
     }
 
-    //Delete snapshot's until only 3 remain
-    while (sortedWasherySnapshots.size() > 3){
+    //Delete snapshot's until only the snapshotRetainCount amount remains
+    while (sortedWasherySnapshots.size() > snapshotRetainCount){
 
         //Get oldest snapshot and remove it
         current_snapshot = sortedWasherySnapshots.get(0)
