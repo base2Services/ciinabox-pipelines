@@ -32,7 +32,7 @@ def call(body) {
     cleanClusterWasherySnapshots(client, config.snapshotRetainCount)
 }
 
-
+@NonCPS
 def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     
     //RDS Instance
@@ -68,6 +68,7 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
 
 }
 
+@NonCPS
 def cleanClusterWasherySnapshots(client, snapshotRetainCount){
 
     //RDS Cluster
