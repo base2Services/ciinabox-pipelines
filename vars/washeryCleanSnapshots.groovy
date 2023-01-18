@@ -87,9 +87,10 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
        }
 
         //Sort washery snapshots based on snapshot create time
-        washerySnapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+        washerySnapshots.sort{a,b-> b.getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')<=>a.getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}
         for (int i = 0; i < washerySnapshots.size(); i++) {
-            echo "${washerySnapshots[i]}"
+            echo "${washerySnapshots[i].getDBClusterSnapshotIdentifier()}"
+            echo "${washerySnapshots[i].getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}"
         }
     }
 
