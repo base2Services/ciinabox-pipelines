@@ -2,7 +2,9 @@
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
+import com.amazonaws.services.rds.model.DeleteDBSnapshotRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
+import com.amazonaws.services.rds.model.DeleteDBClusterSnapshotRequest
 
 def call(body) {
     def config = body
@@ -71,7 +73,7 @@ def listClusterWasherySnapshots(client){
         
         def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBClusterSnapshot(delete_request)
-        
+
         echo response
     }
 }
