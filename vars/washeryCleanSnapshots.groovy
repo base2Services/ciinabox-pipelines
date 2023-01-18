@@ -31,12 +31,11 @@ def listInstanceWasherySnapshots(client){
 
     if(snapshots.size() > 0) {
         sorted_snaps = snapshots.sort{a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-        echo "${sorted_snaps}"
-        echo sorted_snaps
-        echo "${snapshots}"
-        echo snaphots
         for (int i = 0; i < sorted_snaps.size(); i++) {
                 echo "${sorted_snaps[i]}"
+        }
+        for (int i = 0; i < snapshots.size(); i++) {
+                echo "${snapshots[i]}"
         }
     }
 }
