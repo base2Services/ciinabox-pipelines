@@ -17,12 +17,12 @@ def call(body) {
 
     def client = clientBuilder.rds()
 
-    listInstanceWasherySnapshots(client)
-    listClusterWasherySnapshots(client)
+    cleanInstanceWasherySnapshots(client)
+    cleanClusterWasherySnapshots(client)
 }
 
 
-def listInstanceWasherySnapshots(client){
+def cleanInstanceWasherySnapshots(client){
     
     //RDS Instance
     def request = new DescribeDBSnapshotsRequest()
@@ -41,14 +41,25 @@ def listInstanceWasherySnapshots(client){
         }
     }
 
-    for (int i = 0; i < sortedWasherySnapshots.size(); i++) {
-        echo "${sortedWasherySnapshots[i]}"
+    //Delete snapshot's until only 3 remain
+    while (sortedWasherySnapshots.size() > 3){
+
+        //Get oldest snapshot and remove it
+        current_snapshot = sortedWasherySnapshots.get(0)
+        sortedWasherySnapshots.remove(0)
+        snapshot_identifier = current_snapshot.getDBSnapshotIdentifier()
+        
+        //Send delete request
+        def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
+        def response = client.deleteDBSnapshot(delete_request)
+        echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
     }
 
 }
 
-def listClusterWasherySnapshots(client){
+def cleanClusterWasherySnapshots(client){
 
+    //RDS Cluster
     def request = new DescribeDBClusterSnapshotsRequest()
             .withSnapshotType("manual")
     
@@ -77,6 +88,6 @@ def listClusterWasherySnapshots(client){
         //Send delete request
         def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBClusterSnapshot(delete_request)
-        echo "Deleted Snapshot - ${snapshot_identifier}"
+        echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
     }
 }
