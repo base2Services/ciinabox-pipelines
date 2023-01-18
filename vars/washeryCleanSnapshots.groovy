@@ -68,8 +68,10 @@ def listClusterWasherySnapshots(client){
     while (sortedWasherySnapshots.size() > 3){
         current_snapshot = sortedWasherySnapshots.shift()
         snapshot_identifier = current_snapshot.getDBClusterSnapshotIdentifier()
-        def DeleteDBClusterSnapshotRequest delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
-        def DBClusterSnapshot response = client.deleteDBClusterSnapshot(delete_request)
+        
+        def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+        def response = client.deleteDBClusterSnapshot(delete_request)
+        
         echo response
     }
 }
