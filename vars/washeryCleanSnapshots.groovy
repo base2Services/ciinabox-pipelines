@@ -4,10 +4,11 @@ washeryCleanSnapshots DSL
 Cleans old washery snapshots from RDS Snapshot storage
 
 example usage
-executeChangeSet(
+washeryCleanSnapshots(
   region: 'us-east-1', // (required, aws region to deploy the stack)
   accountId: env.DEV_ACCOUNT_ID,
   role: env.CIINABOXV2_ROLE, // IAM role to assume
+  type: 'rds|dbcluster',
   snapshotRetainCount: 3 // The number of washery snapshots to keep stored
 )
 ************************************/
@@ -28,8 +29,13 @@ def call(body) {
 
     def client = clientBuilder.rds()
 
-    cleanInstanceWasherySnapshots(client, config.snapshotRetainCount)
-    cleanClusterWasherySnapshots(client, config.snapshotRetainCount)
+    if (config.type.toLowerCase() == 'rds') {
+        cleanInstanceWasherySnapshots(client, config.snapshotRetainCount)
+    } else if (config.type.toLowerCase() == 'dbcluster') {
+        cleanClusterWasherySnapshots(client, config.snapshotRetainCount)
+    } else {
+        throw new GroovyRuntimeException("washeryCleanSnapshots() doesn't support type ${config.type}")
+    }
 }
 
 @NonCPS
@@ -40,28 +46,24 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     def snapshotsResult = client.describeDBSnapshots(request)
     def snapshots = snapshotsResult.getDBSnapshots()
     def washerySnapshots = []
+    def delete = []
 
     //Retrieve snapshots prefixed with `washery-scrubbed`
-    if(snapshots.size() > 0) {
-        for (int i = 0; i < snapshots.size(); i++) {
-            if (snapshots[i].getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                washerySnapshots.add(snapshots[i])
-            }
+    for (snapshot in snapshots) {
+        if (snapshot.getDBSnapshotIdentifier().startsWith("washery-scrubbed-")){
+            washerySnapshots.add(snapshot)
         }
         //Sort washery snapshots based on snapshot create time
         washerySnapshots.sort{a,b-> a.getSnapshotCreateTime().compareTo(b.getSnapshotCreateTime())}
-        for (int i = 0; i < washerySnapshots.size(); i++) {
-            echo "${washerySnapshots[i].getDBSnapshotIdentifier()} - ${washerySnapshots[i].getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}"
-        }
+        def keep = washerySnapshots[0..snapshotRetainCount]
+        def delete = washerySnapshotRestore[snapshotRetainCount..-1]
+        println keep
+        println delete
     }
 
     //Delete snapshot's until only the snapshotRetainCount amount remains
-    while (washerySnapshots.size() > snapshotRetainCount){
-        //Get oldest snapshot and remove it
-        current_snapshot = washerySnapshots.get(0)
-        washerySnapshots.remove(0)
-        snapshot_identifier = current_snapshot.getDBSnapshotIdentifier()
-        //Send delete request
+    for (snapshot in delete) {
+        snapshot_identifier = snapshot.getDBSnapshotIdentifier()
         def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBSnapshot(delete_request)
         echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
@@ -76,29 +78,25 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
     def snapshotsResult = client.describeDBClusterSnapshots(request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
     def washerySnapshots = []
-    
+    def delete = []
+
     //Retrieve snapshots prefixed with `washery-scrubbed`
-    if(snapshots.size() > 0) {
-       for (int i = 0; i < snapshots.size(); i++) {
-            if (snapshots[i].getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
-                washerySnapshots.add(snapshots[i])
-            }
-       }
+    for (snapshot in snapshots) {
+        if (snapshot.getDBClusterSnapshotIdentifier().startsWith("washery-scrubbed-")){
+            washerySnapshots.add(snapshot)
+        }
         //Sort washery snapshots based on snapshot create time
         washerySnapshots.sort{a,b-> a.getSnapshotCreateTime().compareTo(b.getSnapshotCreateTime())}
-        for (int i = 0; i < washerySnapshots.size(); i++) {
-            echo "${washerySnapshots[i].getDBClusterSnapshotIdentifier()} - ${washerySnapshots[i].getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}"
-        }
+        def keep = washerySnapshots[0..snapshotRetainCount]
+        def delete = washerySnapshotRestore[snapshotRetainCount..-1]
+        println keep
+        println delete
     }
 
     //Delete snapshot's until only the snapshotRetainCount amount remains
-    while (washerySnapshots.size() > snapshotRetainCount){
-        //Get oldest snapshot and remove it
-        current_snapshot = washerySnapshots.get(0)
-        washerySnapshots.remove(0)
-        snapshot_identifier = current_snapshot.getDBClusterSnapshotIdentifier()
-        //Send delete request
-        def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+    for (snapshot in delete) {
+        snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
+        def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
         def response = client.deleteDBClusterSnapshot(delete_request)
         echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
     }
