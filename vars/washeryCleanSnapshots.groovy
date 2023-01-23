@@ -55,7 +55,7 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     }
     //Sort washery snapshots based on snapshot create time
     washerySnapshots.sort{a,b-> a.getSnapshotCreateTime().compareTo(b.getSnapshotCreateTime())}
-    def delete = washerySnapshotRestore[snapshotRetainCount..-1]
+    def delete = washerySnapshots[snapshotRetainCount..-1]
     println delete
 
     //Delete snapshot's until only the snapshotRetainCount amount remains
@@ -85,7 +85,7 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
 
     //Sort washery snapshots based on snapshot create time
     washerySnapshots.sort{a,b-> a.getSnapshotCreateTime().compareTo(b.getSnapshotCreateTime())}
-    def delete = washerySnapshotRestore[snapshotRetainCount..-1]
+    def delete = washerySnapshots[snapshotRetainCount..-1]
     println delete
 
     //Delete snapshot's until only the snapshotRetainCount amount remains
