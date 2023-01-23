@@ -46,7 +46,6 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     def snapshotsResult = client.describeDBSnapshots(request)
     def snapshots = snapshotsResult.getDBSnapshots()
     def washerySnapshots = []
-    def delete = []
 
     //Retrieve snapshots prefixed with `washery-scrubbed`
     for (snapshot in snapshots) {
@@ -76,7 +75,6 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
     def snapshotsResult = client.describeDBClusterSnapshots(request)
     def snapshots = snapshotsResult.getDBClusterSnapshots()
     def washerySnapshots = []
-    def delete = []
 
     //Retrieve snapshots prefixed with `washery-scrubbed`
     for (snapshot in snapshots) {
