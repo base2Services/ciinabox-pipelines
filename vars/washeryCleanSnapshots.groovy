@@ -63,12 +63,14 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
         println delete
 
         //Delete snapshot's until only the snapshotRetainCount amount remains
-        // for (snapshot in delete) {
-        //     snapshot_identifier = snapshot.getDBSnapshotIdentifier()
-        //     def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
-        //     def response = client.deleteDBSnapshot(delete_request)
-        //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
-        // }
+        for (snapshot in delete) {
+            snapshot_identifier = snapshot.getDBSnapshotIdentifier()
+            def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
+            def response = client.deleteDBSnapshot(delete_request)
+            echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+        }
+    } else {
+        println "Skipping delete as retain count exceeds size of existing snapshots"
     }
 }
 
@@ -97,11 +99,13 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
         println delete
 
         //Delete snapshot's until only the snapshotRetainCount amount remains
-        // for (snapshot in delete) {
-        //     snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
-        //     def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
-        //     def response = client.deleteDBClusterSnapshot(delete_request)
-        //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
-        // }
+        for (snapshot in delete) {
+            snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
+            def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+            def response = client.deleteDBClusterSnapshot(delete_request)
+            echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+        }
+    } else {
+        println "Skipping delete as retain count exceeds size of existing snapshots"
     }
 }
