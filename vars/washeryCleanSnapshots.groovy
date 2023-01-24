@@ -9,7 +9,7 @@ washeryCleanSnapshots(
   accountId: env.DEV_ACCOUNT_ID,
   role: env.CIINABOXV2_ROLE, // IAM role to assume
   type: 'rds|dbcluster',
-  dryRun: false|true, // dry run option to test what snapshots will be deleted
+  dryRun: false|true, //  (Optional, defaults to true, dry run option to test what snapshots will be deleted)
   snapshotRetainCount: 3 // The number of washery snapshots to keep stored
 )
 ************************************/
@@ -27,13 +27,13 @@ def call(body) {
         awsAccountId: config.accountId,
         role: config.role
     ])  
-
+    def dryRun =  config.get('dryRun',true)
     def client = clientBuilder.rds()
 
     if (config.type.toLowerCase() == 'rds') {
-        cleanInstanceWasherySnapshots(client, config.snapshotRetainCount, config.dryRun)
+        cleanInstanceWasherySnapshots(client, config.snapshotRetainCount, dryRun)
     } else if (config.type.toLowerCase() == 'dbcluster') {
-        cleanClusterWasherySnapshots(client, config.snapshotRetainCount,  config.dryRun)
+        cleanClusterWasherySnapshots(client, config.snapshotRetainCount,  dryRun)
     } else {
         throw new GroovyRuntimeException("washeryCleanSnapshots() doesn't support type ${config.type}")
     }
@@ -60,7 +60,7 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount, dryRun){
     
     //If retain count is less than the size of the total washery snapshots
     if (snapshotRetainCount < washerySnapshots.size()){
-        def keep = snapshots[0..snapshotRetainCount-1]
+        def keep = washerySnapshots[0..snapshotRetainCount-1]
         def delete = washerySnapshots[snapshotRetainCount..-1]
         println "Washery Snapshots to Keep - ${keep}"
         println "Washery snapshots to be Deleted - ${delete}"
@@ -103,7 +103,7 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount, dryRun){
 
     //If retain count is less than the size of the total washery snapshots
     if (snapshotRetainCount < washerySnapshots.size()){
-        def keep = snapshots[0..snapshotRetainCount-1]
+        def keep = washerySnapshots[0..snapshotRetainCount-1]
         def delete = washerySnapshots[snapshotRetainCount..-1]
         println "Washery Snapshots to Keep - ${keep}"
         println "Washery snapshots to be Deleted - ${delete}"
