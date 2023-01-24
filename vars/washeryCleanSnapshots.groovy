@@ -53,18 +53,23 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
             washerySnapshots.add(snapshot)
         }
     }
+
     //Sort washery snapshots based on snapshot create time
     washerySnapshots.sort{a,b-> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime())}
-    def delete = washerySnapshots[snapshotRetainCount..-1]
-    println delete
+    
+    //If retain count is less than the size of the total washery snapshots
+    if (snapshotRetainCount < washerySnapshots.size()){
+        def delete = washerySnapshots[snapshotRetainCount..-1]
+        println delete
 
-    //Delete snapshot's until only the snapshotRetainCount amount remains
-    // for (snapshot in delete) {
-    //     snapshot_identifier = snapshot.getDBSnapshotIdentifier()
-    //     def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
-    //     def response = client.deleteDBSnapshot(delete_request)
-    //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
-    // }
+        //Delete snapshot's until only the snapshotRetainCount amount remains
+        // for (snapshot in delete) {
+        //     snapshot_identifier = snapshot.getDBSnapshotIdentifier()
+        //     def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
+        //     def response = client.deleteDBSnapshot(delete_request)
+        //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+        // }
+    }
 }
 
 @NonCPS
@@ -85,14 +90,18 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
 
     //Sort washery snapshots based on snapshot create time
     washerySnapshots.sort{a,b-> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime())}
-    def delete = washerySnapshots[snapshotRetainCount..-1]
-    println delete
 
-    //Delete snapshot's until only the snapshotRetainCount amount remains
-    // for (snapshot in delete) {
-    //     snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
-    //     def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
-    //     def response = client.deleteDBClusterSnapshot(delete_request)
-    //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
-    // }
+    //If retain count is less than the size of the total washery snapshots
+    if (snapshotRetainCount < washerySnapshots.size()){
+        def delete = washerySnapshots[snapshotRetainCount..-1]
+        println delete
+
+        //Delete snapshot's until only the snapshotRetainCount amount remains
+        // for (snapshot in delete) {
+        //     snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
+        //     def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+        //     def response = client.deleteDBClusterSnapshot(delete_request)
+        //     echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+        // }
+    }
 }
