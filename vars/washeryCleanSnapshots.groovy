@@ -67,7 +67,7 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
             snapshot_identifier = snapshot.getDBSnapshotIdentifier()
             def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
             def response = client.deleteDBSnapshot(delete_request)
-            echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+            echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
         }
     } else {
         println "Skipping delete as retain count exceeds size of existing snapshots"
@@ -103,7 +103,7 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
             snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
             def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
             def response = client.deleteDBClusterSnapshot(delete_request)
-            echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
+            echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
         }
     } else {
         println "Skipping delete as retain count exceeds size of existing snapshots"
