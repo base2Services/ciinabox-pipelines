@@ -9,6 +9,7 @@ washeryCleanSnapshots(
   accountId: env.DEV_ACCOUNT_ID,
   role: env.CIINABOXV2_ROLE, // IAM role to assume
   type: 'rds|dbcluster',
+  dryRun: false|true, // dry run option to test what snapshots will be deleted
   snapshotRetainCount: 3 // The number of washery snapshots to keep stored
 )
 ************************************/
@@ -30,16 +31,16 @@ def call(body) {
     def client = clientBuilder.rds()
 
     if (config.type.toLowerCase() == 'rds') {
-        cleanInstanceWasherySnapshots(client, config.snapshotRetainCount)
+        cleanInstanceWasherySnapshots(client, config.snapshotRetainCount, config.dryRun)
     } else if (config.type.toLowerCase() == 'dbcluster') {
-        cleanClusterWasherySnapshots(client, config.snapshotRetainCount)
+        cleanClusterWasherySnapshots(client, config.snapshotRetainCount,  config.dryRun)
     } else {
         throw new GroovyRuntimeException("washeryCleanSnapshots() doesn't support type ${config.type}")
     }
 }
 
 @NonCPS
-def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
+def cleanInstanceWasherySnapshots(client, snapshotRetainCount, dryRun){
     //RDS Instance
     def request = new DescribeDBSnapshotsRequest()
             .withSnapshotType("manual")
@@ -59,23 +60,30 @@ def cleanInstanceWasherySnapshots(client, snapshotRetainCount){
     
     //If retain count is less than the size of the total washery snapshots
     if (snapshotRetainCount < washerySnapshots.size()){
+        def keep = snapshots[0..snapshotRetainCount-1]
         def delete = washerySnapshots[snapshotRetainCount..-1]
-        println delete
+        println "Washery Snapshots to Keep - ${keep}"
+        println "Washery snapshots to be Deleted - ${delete}"
 
         //Delete snapshot's until only the snapshotRetainCount amount remains
-        for (snapshot in delete) {
-            snapshot_identifier = snapshot.getDBSnapshotIdentifier()
-            def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
-            def response = client.deleteDBSnapshot(delete_request)
-            echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
+        if (dryRun == false){
+            for (snapshot in delete) {
+                snapshot_identifier = snapshot.getDBSnapshotIdentifier()
+                def delete_request = new DeleteDBSnapshotRequest().withDBSnapshotIdentifier(snapshot_identifier)
+                def response = client.deleteDBSnapshot(delete_request)
+                echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
+            }
+        } else {
+             println "Dry run is set so no snapshots will be deleted"
         }
+
     } else {
         println "Skipping delete as retain count exceeds size of existing snapshots"
     }
 }
 
 @NonCPS
-def cleanClusterWasherySnapshots(client, snapshotRetainCount){
+def cleanClusterWasherySnapshots(client, snapshotRetainCount, dryRun){
     //RDS Cluster
     def request = new DescribeDBClusterSnapshotsRequest()
             .withSnapshotType("manual")
@@ -95,16 +103,23 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
 
     //If retain count is less than the size of the total washery snapshots
     if (snapshotRetainCount < washerySnapshots.size()){
+        def keep = snapshots[0..snapshotRetainCount-1]
         def delete = washerySnapshots[snapshotRetainCount..-1]
-        println delete
+        println "Washery Snapshots to Keep - ${keep}"
+        println "Washery snapshots to be Deleted - ${delete}"
 
         //Delete snapshot's until only the snapshotRetainCount amount remains
-        for (snapshot in delete) {
-            snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
-            def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
-            def response = client.deleteDBClusterSnapshot(delete_request)
-            echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
+        if (dryRun == false){
+            for (snapshot in delete) {
+                snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
+                def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+                def response = client.deleteDBClusterSnapshot(delete_request)
+                echo "Deleted Snapshot - ${snapshot_identifier} created on ${snapshot.getSnapshotCreateTime()}"
+            }
+        } else {
+            println "Dry run is set so no snapshots will be deleted"
         }
+
     } else {
         println "Skipping delete as retain count exceeds size of existing snapshots"
     }
