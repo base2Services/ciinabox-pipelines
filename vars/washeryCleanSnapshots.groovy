@@ -101,7 +101,7 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount){
         //Delete snapshot's until only the snapshotRetainCount amount remains
         for (snapshot in delete) {
             snapshot_identifier = snapshot.getDBClusterSnapshotIdentifier()
-            def delete_request = new DeleteDBSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
+            def delete_request = new DeleteDBClusterSnapshotRequest().withDBClusterSnapshotIdentifier(snapshot_identifier)
             def response = client.deleteDBClusterSnapshot(delete_request)
             echo "Deleted Snapshot - ${snapshot_identifier} created on ${current_snapshot.getSnapshotCreateTime()}"
         }
