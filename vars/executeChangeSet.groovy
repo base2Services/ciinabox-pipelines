@@ -104,7 +104,7 @@ def wait(clientBuilder, stackName, changeSetType) {
   }
 
   try {
-    Future future = waiter.runAsync(
+    def future = waiter.runAsync(
       new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
       new NoOpWaiterHandler()
     )
@@ -116,6 +116,10 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
         if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+          future = waiter.runAsync(
+             new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
+             new NoOpWaiterHandler()
+          )
           cfclient = updateClient(clientBuilder) 
           waiter = updateWaiter(cfclient,changeSetType)
           count = 0
