@@ -83,19 +83,24 @@ def displayEcrScanResults(results) {
 
 @NonCPS
 def waitForEcrScanResults(ecr,config) {
-  def status = getScanResults(ecr,config)
-    .getImageScanStatus().getStatus()
-  while(status == 'IN_PROGRESS') {
-    status = getScanResults(ecr,config)
-      .getImageScanStatus().getStatus()
-    if (status == 'COMPLETE') {
-      println 'image scan completed'
-      break
-    } else if (status == 'IN_PROGRESS') {
-      println 'waiting for image scan to complete'
+  def waiter = ecr.waiters().imageScanComplete()
+  def imageId = new ImageIdentifier().withImageTag(config.tag)
+  def waitParameters = new DescribeImageScanFindingsRequest()
+      .withRepositoryName(config.image)
+      .withRegistryId(config.accountId)
+      .withImageId(imageId)
+
+  def future = waiter.runAsync(
+    new WaiterParameters<>(waitParameters),
+    new NoOpWaiterHandler()
+  )
+
+  while(!future.isDone()) {
+    try {
+      echo "waiting for ecr image scan to complete"
       Thread.sleep(5000)
-    } else {
-      error("image scan failed to complete. ${status}")
+    } catch(InterruptedException ex) {
+        echo "We seem to be timing out ${ex}...ignoring"
     }
   }
 }
