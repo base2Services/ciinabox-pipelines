@@ -18,7 +18,6 @@ executeChangeSet(
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.CloudformationStack
 import com.base2.ciinabox.aws.CloudformationStackEvents
-
 import com.amazonaws.services.cloudformation.model.ExecuteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
 import com.amazonaws.services.cloudformation.waiters.AmazonCloudFormationWaiters
@@ -42,17 +41,18 @@ def call(body) {
 }
 
 def apply(config, stackName, stackNameUpper) {
-  
+
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
     awsAccountId: config.get('awsAccountId'),
     role: config.get('role'),
     maxErrorRetry: config.get('maxErrorRetry', 3),
-    env: env])
+    env: env,
+    duration: config.get('duration', 3600)])
     
   def cfclient = clientBuilder.cloudformation()
-
   def cfstack = new CloudformationStack(clientBuilder, stackName)
+  
   def changeSetType = cfstack.getChangeSetType()
   cfStack = null
   cfclient = null
@@ -64,6 +64,7 @@ def apply(config, stackName, stackNameUpper) {
     changeSetName = env["${stackNameUpper}_CHANGESET_NAME"]
   }
 
+  echo "Session duration: " + config.get('duration', 3600).toString()
   echo "Executing change set ${changeSetName}"
   executeChangeSet(clientBuilder, stackName, changeSetName)
   def success = wait(clientBuilder, stackName, changeSetType)
@@ -87,7 +88,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
   cfclient.executeChangeSet(new ExecuteChangeSetRequest()
     .withChangeSetName(changeSetName)
     .withStackName(stackName))
- cfclient = null 
+  cfclient = null 
 }
 
 def wait(clientBuilder, stackName, changeSetType) {
@@ -104,7 +105,7 @@ def wait(clientBuilder, stackName, changeSetType) {
   }
 
   try {
-    Future future = waiter.runAsync(
+    def future = waiter.runAsync(
       new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
       new NoOpWaiterHandler()
     )
@@ -116,6 +117,10 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
         if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+          future = waiter.runAsync(
+             new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
+             new NoOpWaiterHandler()
+          )
           cfclient = updateClient(clientBuilder) 
           waiter = updateWaiter(cfclient,changeSetType)
           count = 0
