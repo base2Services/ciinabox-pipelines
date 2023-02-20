@@ -46,7 +46,12 @@ def call(body) {
     }
 
     if (config.dumpBucket) {
-        opts = "${opts} -o s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}"
+        if (config.snapshotId.contains("rds:")) {
+            snapshotIdPath = config.snapshotId.minus("rds:")
+            opts = "${opts} -o s3://${config.dumpBucket}/washery/${snapshotIdPath}-${timestamp}"
+        } else {
+            opts = "${opts} -o s3://${config.dumpBucket}/washery/${config.snapshotId}-${timestamp}"
+        }
     }
 
     if (config.saveSnapshot) {
