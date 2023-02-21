@@ -12,9 +12,16 @@
  )
  ************************************/
 
-import com.amazonaws.services.ecr.*
-import com.amazonaws.services.ecr.model.*
-import com.amazonaws.regions.*
+@Grab(group='com.jakewharton.fliptables', module='fliptables', version='1.1.0')
+
+import com.amazonaws.services.ecr.AmazonECRClientBuilder
+import com.amazonaws.services.ecr.model.DescribeImageScanFindingsRequest
+import com.amazonaws.services.ecr.model.ImageIdentifier
+import com.amazonaws.services.ecr.model.StartImageScanRequest
+import com.amazonaws.services.ecr.waiters.AmazonECRWaiters
+import com.amazonaws.waiters.WaiterParameters
+import com.amazonaws.waiters.NoOpWaiterHandler
+import com.jakewharton.fliptables.FlipTable
 
 def call(body) {
   def config = body
@@ -68,14 +75,14 @@ def failOnSeverity(results,config) {
 @NonCPS
 def displayEcrScanResults(results) {
   def findings = results.getImageScanFindings().getFindings()
+  String[] headers = ['Severity', 'Name', 'Package', 'Version']
+  ArrayList data = []
+  
   if (findings) {
-    println "\n========================================================================="
-    println "## Scan Results                                                        ##"
-    println "========================================================================="
     findings.each {
-      println "Severity: ${it.severity} Name: ${it.name} Package: ${it.attributes[1].value} Version: ${it.attributes[0].value}"
+      data.add([it.severity, it.name, it.attributes[1].value, it.attributes[0].value])
     }
-    println "=========================================================================\n"
+    println FlipTable.of(headers, data as String[][]).toString()
   } else {
     println "0 findings from image scan"
   }
@@ -83,19 +90,24 @@ def displayEcrScanResults(results) {
 
 @NonCPS
 def waitForEcrScanResults(ecr,config) {
-  def status = getScanResults(ecr,config)
-    .getImageScanStatus().getStatus()
-  while(status == 'IN_PROGRESS') {
-    status = getScanResults(ecr,config)
-      .getImageScanStatus().getStatus()
-    if (status == 'COMPLETE') {
-      println 'image scan completed'
-      break
-    } else if (status == 'IN_PROGRESS') {
-      println 'waiting for image scan to complete'
+  def waiter = ecr.waiters().imageScanComplete()
+  def imageId = new ImageIdentifier().withImageTag(config.tag)
+  def waitParameters = new DescribeImageScanFindingsRequest()
+      .withRepositoryName(config.image)
+      .withRegistryId(config.accountId)
+      .withImageId(imageId)
+
+  def future = waiter.runAsync(
+    new WaiterParameters<>(waitParameters),
+    new NoOpWaiterHandler()
+  )
+
+  while(!future.isDone()) {
+    try {
+      echo "waiting for ecr image scan to complete"
       Thread.sleep(5000)
-    } else {
-      error("image scan failed to complete. ${status}")
+    } catch(InterruptedException ex) {
+        echo "We seem to be timing out ${ex}...ignoring"
     }
   }
 }
@@ -107,7 +119,7 @@ def getScanResults(ecr,config) {
     .withRepositoryName(config.image)
     .withRegistryId(config.accountId)
     .withImageId(imageId) 
-  DescribeImageScanFindingsResult result = ecr.describeImageScanFindings(request)
+  def result = ecr.describeImageScanFindings(request)
   return result
 }
 
