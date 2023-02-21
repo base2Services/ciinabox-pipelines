@@ -12,9 +12,13 @@
  )
  ************************************/
 
-import com.amazonaws.services.ecr.*
-import com.amazonaws.services.ecr.model.*
-import com.amazonaws.regions.*
+import com.amazonaws.services.ecr.AmazonECRClientBuilder
+import com.amazonaws.services.ecr.model.DescribeImageScanFindingsRequest
+import com.amazonaws.services.ecr.model.ImageIdentifier
+import com.amazonaws.services.ecr.model.StartImageScanRequest
+import com.amazonaws.services.ecr.waiters.AmazonECRWaiters
+import com.amazonaws.waiters.WaiterParameters
+import com.amazonaws.waiters.NoOpWaiterHandler
 
 def call(body) {
   def config = body
@@ -112,7 +116,7 @@ def getScanResults(ecr,config) {
     .withRepositoryName(config.image)
     .withRegistryId(config.accountId)
     .withImageId(imageId) 
-  DescribeImageScanFindingsResult result = ecr.describeImageScanFindings(request)
+  def result = ecr.describeImageScanFindings(request)
   return result
 }
 
