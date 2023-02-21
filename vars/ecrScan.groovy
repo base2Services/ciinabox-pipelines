@@ -12,6 +12,8 @@
  )
  ************************************/
 
+@Grab(group='com.jakewharton.fliptables', module='fliptables', version='1.1.0')
+
 import com.amazonaws.services.ecr.AmazonECRClientBuilder
 import com.amazonaws.services.ecr.model.DescribeImageScanFindingsRequest
 import com.amazonaws.services.ecr.model.ImageIdentifier
@@ -19,6 +21,7 @@ import com.amazonaws.services.ecr.model.StartImageScanRequest
 import com.amazonaws.services.ecr.waiters.AmazonECRWaiters
 import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.waiters.NoOpWaiterHandler
+import com.jakewharton.fliptables.FlipTable
 
 def call(body) {
   def config = body
@@ -72,14 +75,14 @@ def failOnSeverity(results,config) {
 @NonCPS
 def displayEcrScanResults(results) {
   def findings = results.getImageScanFindings().getFindings()
+  String[] headers = ['Severity', 'Name', 'Package', 'Version']
+  ArrayList data = []
+  
   if (findings) {
-    println "\n========================================================================="
-    println "## Scan Results                                                        ##"
-    println "========================================================================="
     findings.each {
-      println "Severity: ${it.severity} Name: ${it.name} Package: ${it.attributes[1].value} Version: ${it.attributes[0].value}"
+      data.add([it.severity, it.name, it.attributes[1].value, it.attributes[0].value])
     }
-    println "=========================================================================\n"
+    println FlipTable.of(headers, data as String[][]).toString()
   } else {
     println "0 findings from image scan"
   }
