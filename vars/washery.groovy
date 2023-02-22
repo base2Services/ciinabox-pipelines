@@ -46,6 +46,7 @@ def call(body) {
     }
 
     if (config.dumpBucket) {
+        // Automated snapshots have a prefix of "rds:" which breaks the pathing of S3, so we need to remove it if it exists e.g. rds:prod-mysql-instance-2023-02-20-11-01
         if (config.snapshotId.contains("rds:")) {
             snapshotIdPath = config.snapshotId.minus("rds:")
             opts = "${opts} -o s3://${config.dumpBucket}/washery/${snapshotIdPath}-${timestamp}"
