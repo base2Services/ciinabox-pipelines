@@ -4,6 +4,17 @@
  pushes a docker image to a repote repository
 
 example usage
+dockerPush(
+  repo: 'myrepo' // required
+  image: 'myimage' // required
+  tags: [ // (optional, tags to push to the remote repository. defaults to 'latest')
+    env.BUILD_NUMBER,
+    'latest'
+  ]
+  cleanup: true | false // (optional, removes the image once push is complete. defaults to false)
+)
+
+
 dockerPush {
   repo = 'myrepo'
   image = 'myimage'
