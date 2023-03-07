@@ -4,21 +4,23 @@
  builds a docker image
 
 example usage
-dockerBuild {
-  dir = '.'
-  repo = 'myrepo'
-  image = 'myimage'
-  tags = [
-    '${BUILD_NUMBER}',
+dockerBuild(
+  dir: '.', // (optional, defaults to the current directory)
+  repo: 'myrepo', // required
+  image: 'myimage', // required
+  tags: [ // (optional, defaults to 'latest')
+    env.BUILD_NUMBER,
     'latest'
-  ]
-  args = [
-    'nodeVersion':'0.10.33'
-  ]
-  push = true
-  cleanup = true
-  pull = true
-}
+  ],
+  args: [ // (optional dependent on your Dockerfile. pass in arguments to your docker build)
+    'nodeVersion': '0.10.33'
+  ],
+  push: true | false, // (optional, pushes the image to the remote repository. defaults to false)
+  cleanup: true | false, // (optional, remove the image post build. defaults to false)
+  pull: true | false, // (optional, Always attempt to pull a newer version of the image. defaults to false)
+  noCache: true | false // (optional, Do not use cache when building the image. defaults to false)
+  target: true | false // (optional, Set the target build stage to build. defaults to false)
+)
 ************************************/
 
 def call(body) {
