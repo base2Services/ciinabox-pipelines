@@ -14,16 +14,6 @@ dockerPush(
   cleanup: true | false // (optional, removes the image once push is complete. defaults to false)
 )
 
-
-dockerPush {
-  repo = 'myrepo'
-  image = 'myimage'
-  tags = [
-    '${BUILD_NUMBER}',
-    'latest'
-  ]
-  cleanup = true
-}
 ************************************/
 
 def call(body) {
