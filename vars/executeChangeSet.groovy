@@ -151,11 +151,10 @@ def wait(clientBuilder, stackName, changeSetType) {
 
 def updateClient(clientBuilder){
   echo "Updating Client"
-  creds = clientBuilder.getCredentials()
+  def creds = clientBuilder.refreshCreds()
   echo "Creds - ${creds}"
-  def cfclient = clientBuilder.cloudformation()
-  echo "Created new client - ${cfclient}"
-  return cfclient
+  clientBuilder.withCredentials(new AWSStaticCredentialsProvider(creds))
+  return clientBuilder.build()
 }
 
 def updateWaiter(cfclient, changeSetType){
