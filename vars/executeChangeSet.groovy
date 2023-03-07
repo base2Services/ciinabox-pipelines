@@ -151,8 +151,8 @@ def wait(clientBuilder, stackName, changeSetType) {
 
 def updateClient(clientBuilder){
   echo "Updating Client"
-  creds = clientBuilder.getCreds()
-  echo "Creds- ${creds}"
+  creds = clientBuilder.getCredentials()
+  echo "Creds - ${creds}"
   def cfclient = clientBuilder.cloudformation()
   echo "Created new client - ${cfclient}"
   return cfclient
