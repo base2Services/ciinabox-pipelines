@@ -25,6 +25,7 @@ import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.waiters.WaiterUnrecoverableException
 import com.amazonaws.waiters.NoOpWaiterHandler
 import java.util.concurrent.Future
+import com.amazonaws.auth.AWSStaticCredentialsProvider
 
 def call(body) {
   def config = body
