@@ -210,12 +210,14 @@ class AwsClientBuilder implements Serializable {
 
   private def getCredentials() {
     if(env['AWS_SESSION_TOKEN'] != null) {
+      print("Session token exists")
       return new BasicSessionCredentials(
         env['AWS_ACCESS_KEY_ID'],
         env['AWS_SECRET_ACCESS_KEY'],
         env['AWS_SESSION_TOKEN']
       )
     } else if(awsAccountId != null && role != null) {
+      print("Spinning up new")
       def stsCreds = assumeRole()
       return new BasicSessionCredentials(
         stsCreds.getAccessKeyId(),
@@ -226,5 +228,7 @@ class AwsClientBuilder implements Serializable {
       return null
     }
   }
+
+
 
 }

@@ -116,7 +116,7 @@ def wait(clientBuilder, stackName, changeSetType) {
         count++
         echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
-        if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+        if (count > 1) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
           future = waiter.runAsync(
              new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
              new NoOpWaiterHandler()
@@ -151,6 +151,8 @@ def wait(clientBuilder, stackName, changeSetType) {
 
 def updateClient(clientBuilder){
   echo "Updating Client"
+  creds = clientBuilder.getCreds()
+  echo "Creds- ${creds}"
   def cfclient = clientBuilder.cloudformation()
   echo "Created new client - ${cfclient}"
   return cfclient
