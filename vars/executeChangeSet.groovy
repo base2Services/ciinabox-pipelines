@@ -156,7 +156,7 @@ def updateClient(clientBuilder){
   echo "Updating Client"
 
   def newClientBuilder = new AmazonCloudFormationClientBuilder().standard()
-      .withClientConfiguration(AwsClientBuilder.config())
+      .withClientConfiguration(new AwsClientBuilder.config())
     
   newClientBuilder.withRegion(config.region)
 
@@ -167,6 +167,17 @@ def updateClient(clientBuilder){
   echo "New Creds - ${newClientBuilder.getCredentials()}"
   
   return newClientBuilder.build()
+}
+
+private def config() {
+    def clientConfiguration = new ClientConfiguration()
+      .withRetryPolicy(new RetryPolicy(
+        new SDKDefaultRetryCondition(), 
+        new SDKDefaultBackoffStrategy(), 
+        maxErrorRetry, 
+        true))
+    
+    return clientConfiguration
 }
 
 def updateWaiter(cfclient, changeSetType){
