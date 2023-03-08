@@ -26,6 +26,7 @@ import com.amazonaws.waiters.WaiterUnrecoverableException
 import com.amazonaws.waiters.NoOpWaiterHandler
 import java.util.concurrent.Future
 import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 
 def call(body) {
   def config = body
