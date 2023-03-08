@@ -156,7 +156,7 @@ def updateClient(clientBuilder){
   echo "Updating Client"
 
   def newClientBuilder = new AmazonCloudFormationClientBuilder().standard()
-      .withClientConfiguration(clientBuilder.config())
+      .withClientConfiguration(AwsClientBuilder.config())
     
   newClientBuilder.withRegion(config.region)
 
