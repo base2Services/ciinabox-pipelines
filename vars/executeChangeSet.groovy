@@ -122,7 +122,7 @@ def wait(clientBuilder, stackName, changeSetType) {
              new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
              new NoOpWaiterHandler()
           )
-          cfclient = updateClient(clientBuilder) 
+          cfclient = updateClient() 
           waiter = updateWaiter(cfclient,changeSetType)
           count = 0
         }
@@ -150,11 +150,21 @@ def wait(clientBuilder, stackName, changeSetType) {
   return true
 }
 
-def updateClient(clientBuilder){
+def updateClient(config){
+  
   echo "Updating Client"
-  def creds = clientBuilder.refreshCreds()
-  echo "Creds - ${creds}"
+
+  def clientBuilder = new AmazonCloudFormationClientBuilder().standard()
+      .withClientConfiguration(AwsClientBuilder.config())
+    
+  clientBuilder.withRegion(config.region)
+
+  def newCreds = AwsClientBuilder.refreshCreds()
+
   clientBuilder.withCredentials(new AWSStaticCredentialsProvider(creds))
+
+  echo "New Creds - ${clientBuilder.getCredentials()}"
+  
   return clientBuilder.build()
 }
 

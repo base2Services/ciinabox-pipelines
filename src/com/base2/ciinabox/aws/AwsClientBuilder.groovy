@@ -229,7 +229,7 @@ class AwsClientBuilder implements Serializable {
 
   private def refreshCreds() {
     def stsCreds = assumeRole()
-    return new BasicSessionCredentials(
+    def creds =  new BasicSessionCredentials(
         stsCreds.getAccessKeyId(),
         stsCreds.getSecretAccessKey(),
         stsCreds.getSessionToken()
