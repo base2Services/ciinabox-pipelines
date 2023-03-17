@@ -144,6 +144,9 @@ class AwsClientBuilder implements Serializable {
     }
 
     def creds = getCredentials()
+
+    echo creds 
+
     if(creds != null) {
       cb.withCredentials(new AWSStaticCredentialsProvider(creds))
     }
@@ -235,6 +238,7 @@ class AwsClientBuilder implements Serializable {
         stsCreds.getSessionToken()
       )
 
+    echo creds
     return creds
   }
 }
