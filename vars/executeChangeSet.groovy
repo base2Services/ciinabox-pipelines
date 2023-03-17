@@ -69,7 +69,7 @@ def apply(config, stackName, stackNameUpper) {
   echo "Session duration: " + config.get('duration', 3600).toString()
   echo "Executing change set ${changeSetName}"
   executeChangeSet(clientBuilder, stackName, changeSetName)
-  def success = wait(clientBuilder, stackName, changeSetType)
+  def success = wait(clientBuilder, stackName, changeSetType, config)
 
   if (!success) {
     cfclient = clientBuilder.cloudformation()
@@ -93,7 +93,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
   cfclient = null 
 }
 
-def wait(clientBuilder, stackName, changeSetType) {
+def wait(clientBuilder, stackName, changeSetType, config) {
   def cfclient = clientBuilder.cloudformation()
   def waiter = null
   def count = 0
@@ -123,7 +123,7 @@ def wait(clientBuilder, stackName, changeSetType) {
              new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
              new NoOpWaiterHandler()
           )
-          cfclient = updateClient(clientBuilder) 
+          cfclient = updateClient(clientBuilder, config.region) 
           waiter = updateWaiter(cfclient,changeSetType)
           count = 0
         }
@@ -151,33 +151,25 @@ def wait(clientBuilder, stackName, changeSetType) {
   return true
 }
 
-def updateClient(clientBuilder){
+def updateClient(clientBuilder, region){
   
   echo "Updating Client"
 
-  def newClientBuilder = new AmazonCloudFormationClientBuilder().standard()
-      .withClientConfiguration(new AwsClientBuilder.config())
-    
-  newClientBuilder.withRegion(config.region)
+  def cb = new AmazonCloudFormationClientBuilder().standard()
+    .withClientConfiguration(clientBuilder.config())
 
-  def newCreds = AwsClientBuilder.refreshCreds()
+  if (region) {
+    cb.withRegion(region)
+  }
 
-  newClientBuilder.withCredentials(new AWSStaticCredentialsProvider(creds))
+  def creds =  clientBuilder.getNewCreds()
 
-  echo "New Creds - ${newClientBuilder.getCredentials()}"
-  
-  return newClientBuilder.build()
-}
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
 
-private def config() {
-    def clientConfiguration = new ClientConfiguration()
-      .withRetryPolicy(new RetryPolicy(
-        new SDKDefaultRetryCondition(), 
-        new SDKDefaultBackoffStrategy(), 
-        maxErrorRetry, 
-        true))
-    
-    return clientConfiguration
+  return cb.build()
+
 }
 
 def updateWaiter(cfclient, changeSetType){
