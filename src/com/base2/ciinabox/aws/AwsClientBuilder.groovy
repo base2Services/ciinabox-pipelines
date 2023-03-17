@@ -145,7 +145,7 @@ class AwsClientBuilder implements Serializable {
 
     def creds = getCredentials()
 
-    echo "Orig creds: ${creds.getAWSAccessKeyId()}" 
+    println "Orig creds: ${creds.getAWSAccessKeyId()}" 
 
 
     if(creds != null) {
@@ -239,7 +239,7 @@ class AwsClientBuilder implements Serializable {
         stsCreds.getSessionToken()
       )
 
-    echo "new creds: ${creds.getAWSAccessKeyId()}" 
+    println "new creds: ${creds.getAWSAccessKeyId()}" 
     return creds
   }
 }
