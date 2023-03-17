@@ -27,8 +27,6 @@ import com.amazonaws.waiters.NoOpWaiterHandler
 import java.util.concurrent.Future
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 
 def call(body) {
   def config = body
