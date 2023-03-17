@@ -20,8 +20,7 @@ import com.amazonaws.services.rds.AmazonRDSClientBuilder
 import com.amazonaws.services.codeartifact.AWSCodeArtifactClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder
-import java.util.logging.Logger
-import java.util.logging.Level
+
 class AwsClientBuilder implements Serializable {
   
   def region
@@ -137,8 +136,6 @@ class AwsClientBuilder implements Serializable {
   }
 
   def cloudformation() {
-    
-
     def cb = new AmazonCloudFormationClientBuilder().standard()
       .withClientConfiguration(config())
 
@@ -147,11 +144,7 @@ class AwsClientBuilder implements Serializable {
     }
 
     def creds = getCredentials()
-
-    def logger = Logger.getLogger(getClass().name)
-    logger.log(Level.FINE, "Orig creds: ${creds.getAWSAccessKeyId()}" ) 
-
-
+    this.echo(creds.etAWSAccessKeyId())
     if(creds != null) {
       cb.withCredentials(new AWSStaticCredentialsProvider(creds))
     }
@@ -242,9 +235,7 @@ class AwsClientBuilder implements Serializable {
         stsCreds.getSecretAccessKey(),
         stsCreds.getSessionToken()
       )
-
-    def logger = Logger.getLogger(getClass().name)
-    logger.log(Level.FINE, "New creds: ${creds.getAWSAccessKeyId()}" ) 
+    this.echo(creds.etAWSAccessKeyId())
 
     return creds
   }
