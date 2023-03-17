@@ -144,7 +144,7 @@ class AwsClientBuilder implements Serializable {
     }
 
     def creds = getCredentials()
-    this.echo(creds.etAWSAccessKeyId())
+    this.echo(creds.getAWSAccessKeyId())
     if(creds != null) {
       cb.withCredentials(new AWSStaticCredentialsProvider(creds))
     }
@@ -235,7 +235,7 @@ class AwsClientBuilder implements Serializable {
         stsCreds.getSecretAccessKey(),
         stsCreds.getSessionToken()
       )
-    this.echo(creds.etAWSAccessKeyId())
+    this.echo(creds.getAWSAccessKeyId())
 
     return creds
   }
