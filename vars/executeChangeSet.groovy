@@ -116,7 +116,6 @@ def wait(clientBuilder, stackName, changeSetType, config) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
-        echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
         if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
           future = waiter.runAsync(

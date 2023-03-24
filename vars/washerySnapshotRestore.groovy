@@ -46,11 +46,9 @@ def call(body) {
     ])
 
     if (config.type.toLowerCase() == 'rds') {
-        client = clientBuilder.rds()
         snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:snapshot:${config.snapshot}"
         passwordResetHandler = "handleDbInstancePasswordReset"
     } else if (config.type.toLowerCase() == 'dbcluster') {
-        client = clientBuilder.rds()
         snapshotArn = "arn:aws:rds:${config.region}:${snapshotAccountId}:cluster-snapshot:${config.snapshot}"
         passwordResetHandler = "handleDbClusterPasswordReset"
     } else {
@@ -62,6 +60,7 @@ def call(body) {
 
     autoApproveChangeSet = config.get('autoApproveChangeSet', false)
 
+    //Execute washery restore before rds client is initialised incase duration of changeset exceeds token duration
     changeSetDeploy(
         description: "Scheduled Washery DB Restore of snapshot ${config.snapshot}",
         region: config.region, 
@@ -74,6 +73,8 @@ def call(body) {
         approveChanges: autoApproveChangeSet,
         nestedStacks: true
     )
+
+    client = clientBuilder.rds()
 
     if (config.resetMasterPassword && config.resourceIdExportName) {
             resourceId = cloudformation(
