@@ -141,7 +141,7 @@ def wait(clientBuilder, stackName, changeSetType) {
   def stacks = cfclient.describeStacks(request).getStacks()
   def finalStatus = stacks[0].getStackStatus()
   cfclient = null
-  if (!finalStatus.matches("UPDATE_COMPLETE|CREATE_COMPLETE")) {
+  if (!finalStatus.matches("UPDATE_COMPLETE|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS|CREATE_COMPLETE")) {
     echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${finalStatus}"
     return false
   }
