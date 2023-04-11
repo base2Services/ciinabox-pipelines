@@ -25,6 +25,8 @@ import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.waiters.WaiterUnrecoverableException
 import com.amazonaws.waiters.NoOpWaiterHandler
 import java.util.concurrent.Future
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 
 def call(body) {
   def config = body
@@ -67,7 +69,7 @@ def apply(config, stackName, stackNameUpper) {
   echo "Session duration: " + config.get('duration', 3600).toString()
   echo "Executing change set ${changeSetName}"
   executeChangeSet(clientBuilder, stackName, changeSetName)
-  def success = wait(clientBuilder, stackName, changeSetType)
+  def success = wait(clientBuilder, stackName, changeSetType, config)
 
   if (!success) {
     cfclient = clientBuilder.cloudformation()
@@ -91,7 +93,7 @@ def executeChangeSet(clientBuilder, stackName, changeSetName) {
   cfclient = null 
 }
 
-def wait(clientBuilder, stackName, changeSetType) {
+def wait(clientBuilder, stackName, changeSetType, config) {
   def cfclient = clientBuilder.cloudformation()
   def waiter = null
   def count = 0
@@ -114,15 +116,14 @@ def wait(clientBuilder, stackName, changeSetType) {
         echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
         Thread.sleep(10000)
         count++
-        echo "Current Client - ${cfclient} & Current Waiter - ${waiter}"
         // Initialise new client and waiter if count exceeds set timeout value
         if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+          cfclient = updateClient(clientBuilder, cfclient, config.region) 
+          waiter = updateWaiter(cfclient,changeSetType)
           future = waiter.runAsync(
              new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
              new NoOpWaiterHandler()
           )
-          cfclient = updateClient(clientBuilder) 
-          waiter = updateWaiter(cfclient,changeSetType)
           count = 0
         }
 
@@ -149,11 +150,25 @@ def wait(clientBuilder, stackName, changeSetType) {
   return true
 }
 
-def updateClient(clientBuilder){
+def updateClient(clientBuilder, cfclient, region){
+  
   echo "Updating Client"
-  def cfclient = clientBuilder.cloudformation()
-  echo "Created new client - ${cfclient}"
-  return cfclient
+
+  def cb = new AmazonCloudFormationClientBuilder().standard()
+    .withClientConfiguration(clientBuilder.config())
+
+  if (region) {
+    cb.withRegion(region)
+  }
+
+  def creds =  clientBuilder.getNewCreds()
+
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
+
+  return cb.build()
+
 }
 
 def updateWaiter(cfclient, changeSetType){

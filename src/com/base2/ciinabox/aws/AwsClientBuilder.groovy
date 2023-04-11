@@ -183,7 +183,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
   
-  private def config() {
+  def config() {
     def clientConfiguration = new ClientConfiguration()
       .withRetryPolicy(new RetryPolicy(
         new SDKDefaultRetryCondition(), 
@@ -227,4 +227,14 @@ class AwsClientBuilder implements Serializable {
     }
   }
 
+  def getNewCreds() {
+    def stsCreds = assumeRole()
+    def creds =  new BasicSessionCredentials(
+        stsCreds.getAccessKeyId(),
+        stsCreds.getSecretAccessKey(),
+        stsCreds.getSessionToken()
+      )
+
+    return creds
+  }
 }
