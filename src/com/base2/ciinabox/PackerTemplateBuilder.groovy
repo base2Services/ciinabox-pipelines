@@ -45,12 +45,17 @@ class PackerTemplateBuilder implements Serializable {
       }
   }
 
-  public void addCommunicator(String username) {
+  public void addCommunicator(String username, Boolean credssp) {
     if (this.type.startsWith('windows')) {
       this.builder.communicator = 'winrm'
       this.builder.winrm_username = 'Administrator'
       this.builder.windows_password_timeout = '20m'
-      this.builder.user_data_file = 'setup_winrm.ps1'
+      if (credssp) {
+        this.builder.user_data_file = 'setup_winrm_credssp.ps1'
+      } else {
+        this.builder.user_data_file = 'setup_winrm.ps1'
+      }
+      
     } else {
       this.builder.communicator = 'ssh'
       this.builder.ssh_username = username
