@@ -33,7 +33,8 @@
     debug: 'true|false', // (optional)
     winUpdate: true|false,  // (optional, whether to perform windows updates on AMI) 
     ec2LaunchV2: true|false, // (optional, set to true if windows ami is using EC2 Launch V2 package)
-    uninstallCinc: true|false // (optional, uninstall the cinc installation after the cinc provisioner)
+    uninstallCinc: true|false, // (optional, uninstall the cinc installation after the cinc provisioner)
+    credssp: true|false //(optional, defaults to false. Uses a CredSSP WinRM connection when connecting to windows instances)
   )
 ************************************/
 import com.base2.ciinabox.aws.Util
@@ -167,7 +168,7 @@ def call(body) {
     ptb.addAmiTags(config.amiTags)
   }
 
-  ptb.addCommunicator(config.get('username', 'ec2-user'))
+  ptb.addCommunicator(config.get('username', 'ec2-user'), config.get('credssp', false))
   ptb.addInstall7zipProvisioner()
 
   if (config.winUpdate) {
@@ -201,6 +202,7 @@ def call(body) {
   writeScript('packer/ec2_launch_config.ps1')
   writeScript('packer/install_7zip.ps1')
   writeScript('packer/setup_winrm.ps1')
+  writeScript('packer/setup_winrm_credssp.ps1')
   writeScript('packer/uninstall_cinc.ps1')
 
   def packerTemplate = ptb.toJson()
