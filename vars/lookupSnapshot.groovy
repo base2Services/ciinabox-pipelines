@@ -25,8 +25,9 @@ import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsResult
+import com.amazonaws.services.rds.model.DescribeDBSnapshotsResult
 import com.amazonaws.services.rds.model.DBClusterSnapshot
-
+import com.amazonaws.services.rds.model.DBSnapshot
 import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
@@ -58,15 +59,28 @@ def call(body) {
 }
 
 @NonCPS
-def handleDBCluster(client, config) {
-    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-    def sortBy = config.get('snapshot', 'latest')
-    def request = new DescribeDBClusterSnapshotsRequest().withDBClusterIdentifier(config.resource)
+def getAllDBSnapshots(client, request) {
+    List<DBSnapshot> allSnapshots = []
+    String marker = null
 
-    if (config.snapshotType) {
-        request.setSnapshotType(config.snapshotType)
+    while (true) {
+        request.setMarker(marker)
+        DescribeDBSnapshotsResult snapshotsResult = client.describeDBSnapshots(request)
+        List<DBSnapshot> snapshots = snapshotsResult.getDBSnapshots()
+
+        allSnapshots.addAll(snapshots)
+
+        marker = snapshotsResult.getMarker()
+        if (marker == null) {
+            break
+        }
     }
 
+    return allSnapshots
+}
+
+@NonCPS
+def getAllDBClusterSnapshots(client, request) {
     List<DBClusterSnapshot> allSnapshots = []
     String marker = null
 
@@ -81,7 +95,20 @@ def handleDBCluster(client, config) {
         }
     }
 
-    echo("Snapshots: ${allSnapshots}")
+    return allSnapshots
+}
+
+@NonCPS
+def handleDBCluster(client, config) {
+    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+    def sortBy = config.get('snapshot', 'latest')
+    def request = new DescribeDBClusterSnapshotsRequest().withDBClusterIdentifier(config.resource)
+
+    if (config.snapshotType) {
+        request.setSnapshotType(config.snapshotType)
+    }
+
+    List<DBClusterSnapshot> allSnapshots = getAllDBClusterSnapshots(client, request)
 
     if (allSnapshots.size() > 0) {
         if (sortBy.toLowerCase() == 'latest') {
@@ -99,31 +126,28 @@ def handleDBCluster(client, config) {
 
 @NonCPS
 def handleRds(client, config) {
-  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def sortBy = config.get('snapshot', 'latest')
+    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+    def sortBy = config.get('snapshot', 'latest')
+    def request = new DescribeDBSnapshotsRequest().withDBInstanceIdentifier(config.resource)
 
-  def request = new DescribeDBSnapshotsRequest()
-    .withDBInstanceIdentifier(config.resource)
-
-  if(config.snapshotType) {
-    request.setSnapshotType(config.snapshotType)
-  } 
-
-  def snapshotsResult = client.describeDBSnapshots(request)
-  def snapshots = snapshotsResult.getDBSnapshots()
-
-  if(snapshots.size() > 0) {
-    if(sortBy.toLowerCase() == 'latest') {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      env[outputName] = sorted_snaps.get(0).getDBSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getDBSnapshotArn()
-      echo("Latest snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
-    } else {
-      error("currently only snapshot 'latest' is supported")
+    if (config.snapshotType) {
+        request.setSnapshotType(config.snapshotType)
     }
-  } else {
-    error("unable to find RDS snapshots for resource ${config.resource}")
-  }
+
+    List<DBSnapshot> allSnapshots = getAllDBSnapshots(client, request)
+
+    if (allSnapshots.size() > 0) {
+        if (sortBy.toLowerCase() == 'latest') {
+            allSnapshots = allSnapshots.sort { a, b -> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime()) }
+            env[outputName] = allSnapshots.get(0).getDBSnapshotIdentifier()
+            env["${outputName}_ARN"] = allSnapshots.get(0).getDBSnapshotArn()
+            echo("Latest snapshot found for ${config.resource} is ${allSnapshots.get(0).getDBSnapshotIdentifier()} created on ${allSnapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+        } else {
+            error("Currently only snapshot 'latest' is supported")
+        }
+    } else {
+        error("Unable to find RDS snapshots for resource ${config.resource}")
+    }
 }
 
 @NonCPS
