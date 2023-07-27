@@ -70,9 +70,12 @@ def handleDBCluster(client, config) {
   def snapshotsResult =  client.describeDBClusterSnapshots(request)
   def snapshots = snapshotsResult.getDBClusterSnapshots()
 
+  echo("Snapshots ${snapshots}")
+
   if(snapshots.size() > 0) {
     if(sortBy.toLowerCase() == 'latest') {
       def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
+      echo("Sorted Snapshots ${sorted_snaps}")
       env[outputName] = sorted_snaps.get(0).getDBClusterSnapshotIdentifier()
       env["${outputName}_ARN"] = sorted_snaps.get(0).getSourceDBClusterSnapshotArn()
       echo("Latest DBCluster snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBClusterSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
