@@ -68,7 +68,7 @@ def handleDBCluster(client, config) {
     List<DBClusterSnapshot> allSnapshots = []
     String marker = null
 
-    do {
+    while (true) {
         request.setMarker(marker)
         DescribeDBClusterSnapshotsResult snapshotsResult = client.describeDBClusterSnapshots(request)
         List<DBClusterSnapshot> snapshots = snapshotsResult.getDBClusterSnapshots()
@@ -76,7 +76,10 @@ def handleDBCluster(client, config) {
         allSnapshots.addAll(snapshots)
 
         marker = snapshotsResult.getMarker()
-    } while (marker)
+        if (marker == null) {
+            break
+        }
+    }
 
     if (allSnapshots.size() > 0) {
         if (sortBy.toLowerCase() == 'latest') {
