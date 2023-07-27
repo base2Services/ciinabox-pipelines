@@ -57,34 +57,39 @@ def call(body) {
 
 @NonCPS
 def handleDBCluster(client, config) {
-  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def sortBy = config.get('snapshot', 'latest')
+    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+    def sortBy = config.get('snapshot', 'latest')
+    def request = new DescribeDBClusterSnapshotsRequest().withDBClusterIdentifier(config.resource)
 
-  def request = new DescribeDBClusterSnapshotsRequest()
-    .withDBClusterIdentifier(config.resource)
-
-  if (config.snapshotType) {
-    request.setSnapshotType(config.snapshotType)
-  } 
-
-  def snapshotsResult =  client.describeDBClusterSnapshots(request)
-  def snapshots = snapshotsResult.getDBClusterSnapshots()
-
-  echo("Snapshots ${snapshots}")
-
-  if(snapshots.size() > 0) {
-    if(sortBy.toLowerCase() == 'latest') {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      echo("Sorted Snapshots ${sorted_snaps}")
-      env[outputName] = sorted_snaps.get(0).getDBClusterSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getSourceDBClusterSnapshotArn()
-      echo("Latest DBCluster snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBClusterSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
-    } else {
-      error("currently only snapshot 'latest' is supported")
+    if (config.snapshotType) {
+        request.setSnapshotType(config.snapshotType)
     }
-  } else {
-    error("unable to find DBCluster snapshots for resource ${config.resource}")
-  }
+
+    List<DBClusterSnapshot> allSnapshots = []
+    String marker = null
+
+    do {
+        request.setMarker(marker)
+        DescribeDBClusterSnapshotsResult snapshotsResult = client.describeDBClusterSnapshots(request)
+        List<DBClusterSnapshot> snapshots = snapshotsResult.getDBClusterSnapshots()
+
+        allSnapshots.addAll(snapshots)
+
+        marker = snapshotsResult.getMarker()
+    } while (marker)
+
+    if (allSnapshots.size() > 0) {
+        if (sortBy.toLowerCase() == 'latest') {
+            allSnapshots = allSnapshots.sort { a, b -> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime()) }
+            env[outputName] = allSnapshots.get(0).getDBClusterSnapshotIdentifier()
+            env["${outputName}_ARN"] = allSnapshots.get(0).getSourceDBClusterSnapshotArn()
+            echo("Latest DBCluster snapshot found for ${config.resource} is ${allSnapshots.get(0).getDBClusterSnapshotIdentifier()} created on ${allSnapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+        } else {
+            error("Currently only snapshot 'latest' is supported")
+        }
+    } else {
+        error("Unable to find DBCluster snapshots for resource ${config.resource}")
+    }
 }
 
 @NonCPS
