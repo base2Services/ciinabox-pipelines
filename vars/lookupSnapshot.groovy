@@ -74,14 +74,14 @@ def handleDBCluster(client, config) {
         request.setMarker(marker)
         DescribeDBClusterSnapshotsResult snapshotsResult = client.describeDBClusterSnapshots(request)
         List<DBClusterSnapshot> snapshots = snapshotsResult.getDBClusterSnapshots()
-
         allSnapshots.addAll(snapshots)
-
         marker = snapshotsResult.getMarker()
         if (marker == null) {
             break
         }
     }
+
+    echo("Snapshots: ${allSnapshots}")
 
     if (allSnapshots.size() > 0) {
         if (sortBy.toLowerCase() == 'latest') {
