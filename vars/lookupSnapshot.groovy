@@ -24,6 +24,8 @@ import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
 
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
+import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsResult
+import com.amazonaws.services.rds.model.DBClusterSnapshot
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 
