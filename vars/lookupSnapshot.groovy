@@ -60,13 +60,13 @@ def call(body) {
 
 @NonCPS
 def getAllDBSnapshots(client, request) {
-    List<DBSnapshot> allSnapshots = []
-    String marker = null
+    def allSnapshots = []
+    def marker = null
 
     while (true) {
         request.setMarker(marker)
-        DescribeDBSnapshotsResult snapshotsResult = client.describeDBSnapshots(request)
-        List<DBSnapshot> snapshots = snapshotsResult.getDBSnapshots()
+        def snapshotsResult = client.describeDBSnapshots(request)
+        def snapshots = snapshotsResult.getDBSnapshots()
 
         allSnapshots.addAll(snapshots)
 
@@ -81,13 +81,13 @@ def getAllDBSnapshots(client, request) {
 
 @NonCPS
 def getAllDBClusterSnapshots(client, request) {
-    List<DBClusterSnapshot> allSnapshots = []
-    String marker = null
+    def allSnapshots = []
+    def marker = null
 
     while (true) {
         request.setMarker(marker)
-        DescribeDBClusterSnapshotsResult snapshotsResult = client.describeDBClusterSnapshots(request)
-        List<DBClusterSnapshot> snapshots = snapshotsResult.getDBClusterSnapshots()
+        def snapshotsResult = client.describeDBClusterSnapshots(request)
+        def snapshots = snapshotsResult.getDBClusterSnapshots()
         allSnapshots.addAll(snapshots)
         marker = snapshotsResult.getMarker()
         if (marker == null) {
@@ -108,7 +108,7 @@ def handleDBCluster(client, config) {
         request.setSnapshotType(config.snapshotType)
     }
 
-    List<DBClusterSnapshot> allSnapshots = getAllDBClusterSnapshots(client, request)
+    def allSnapshots = getAllDBClusterSnapshots(client, request)
 
     if (allSnapshots.size() > 0) {
         if (sortBy.toLowerCase() == 'latest') {
@@ -134,7 +134,7 @@ def handleRds(client, config) {
         request.setSnapshotType(config.snapshotType)
     }
 
-    List<DBSnapshot> allSnapshots = getAllDBSnapshots(client, request)
+    def allSnapshots = getAllDBSnapshots(client, request)
 
     if (allSnapshots.size() > 0) {
         if (sortBy.toLowerCase() == 'latest') {
