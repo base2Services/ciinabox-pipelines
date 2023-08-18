@@ -24,7 +24,10 @@ import com.amazonaws.services.redshift.model.SnapshotAttributeToSortBy
 
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest
 import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsRequest
-
+import com.amazonaws.services.rds.model.DescribeDBClusterSnapshotsResult
+import com.amazonaws.services.rds.model.DescribeDBSnapshotsResult
+import com.amazonaws.services.rds.model.DBClusterSnapshot
+import com.amazonaws.services.rds.model.DBSnapshot
 import com.base2.ciinabox.aws.AwsClientBuilder
 
 def call(body) {
@@ -56,61 +59,95 @@ def call(body) {
 }
 
 @NonCPS
-def handleDBCluster(client, config) {
-  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def sortBy = config.get('snapshot', 'latest')
+def getAllDBSnapshots(client, request) {
+    def allSnapshots = []
+    def marker = null
 
-  def request = new DescribeDBClusterSnapshotsRequest()
-    .withDBClusterIdentifier(config.resource)
+    while (true) {
+        request.setMarker(marker)
+        def snapshotsResult = client.describeDBSnapshots(request)
+        def snapshots = snapshotsResult.getDBSnapshots()
 
-  if (config.snapshotType) {
-    request.setSnapshotType(config.snapshotType)
-  } 
+        allSnapshots.addAll(snapshots)
 
-  def snapshotsResult =  client.describeDBClusterSnapshots(request)
-  def snapshots = snapshotsResult.getDBClusterSnapshots()
-
-  if(snapshots.size() > 0) {
-    if(sortBy.toLowerCase() == 'latest') {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      env[outputName] = sorted_snaps.get(0).getDBClusterSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getSourceDBClusterSnapshotArn()
-      echo("Latest DBCluster snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBClusterSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
-    } else {
-      error("currently only snapshot 'latest' is supported")
+        marker = snapshotsResult.getMarker()
+        if (marker == null) {
+            break
+        }
     }
-  } else {
-    error("unable to find DBCluster snapshots for resource ${config.resource}")
-  }
+
+    return allSnapshots
+}
+
+@NonCPS
+def getAllDBClusterSnapshots(client, request) {
+    def allSnapshots = []
+    def marker = null
+
+    while (true) {
+        request.setMarker(marker)
+        def snapshotsResult = client.describeDBClusterSnapshots(request)
+        def snapshots = snapshotsResult.getDBClusterSnapshots()
+        allSnapshots.addAll(snapshots)
+        marker = snapshotsResult.getMarker()
+        if (marker == null) {
+            break
+        }
+    }
+
+    return allSnapshots
+}
+
+@NonCPS
+def handleDBCluster(client, config) {
+    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+    def sortBy = config.get('snapshot', 'latest')
+    def request = new DescribeDBClusterSnapshotsRequest().withDBClusterIdentifier(config.resource)
+
+    if (config.snapshotType) {
+        request.setSnapshotType(config.snapshotType)
+    }
+
+    def allSnapshots = getAllDBClusterSnapshots(client, request)
+
+    if (allSnapshots.size() > 0) {
+        if (sortBy.toLowerCase() == 'latest') {
+            allSnapshots = allSnapshots.sort { a, b -> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime()) }
+            env[outputName] = allSnapshots.get(0).getDBClusterSnapshotIdentifier()
+            env["${outputName}_ARN"] = allSnapshots.get(0).getSourceDBClusterSnapshotArn()
+            echo("Latest DBCluster snapshot found for ${config.resource} is ${allSnapshots.get(0).getDBClusterSnapshotIdentifier()} created on ${allSnapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+        } else {
+            error("Currently only snapshot 'latest' is supported")
+        }
+    } else {
+        error("Unable to find DBCluster snapshots for resource ${config.resource}")
+    }
 }
 
 @NonCPS
 def handleRds(client, config) {
-  def outputName = config.get('envVarName', 'SNAPSHOT_ID')
-  def sortBy = config.get('snapshot', 'latest')
+    def outputName = config.get('envVarName', 'SNAPSHOT_ID')
+    def sortBy = config.get('snapshot', 'latest')
+    def request = new DescribeDBSnapshotsRequest().withDBInstanceIdentifier(config.resource)
 
-  def request = new DescribeDBSnapshotsRequest()
-    .withDBInstanceIdentifier(config.resource)
-
-  if(config.snapshotType) {
-    request.setSnapshotType(config.snapshotType)
-  } 
-
-  def snapshotsResult = client.describeDBSnapshots(request)
-  def snapshots = snapshotsResult.getDBSnapshots()
-
-  if(snapshots.size() > 0) {
-    if(sortBy.toLowerCase() == 'latest') {
-      def sorted_snaps = snapshots.sort {a,b-> b.getSnapshotCreateTime()<=>a.getSnapshotCreateTime()}
-      env[outputName] = sorted_snaps.get(0).getDBSnapshotIdentifier()
-      env["${outputName}_ARN"] = sorted_snaps.get(0).getDBSnapshotArn()
-      echo("Latest snapshot found for ${config.resource} is ${sorted_snaps.get(0).getDBSnapshotIdentifier()} created on ${sorted_snaps.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
-    } else {
-      error("currently only snapshot 'latest' is supported")
+    if (config.snapshotType) {
+        request.setSnapshotType(config.snapshotType)
     }
-  } else {
-    error("unable to find RDS snapshots for resource ${config.resource}")
-  }
+
+    def allSnapshots = getAllDBSnapshots(client, request)
+
+    if (allSnapshots.size() > 0) {
+        if (sortBy.toLowerCase() == 'latest') {
+            allSnapshots = allSnapshots.sort { a, b -> b.getSnapshotCreateTime().compareTo(a.getSnapshotCreateTime()) }
+            env[outputName] = allSnapshots.get(0).getDBSnapshotIdentifier()
+            env["${outputName}_ARN"] = allSnapshots.get(0).getDBSnapshotArn()
+            echo("Latest snapshot found for ${config.resource} is ${allSnapshots.get(0).getDBSnapshotIdentifier()} created on ${allSnapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')}")
+        } else {
+            error("Currently only snapshot 'latest' is supported")
+        }
+    } else {
+        error("Unable to find RDS snapshots for resource ${config.resource}")
+    }
 }
 
 @NonCPS
