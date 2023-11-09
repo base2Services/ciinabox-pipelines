@@ -14,6 +14,7 @@ import org.yaml.snakeyaml.nodes.Node
 import org.yaml.snakeyaml.nodes.ScalarNode
 import org.yaml.snakeyaml.nodes.SequenceNode
 import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.LoaderOptions
 
 import com.cloudbees.groovy.cps.NonCPS
 
@@ -21,10 +22,10 @@ import com.cloudbees.groovy.cps.NonCPS
  * Allows snakeyaml to parse YAML templates that contain short forms of
  * CloudFormation intrinsic functions.
  * 
- * @author Trek10, Inc.
  */
 public class IntrinsicsYamlConstructor extends SafeConstructor implements Serializable {
     public IntrinsicsYamlConstructor() {
+        super(new LoaderOptions())
         this.yamlConstructors.put(new Tag("!And"), new ConstructFunction(true, false))
         this.yamlConstructors.put(new Tag("!Base64"), new ConstructFunction(true, false))
         this.yamlConstructors.put(new Tag("!Cidr"), new ConstructFunction(true, false))
