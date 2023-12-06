@@ -10,6 +10,9 @@ codedeploy(
   role: 'ciinabox',
   applicationName: 'myapp',
   deploymentGroupName: 'webservers',
+  deploymentConfigName: 'CodeDeployDefault.OneAtATime',
+  description: 'Deploying application'                  // Optional
+  fileExistsBehavior: 'DISALLOW | OVERWRITE | RETAIN',  // Optional
   s3bucket: env.SOURCE_BUCKET,
   key: 'codedeploy/deploy.zip',
   bundleType: 'zip'
@@ -89,7 +92,7 @@ def waitForExistingDeployment(codedeploy, applicationName, deploymentGroupName) 
     )
     if(deployments.getDeployments() != null && deployments.getDeployments().size() > 0) {
       existingDeployment = deployments.getDeployments().get(0)
-      echo "waiting for existing deployment ${existingDeployment} to complete"
+      echo "Waiting for existing deployment ${existingDeployment} to complete"
       wait(codedeploy, existingDeployment)
     }
 }
@@ -102,7 +105,7 @@ def wait(codedeploy, deployment) {
       new WaiterParameters<>(new GetDeploymentRequest().withDeploymentId(deployment)),
       new NoOpWaiterHandler()
     )
-    echo "waitng for codedeploy ${deployment} to complete"
+    echo "Waiting for codedeploy ${deployment} to complete"
     while(!future.isDone()) {
       try {
         def deployInfo = codedeploy.getDeployment(new GetDeploymentRequest().withDeploymentId(deployment)).getDeploymentInfo()
@@ -155,7 +158,7 @@ def getCredentials(awsAccountId, region, roleName) {
 def assumeRole(awsAccountId, region, roleName) {
   def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + roleName
   def roleSessionName = "sts-session-" + awsAccountId
-  println "assuming IAM role ${roleArn}"
+  println "Assuming IAM role ${roleArn}"
   def sts = new AWSSecurityTokenServiceClient()
   if (!region.equals("us-east-1")) {
       sts.setEndpoint("sts." + region + ".amazonaws.com")
