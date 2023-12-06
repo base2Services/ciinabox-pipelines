@@ -37,6 +37,11 @@ class PackerTemplateBuilder implements Serializable {
     this.builder.tags += tags 
   }
 
+  public void addLinuxSSH() {
+    this.builder.ssh_username = 'ec2-user'
+    this.builder.temporary_key_pair_type = 'ed25519'
+  }
+
   public void addWindowsUpdate(){
       if (this.type.startsWith('windows')) {
           this.provisioners.push([
@@ -204,7 +209,7 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
-  public void addAmamzonConfigProvisioner() {
+  public void addAmazonConfigProvisioner() {
     if (this.type.equals('windows')) {
       this.provisioners.push([
         type: 'powershell',
@@ -223,7 +228,7 @@ class PackerTemplateBuilder implements Serializable {
 
   }
 
-  public void addAmamzonEc2LaunchV2Provisioner() {
+  public void addAmazonEc2LaunchV2Provisioner() {
     if (this.type.equals('windows')) {
       this.provisioners.push([
         type: 'powershell',

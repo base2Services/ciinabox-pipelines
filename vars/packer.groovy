@@ -172,7 +172,11 @@ def call(body) {
   ptb.addInstall7zipProvisioner()
 
   if (config.winUpdate) {
-      ptb.addWindowsUpdate()
+    ptb.addWindowsUpdate()
+  }
+
+  if (config.type == 'linux') {
+    ptb.addLinuxSSH()
   }
 
   if (config.runList) {
@@ -192,9 +196,9 @@ def call(body) {
   }
 
   if (config.ec2LaunchV2) {
-    ptb.addAmamzonEc2LaunchV2Provisioner()
+    ptb.addAmazonEc2LaunchV2Provisioner()
   } else {
-    ptb.addAmamzonConfigProvisioner()
+    ptb.addAmazonConfigProvisioner()
   }
 
   writeScript('packer/download_cookbooks.ps1')
