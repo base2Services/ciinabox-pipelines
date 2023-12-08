@@ -230,7 +230,7 @@ ${packerTemplate}
 =================================================
   """)
   sh "${packerPath} plugins install github.com/hashicorp/amazon"
-  sh "${packerPath} plugins install github.com/hashicorp/packer-plugin-chef"
+  sh "${packerPath} plugins install github.com/hashicorp/chef"
   sh "${packerPath} plugins installed"
   sh "${packerPath} validate ${ptb.id}.json"
 
