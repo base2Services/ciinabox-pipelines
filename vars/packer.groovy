@@ -231,8 +231,6 @@ ${packerTemplate}
   """)
   sh "${packerPath} plugins install github.com/hashicorp/amazon"
   sh "${packerPath} plugins install github.com/hashicorp/chef"
-  sh "dpkg -S libcrypt.so"
-  sh "apt-get install libc6:amd64"
   sh "${packerPath} validate ${ptb.id}.json"
 
   println("""
