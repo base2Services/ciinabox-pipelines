@@ -229,6 +229,7 @@ ${packerTemplate}
 | Validating packer template                    |
 =================================================
   """)
+  sh "${packerPath} plugins installed"
   sh "${packerPath} validate ${ptb.id}.json"
 
   println("""
