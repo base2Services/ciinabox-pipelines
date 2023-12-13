@@ -42,12 +42,21 @@ class PackerTemplateBuilder implements Serializable {
     this.builder.temporary_key_pair_type = 'ed25519'
   }
 
+  public void addMissingLibraries() {
+    this.provisioners.push([
+      type: 'shell',
+      inline: [
+        "sudo apt-get install libc6:amd64"
+      ]
+    ])
+  }
+
   public void addWindowsUpdate(){
-      if (this.type.startsWith('windows')) {
-          this.provisioners.push([
-              type: 'windows-update'
-          ])
-      }
+    if (this.type.startsWith('windows')) {
+      this.provisioners.push([
+          type: 'windows-update'
+      ])
+    }
   }
 
   public void addCommunicator(String username, Boolean credssp) {
