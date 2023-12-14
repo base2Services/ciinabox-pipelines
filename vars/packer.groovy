@@ -177,7 +177,7 @@ def call(body) {
 
   if (config.type == 'linux') {
     ptb.addLinuxSSH()
-    ptb.addMissingLibraries()
+    //ptb.addMissingLibraries()
   }
 
   if (config.runList) {
