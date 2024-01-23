@@ -148,11 +148,14 @@ class PackerTemplateBuilder implements Serializable {
         destination: '/etc/chef'
       ])
 
-      if (useCinc) {
+      /*if (useCinc) {
         chefProvisioner.install_command = "curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s --"
         if (version) {
           chefProvisioner.install_command += " -v ${version}"
         }
+      }*/
+      if (useCinc) {
+        chefProvisioner.install_command = "curl -L https://omnitruck.cinc.sh/install.sh -l https://omnitruck.cinc.sh/stable/cinc/metadata?v=18&p=el&pv=7&m=x86_64"
       }
     }
 
