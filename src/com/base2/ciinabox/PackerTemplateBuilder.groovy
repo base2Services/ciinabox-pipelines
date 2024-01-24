@@ -155,7 +155,7 @@ class PackerTemplateBuilder implements Serializable {
         }
       }*/
       if (useCinc) {
-        chefProvisioner.install_command = "gem install chef-bin --clear-sources -s https://packagecloud.io/cinc-project/stable -s https://rubygems.org"
+        chefProvisioner.install_command = "curl -L http://downloads.cinc.sh/files/stable/cinc/18.3.0/amazon/2/cinc-18.3.0-1.amazon2.x86_64.rpm | sudo bash yum install -y --"
       }
     }
 
