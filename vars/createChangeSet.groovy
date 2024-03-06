@@ -64,6 +64,8 @@ import com.amazonaws.services.cloudformation.waiters.AmazonCloudFormationWaiters
 import com.amazonaws.waiters.WaiterParameters
 import com.amazonaws.waiters.WaiterUnrecoverableException
 
+import com.amazonaws.services.s3.model.AmazonS3Exception
+
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest
 
@@ -159,9 +161,15 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     request.withRoleARN(config.roleArn)
   }
 
-  def params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
-  if (params.size() > 0) {
-    request.withParameters(params)
+  try {
+    def params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
+    if (params.size() > 0) {
+      request.withParameters(params)
+    }
+  } catch (AmazonS3Exception ex) {
+    println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
+    env.ERROR_S3_KEY_DOES_NOT_EXIST = true
+    currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
   }
 
   def tags = []
