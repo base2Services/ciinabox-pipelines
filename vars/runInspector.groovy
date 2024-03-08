@@ -189,7 +189,7 @@ def main(body, stackName, bucketName, fileName, runId) {
 
     // Wait for the inspector test to run
     def runStatus = getRunStatus(assessmentArn)
-    while  (runStatus != "COMPLETED") {
+    while ((runStatus != "COMPLETED") & (runStatus != "FAILED")) {
         runStatus = getRunStatus(assessmentArn)
         println("Test Run Status: ${runStatus}")
         TimeUnit.SECONDS.sleep(60);
