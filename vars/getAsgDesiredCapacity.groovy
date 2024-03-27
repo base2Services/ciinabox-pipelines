@@ -30,18 +30,15 @@ def call(body) {
     return desired_capacity
 }
 
-
 @NonCPS
 def getDesiredCapacity(client, config) {
     def request = new DescribeAutoScalingGroupsRequest()
             .withAutoScalingGroupNames(config.autoscalingGroupName)
 
     def asgResult = client.describeAutoScalingGroups(request)
-    print(asgResult)
     def asgs = asgResult.getAutoScalingGroups()
-    print(asgs)
     if (asgs.isEmpty()) {
-        throw new GroovyRuntimeException("Nothing found for asg: ${config.autoscalingGroupName}")
+        return config.default_count
     } else {
         return asgs.first().getDesiredCapacity()
     }
