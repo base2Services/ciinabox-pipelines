@@ -36,9 +36,13 @@ def getDesiredCapacity(client, config) {
     def request = new DescribeAutoScalingGroupsRequest()
             .withAutoScalingGroupNames(config.autoscalingGroupName)
 
-    def asgs = client.describeAutoScalingGroups(request).getAutoScalingGroups()
+    def asgResult = client.describeAutoScalingGroups(request)
+    print(asgResult)
+    def asgs = asgResult.getAutoScalingGroups()
     print(asgs)
-    def desired_capacity = asgs.first().getDesiredCapacity()
-    print(desired_capacity)
-    return desired_capacity
+    if (asgs.isEmpty()) {
+        throw new GroovyRuntimeException("Nothing found for asg: ${config.autoscalingGroupName}")
+    } else {
+        return asgs.first().getDesiredCapacity()
+    }
 }
