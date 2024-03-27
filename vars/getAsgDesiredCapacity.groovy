@@ -36,6 +36,9 @@ def getDesiredCapacity(client, config) {
     def request = new DescribeAutoScalingGroupsRequest()
             .withAutoScalingGroupNames(config.autoscalingGroupName)
 
-    def response = client.describeAutoScalingGroups(request).first().getDesiredCapacity()
-    print(response)
+    def asgs = client.describeAutoScalingGroups(request).getAutoScalingGroups()
+    print(asgs)
+    def desired_capacity = asgs.first().getDesiredCapacity()
+    print(desired_capacity)
+    return desired_capacity
 }
