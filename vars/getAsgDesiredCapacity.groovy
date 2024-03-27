@@ -9,7 +9,7 @@ example usage
     region: env.AWS_REGION,
     accountId: env.DEV_ACCOUNT_ID,
     role: 'ciinabox-v2',
-    default_count: '5'
+    default_capacity: '5'
   )
 
 ************************************/
@@ -38,7 +38,7 @@ def getDesiredCapacity(client, config) {
     def asgResult = client.describeAutoScalingGroups(request)
     def asgs = asgResult.getAutoScalingGroups()
     if (asgs.isEmpty()) {
-        return config.default_count
+        return config.default_capacity
     } else {
         return asgs.first().getDesiredCapacity()
     }
