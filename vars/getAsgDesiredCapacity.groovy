@@ -1,14 +1,14 @@
 /***********************************
-getAsgDesiredCount Function
+getAsgDesiredCapacity Function
 
 Takes in an auto scaling group returns the current desired count.
 
 example usage
-  getAsgDesiredCount (
-    autoscaling_group_name: 'name',
+  getAsgDesiredCapacity (
+    autoscalingGroupName: 'name',
     region: env.AWS_REGION,
     accountId: env.DEV_ACCOUNT_ID,
-    role: 'ciinabox',
+    role: 'ciinabox-v2',
     default_count: '5'
   )
 
@@ -34,9 +34,8 @@ def call(body) {
 @NonCPS
 def getDesiredCount(client, config) {
     def request = new DescribeAutoScalingGroupsRequest()
-            .withAutoScalingGroupNames(config.autoscaling_group_name)
+            .withAutoScalingGroupNames(config.autoscalingGroupName)
 
-    def response = client.describeAutoScalingGroups(request)
+    def response = client.describeAutoScalingGroups(request)[0].desiredCapacity
     print(response)
 }
-
