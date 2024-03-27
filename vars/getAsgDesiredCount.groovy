@@ -5,7 +5,7 @@ Takes in an auto scaling group returns the current desired count.
 
 example usage
   getAsgDesiredCount (
-    asg_name: autoscaling group name,
+    autoscaling_group_name: 'name',
     region: env.AWS_REGION,
     accountId: env.DEV_ACCOUNT_ID,
     role: 'ciinabox',
@@ -16,7 +16,6 @@ example usage
 
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
-
 
 def call(body) {
     def config = body
@@ -34,8 +33,8 @@ def call(body) {
 
 @NonCPS
 def getDesiredCount(client, config) {
-    def request = DescribeAutoScalingGroupsRequest()
-            .withAutoScalingGroupNames(config.asg)
+    def request = new DescribeAutoScalingGroupsRequest()
+            .withAutoScalingGroupNames(config.autoscaling_group_name)
 
     def response = client.describeAutoScalingGroups(request)
     print(response)
