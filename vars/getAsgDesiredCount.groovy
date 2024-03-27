@@ -1,21 +1,22 @@
 /***********************************
-getAsgServiceDesiredCount Function
+getAsgDesiredCount Function
 
 Takes in an auto scaling group returns the current desired count.
 
 example usage
-  getAsgServiceDesiredCount (
-    asg: my-dev-cluster,
+  getAsgDesiredCount (
+    asg_name: autoscaling group name,
     region: env.AWS_REGION,
     accountId: env.DEV_ACCOUNT_ID,
     role: 'ciinabox',
-    default: '5'
+    default_count: '5'
   )
 
 ************************************/
 
 import com.base2.ciinabox.aws.AwsClientBuilder
-import software.amazon.awssdk.services.autoscaling.model.DescribeAutoScalingGroupsRequest
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest
+
 
 def call(body) {
     def config = body
