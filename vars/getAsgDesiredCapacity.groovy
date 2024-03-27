@@ -25,17 +25,17 @@ def call(body) {
         role: config.role
     ])  
     def client = clientBuilder.asg()
-    def desired_count = getDesiredCount(client, config)
-    print(desired_count)
-    return desired_count
+    def desired_capacity = getDesiredCapacity(client, config)
+    print(desired_capacity)
+    return desired_capacity
 }
 
 
 @NonCPS
-def getDesiredCount(client, config) {
+def getDesiredCapacity(client, config) {
     def request = new DescribeAutoScalingGroupsRequest()
             .withAutoScalingGroupNames(config.autoscalingGroupName)
 
-    def response = client.describeAutoScalingGroups(request)[0].desiredCapacity
+    def response = client.describeAutoScalingGroups(request).first().getDesiredCapacity()
     print(response)
 }
