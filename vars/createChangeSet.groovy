@@ -167,6 +167,8 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
       request.withParameters(params)
     }
   } catch (AmazonS3Exception ex) {
+    println(ex)
+    ex.printStackTrace()
     println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
     env.ERROR_S3_KEY_DOES_NOT_EXIST = true
     currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
