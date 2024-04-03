@@ -168,7 +168,9 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     }
   } catch (AmazonS3Exception ex) {
     println(ex)
-    ex.printStackTrace()
+    if(ex.message.contains('Access Denied (Service: Amazon S3; Status Code: 403;')) {
+      throw ex;
+    }
     println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
     env.ERROR_S3_KEY_DOES_NOT_EXIST = true
     currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
