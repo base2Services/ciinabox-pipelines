@@ -10,7 +10,7 @@
 
 $ErrorActionPreference = "Stop"
 Set-ExecutionPolicy Bypass -force
-
+Get-ChildItem env:
 $WorkDir         = "c:\temp\"
 $ChefDir         = "C:\chef\"
 $CookbookDir     = "C:\chef\cookbooks"
