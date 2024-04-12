@@ -180,6 +180,7 @@ def call(body) {
       config.get('cookbookS3Bucket'),
       config.get('cookbookS3Region', region),
       config.get('cookbookS3Path'))
+    println(config.get('cookbookS3Bucket'),config.get('cookbookS3Path'))
     if (config.get('useCinc', false)) {
       ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('cincVersion'), true)
     } else {
@@ -192,9 +193,9 @@ def call(body) {
   }
 
   if (config.ec2LaunchV2) {
-    ptb.addAmamzonEc2LaunchV2Provisioner()
+    ptb.addAmazonEc2LaunchV2Provisioner()
   } else {
-    ptb.addAmamzonConfigProvisioner()
+    ptb.addAmazonConfigProvisioner()
   }
 
   writeScript('packer/download_cookbooks.ps1')

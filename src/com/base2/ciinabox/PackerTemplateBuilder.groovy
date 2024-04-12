@@ -204,7 +204,7 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
-  public void addAmamzonConfigProvisioner() {
+  public void addAmazonConfigProvisioner() {
     if (this.type.equals('windows')) {
       this.provisioners.push([
         type: 'powershell',
@@ -223,7 +223,7 @@ class PackerTemplateBuilder implements Serializable {
 
   }
 
-  public void addAmamzonEc2LaunchV2Provisioner() {
+  public void addAmazonEc2LaunchV2Provisioner() {
     if (this.type.equals('windows')) {
       this.provisioners.push([
         type: 'powershell',
