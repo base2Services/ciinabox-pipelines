@@ -180,7 +180,7 @@ def call(body) {
       config.get('cookbookS3Bucket'),
       config.get('cookbookS3Region', region),
       config.get('cookbookS3Path'))
-    println(config.get('cookbookS3Bucket'),config.get('cookbookS3Path'))
+    println("${config.get('cookbookS3Bucket')},${config.get('cookbookS3Path')}")
     if (config.get('useCinc', false)) {
       ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('cincVersion'), true)
     } else {
