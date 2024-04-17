@@ -29,8 +29,8 @@ if(Test-Path -Path $CookbookDir ){
 }
 
 Write-Output "INFO: Extracting $GzipPath to $CookbookDir"
-7z x $GzipPath -o"$WorkDir" -y
-7z x $TarPath -o"$ChefDir" -y
+& "C:\Program Files\7-Zip\7z.exe" x $GzipPath -o"$WorkDir" -y
+& "C:\Program Files\7-Zip\7z.exe" x $TarPath -o"$ChefDir" -y
 
 Write-Output "INFO: Cleaning up $GzipPath $TarPath"
 rm $GzipPath
