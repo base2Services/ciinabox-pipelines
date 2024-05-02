@@ -74,7 +74,11 @@ def failOnSeverity(results,config) {
 
 @NonCPS
 def displayEcrScanResults(results) {
+  echo("Results in display func ${results}")
+
   def findings = results.getImageScanFindings().getFindings()
+
+  echo("Findings: ${findings}")
   String[] headers = ['Severity', 'Name', 'Package', 'Version']
   ArrayList data = []
   
