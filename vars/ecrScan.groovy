@@ -31,8 +31,8 @@ def call(body) {
     triggerScan(ecr,config)
   }
   
-  waitForEcrScanResults(ecr,config)
   def results = getScanResults(ecr,config)
+  waitForEcrScanResults(ecr,config)
   displayEcrScanResults(results)
   failOnSeverity(results,config)
 }
@@ -76,7 +76,8 @@ def failOnSeverity(results,config) {
 def displayEcrScanResults(results) {
   echo("Results in display func ${results}")
   echo("results toString: ${results.toString()}")
-
+  
+  echo("results.imageScanFindings() result: ${results.imageScanFindings()}")
   echo("results.getImageScanFindings() result: ${results.getImageScanFindings()}")
   def findings = results.getImageScanFindings().getFindings()
 
