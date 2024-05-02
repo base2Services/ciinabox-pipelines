@@ -31,8 +31,8 @@ def call(body) {
     triggerScan(ecr,config)
   }
   
-  def results = getScanResults(ecr,config)
   waitForEcrScanResults(ecr,config)
+  def results = getScanResults(ecr,config)
   displayEcrScanResults(results)
   failOnSeverity(results,config)
 }
@@ -119,11 +119,8 @@ def waitForEcrScanResults(ecr,config) {
 
 @NonCPS
 def getScanResults(ecr,config) {
-
   echo("Config: ${config}")
-
   def imageId = new ImageIdentifier().withImageTag(config.tag)
-
   echo("Image ID: ${imageId}")
   def request = new DescribeImageScanFindingsRequest()
     .withRepositoryName(config.image)
@@ -131,9 +128,7 @@ def getScanResults(ecr,config) {
     .withImageId(imageId) 
 
   echo("Request: ${request}")
-
   def result = ecr.describeImageScanFindings(request)
-
   echo("Result: ${result}")
   return result
 }
