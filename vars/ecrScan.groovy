@@ -114,12 +114,23 @@ def waitForEcrScanResults(ecr,config) {
 
 @NonCPS
 def getScanResults(ecr,config) {
+
+  echo("Config: ${config}")
+
+
   def imageId = new ImageIdentifier().withImageTag(config.tag)
+
+  echo("Image ID: ${imageId}")
   def request = new DescribeImageScanFindingsRequest()
     .withRepositoryName(config.image)
     .withRegistryId(config.accountId)
     .withImageId(imageId) 
+
+  echo("Request: ${request}")
+
   def result = ecr.describeImageScanFindings(request)
+
+  echo("Result: ${result}")
   return result
 }
 
