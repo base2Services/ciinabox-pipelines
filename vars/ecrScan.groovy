@@ -31,8 +31,8 @@ def call(body) {
     triggerScan(ecr,config)
   }
   
-  waitForEcrScanResults(ecr,config)
   def results = getScanResults(ecr,config)
+  waitForEcrScanResults(ecr,config)
   displayEcrScanResults(results)
   failOnSeverity(results,config)
 }
