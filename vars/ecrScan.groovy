@@ -31,8 +31,8 @@ def call(body) {
     triggerScan(ecr,config)
   }
   
-  def results = getScanResults(ecr,config)
   waitForEcrScanResults(ecr,config)
+  def results = getScanResults(ecr,config)
   displayEcrScanResults(results)
   failOnSeverity(results,config)
 }
@@ -123,7 +123,6 @@ def waitForEcrScanResults(ecr,config) {
 def getScanResults(ecr,config) {
 
   echo("Config: ${config}")
-
 
   def imageId = new ImageIdentifier().withImageTag(config.tag)
 
