@@ -76,6 +76,7 @@ def failOnSeverity(results,config) {
 def displayEcrScanResults(results) {
   echo("Results in display func ${results}")
 
+  echo("results.getImageScanFindings() result: ${results.getImageScanFindings()}")
   def findings = results.getImageScanFindings().getFindings()
 
   echo("Findings: ${findings}")
