@@ -75,6 +75,7 @@ def failOnSeverity(results,config) {
 @NonCPS
 def displayEcrScanResults(results) {
   echo("Results in display func ${results}")
+  echo("results toString: ${results.toString()}")
 
   echo("results.getImageScanFindings() result: ${results.getImageScanFindings()}")
   def findings = results.getImageScanFindings().getFindings()
