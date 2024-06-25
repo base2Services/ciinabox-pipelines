@@ -84,12 +84,16 @@ def handleDBCluster(client, config) {
       error("Unable to find ${snapshot_identifier}")
       break
     }
-    if(snapshot_status == "available") {
-      env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
-      env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
-      echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
-    } else {
-      Thread.sleep(10000)
+    try {
+      if(snapshot_status == "available") {
+        env[outputName] = snapshots.get(0).getDBClusterSnapshotIdentifier()
+        env["${outputName}_ARN"] = snapshots.get(0).getSourceDBClusterSnapshotArn()
+        echo("DBCluster snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+      } else {
+        Thread.sleep(10000)
+      } 
+    } catch(InterruptedException ex) {
+        // suppress and continue
     }
   }  
 }
@@ -117,12 +121,16 @@ def handleRds(client, config) {
       error("Unable to find ${snapshot_identifier}")
       break
     }
-    if(snapshot_status == "available") {
-      env[outputName] = snapshots.get(0).getDBSnapshotIdentifier()
-      env["${outputName}_ARN"] = snapshots.get(0).getDBSnapshotArn()
-      echo("RDS snapshot created for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
-    } else {
-      Thread.sleep(10000)
+    try {
+      if(snapshot_status == "available") {
+        env[outputName] = snapshots.get(0).getDBSnapshotIdentifier()
+        env["${outputName}_ARN"] = snapshots.get(0).getDBSnapshotArn()
+        echo("RDS snapshot created for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+      } else {
+        Thread.sleep(10000)
+      }
+    } catch(InterruptedException ex) {
+      // suppress and continue
     }
   }
 }
@@ -150,13 +158,17 @@ def handleRedshift(client, config) {
       error("Unable to find ${snapshot_identifier}")
       break
     }
-    if(snapshot_status == "available") {
-      env[outputName] = snapshots.get(0).getSnapshotIdentifier()
-      env["${outputName}_OWNER"] = snapshots.get(0).getOwnerAccount()
-      env["${outputName}_CLUSTER_ID"] = snapshots.get(0).getClusterIdentifier()
-      echo("Redshift snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
-    } else {
-      Thread.sleep(10000)
+    try {
+      if(snapshot_status == "available") {
+        env[outputName] = snapshots.get(0).getSnapshotIdentifier()
+        env["${outputName}_OWNER"] = snapshots.get(0).getOwnerAccount()
+        env["${outputName}_CLUSTER_ID"] = snapshots.get(0).getClusterIdentifier()
+        echo("Redshift snapshot for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+      } else {
+        Thread.sleep(10000)
+      }
+    } catch(InterruptedException ex) {
+      // suppress and continue
     }
   }
 }
