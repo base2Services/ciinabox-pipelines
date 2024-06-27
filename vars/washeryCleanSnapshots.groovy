@@ -40,12 +40,51 @@ def call(body) {
 }
 
 @NonCPS
+def getAllDBSnapshots(client, request) {
+    def allSnapshots = []
+    def marker = null
+
+    while (true) {
+        request.setMarker(marker)
+        def snapshotsResult = client.describeDBSnapshots(request)
+        def snapshots = snapshotsResult.getDBSnapshots()
+
+        allSnapshots.addAll(snapshots)
+
+        marker = snapshotsResult.getMarker()
+        if (marker == null) {
+            break
+        }
+    }
+
+    return allSnapshots
+}
+
+@NonCPS
+def getAllDBClusterSnapshots(client, request) {
+    def allSnapshots = []
+    def marker = null
+
+    while (true) {
+        request.setMarker(marker)
+        def snapshotsResult = client.describeDBClusterSnapshots(request)
+        def snapshots = snapshotsResult.getDBClusterSnapshots()
+        allSnapshots.addAll(snapshots)
+        marker = snapshotsResult.getMarker()
+        if (marker == null) {
+            break
+        }
+    }
+
+    return allSnapshots
+}
+
+@NonCPS
 def cleanInstanceWasherySnapshots(client, snapshotRetainCount, dryRun){
     //RDS Instance
     def request = new DescribeDBSnapshotsRequest()
             .withSnapshotType("manual")
-    def snapshotsResult = client.describeDBSnapshots(request)
-    def snapshots = snapshotsResult.getDBSnapshots()
+    def snapshots = getAllDBSnapshots(client, request)
     def washerySnapshots = []
 
     //Retrieve snapshots prefixed with `washery-scrubbed`
@@ -87,8 +126,7 @@ def cleanClusterWasherySnapshots(client, snapshotRetainCount, dryRun){
     //RDS Cluster
     def request = new DescribeDBClusterSnapshotsRequest()
             .withSnapshotType("manual")
-    def snapshotsResult = client.describeDBClusterSnapshots(request)
-    def snapshots = snapshotsResult.getDBClusterSnapshots()
+    def snapshots = getAllDBClusterSnapshots(client, request)
     def washerySnapshots = []
 
     //Retrieve snapshots prefixed with `washery-scrubbed`
