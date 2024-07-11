@@ -175,9 +175,9 @@ def call(body) {
     ptb.addWindowsUpdate()
   }
 
-  if (config.type == 'linux') {
+  /*if (config.type == 'linux') {
     ptb.addLinuxSSH()
-  }
+  }*/
 
   if (config.runList) {
     ptb.addDownloadCookbookProvisioner(
