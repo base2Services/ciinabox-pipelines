@@ -133,7 +133,7 @@ def call(body) {
     throw new GroovyRuntimeException("Unable to find AMI")
   }
 
-  if ((config.ebsVolumeSize && !config.ebsVolumeSize) || (!config.ebsVolumeSize && config.ebsVolumeSize)) {
+  if ((config.ebsVolumeSize && !config.ebsDeviceName) || (!config.ebsVolumeSize && config.ebsDeviceName)) {
     throw new GroovyRuntimeException("Supply both ebs Volume Size and DeviceName")
   }
 
