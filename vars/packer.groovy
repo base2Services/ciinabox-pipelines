@@ -175,10 +175,6 @@ def call(body) {
     ptb.addWindowsUpdate()
   }
 
-  /*if (config.type == 'linux') {
-    ptb.addLinuxSSH()
-  }*/
-
   if (config.runList) {
     ptb.addDownloadCookbookProvisioner(
       config.get('cookbookS3Bucket'),

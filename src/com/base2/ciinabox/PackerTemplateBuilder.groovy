@@ -37,11 +37,6 @@ class PackerTemplateBuilder implements Serializable {
     this.builder.tags += tags 
   }
 
-  public void addLinuxSSH() {
-    this.builder.ssh_username = 'ec2-user'
-    this.builder.temporary_key_pair_type = 'ed25519'
-  }
-
   public void addWindowsUpdate(){
     if (this.type.startsWith('windows')) {
       this.provisioners.push([
@@ -66,6 +61,7 @@ class PackerTemplateBuilder implements Serializable {
       this.builder.ssh_username = username
       this.builder.ssh_pty = true
       this.builder.ssh_timeout = '5m'
+      this.builder.temporary_key_pair_type = 'ed25519'
     }
   }
 
