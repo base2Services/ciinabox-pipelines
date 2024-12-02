@@ -65,8 +65,11 @@ class CloudformationStack implements Serializable {
     def newTemplateParams = []
     def stacks = []
     
+    println("Region: ${region}")
+
     def client = clientBuilder.cloudformation()
     def ok = false
+    println("Client: ${client}")
     while(!ok) {
       try {
         stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
@@ -133,6 +136,7 @@ class CloudformationStack implements Serializable {
   returns the template object
   **/
   def getTemplateFromUrl(String templateUrl) {
+    println("Template URL: ${templateUrl}")
     def s3URI = new AmazonS3URI(templateUrl)
 
     // get the region of the bucket because the S3URI always returns null
