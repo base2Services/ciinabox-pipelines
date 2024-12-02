@@ -160,6 +160,8 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
 
   if (config.templateUrl) {
     def templateUrl = config.templateUrl.replace("s3.amazonaws.com", "s3.${config.bucketRegion}.amazonaws.com")
+    println("Template URL: ${config.templateUrl}")
+    println("New Template URL: ${templateUrl}")
     request.withTemplateURL(templateUrl)
   } else {
       request.withUsePreviousTemplate(true)
