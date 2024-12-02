@@ -178,6 +178,7 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   println("Current Region: ${config.region}")
 
   try {
+    println("CFstack: ${cfstack}")
     def params = cfstack.getStackParams(config.parameters, templateUrl)
     if (params.size() > 0) {
       request.withParameters(params)
