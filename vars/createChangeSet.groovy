@@ -150,11 +150,20 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     request.withCapabilities(config.capabilities)
   }
 
+  // if (config.templateUrl) {
+  //   request.withTemplateURL(config.templateUrl)
+  // } else {
+  //   request.withUsePreviousTemplate(true)
+  // }
+
   if (config.templateUrl) {
-    request.withTemplateURL(config.templateUrl)
+    def templateUrl = config.templateUrl.replace("s3.amazonaws.com", "s3.${config.bucketRegion}.amazonaws.com")
+    request.withTemplateURL(templateUrl)
   } else {
-    request.withUsePreviousTemplate(true)
+      request.withUsePreviousTemplate(true)
   }
+
+  println("Template URL: ${templateUrl}")
 
   if (config.roleArn) {
     steps.echo "using cloudformation service role arn ${config.roleArn}"
@@ -164,7 +173,7 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   println("Current Region: ${config.region}")
 
   try {
-    def params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
+    def params = cfstack.getStackParams(config.parameters, templateUrl)
     if (params.size() > 0) {
       request.withParameters(params)
     }
@@ -173,7 +182,7 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     if(ex.message.contains('Access Denied (Service: Amazon S3; Status Code: 403;')) {
       throw ex;
     }
-    println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
+    println ("============\nThe specified CloudFormation template ${templateUrl} was not found!\nIt seems it was not built in previous build task.\n============\n")
     env.ERROR_S3_KEY_DOES_NOT_EXIST = true
     currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
   }
