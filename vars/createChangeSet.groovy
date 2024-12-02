@@ -161,6 +161,8 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     request.withRoleARN(config.roleArn)
   }
 
+  println("Current Region: ${config.region}")
+
   try {
     def params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
     if (params.size() > 0) {

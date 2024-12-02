@@ -138,6 +138,8 @@ class CloudformationStack implements Serializable {
     // get the region of the bucket because the S3URI always returns null
     def bucketRegion = getBucketRegion(s3URI.getBucket())
 
+    println("Bucket Region: ${bucketRegion}")
+
     def s3Client = new AwsClientBuilder([region: bucketRegion]).s3()
     def template = null
     def templateBody = s3Client.getObject(new GetObjectRequest(s3URI.getBucket(), s3URI.getKey())).getObjectContent()
