@@ -61,15 +61,14 @@ class CloudformationStack implements Serializable {
   returns a list of cloudformation parameters
   **/
   def getStackParams(Map overrideParams, String templateUrl, region=null) {
+    println("Region: ${region}")
     def stackParams = [:]
     def newTemplateParams = []
     def stacks = []
     
-    println("Region: ${region}")
-
     def client = clientBuilder.cloudformation()
     def ok = false
-    println("Client: ${client}")
+    println("got here")
     while(!ok) {
       try {
         stacks = client.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()
