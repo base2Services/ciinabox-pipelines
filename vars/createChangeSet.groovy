@@ -180,17 +180,21 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   try {
     println("CFstack: ${cfstack}")
     def params = cfstack.getStackParams(config.parameters, templateUrl)
+    println("got params")
     if (params.size() > 0) {
       request.withParameters(params)
     }
+    println("got sizes: ${cfstack}")
   } catch (AmazonS3Exception ex) {
     println(ex)
     if(ex.message.contains('Access Denied (Service: Amazon S3; Status Code: 403;')) {
       throw ex;
     }
-    println ("============\nThe specified CloudFormation template ${templateUrl} was not found!\nIt seems it was not built in previous build task.\n============\n")
-    env.ERROR_S3_KEY_DOES_NOT_EXIST = true
-    currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+    if (!ex.message.contains('The authorization header is malformed')){
+      println ("============\nThe specified CloudFormation template ${templateUrl} was not found!\nIt seems it was not built in previous build task.\n============\n")
+      env.ERROR_S3_KEY_DOES_NOT_EXIST = true
+      currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+    }
   }
 
   def tags = []
