@@ -206,6 +206,7 @@ def call(body) {
   writeScript('packer/uninstall_cinc.ps1')
 
   def packerTemplate = ptb.toJson()
+  println("Showing below that there are no quotations")
   println(ptb.debugStuff())
   def packerPath = config.get('packerPath', '/opt/packer/packer')
 
