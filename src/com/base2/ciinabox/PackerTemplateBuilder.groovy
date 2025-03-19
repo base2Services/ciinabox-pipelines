@@ -84,7 +84,7 @@ class PackerTemplateBuilder implements Serializable {
     ]
 
     if (json) {
-      chefProvisioner.json = json
+      chefProvisioner.json = JsonOutput.prettyPrint(JsonOutput.toJson(json))
     }
     if (version) {
       chefProvisioner.version = version
