@@ -246,6 +246,10 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
+  public void debugStuff() {
+    return this.provisioners
+  }
+
   public String toJson() {
     Map template = [
       builders: [],
@@ -261,7 +265,7 @@ class PackerTemplateBuilder implements Serializable {
 
     template.builders.push(this.builder)
     template.provisioners = this.provisioners
-    println(template)
+    
     return JsonOutput.prettyPrint(JsonOutput.toJson(template))
   }
 }

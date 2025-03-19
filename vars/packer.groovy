@@ -206,7 +206,7 @@ def call(body) {
   writeScript('packer/uninstall_cinc.ps1')
 
   def packerTemplate = ptb.toJson()
-  println(ptb)
+  println(debugStuff())
   def packerPath = config.get('packerPath', '/opt/packer/packer')
 
   if (debug) {
