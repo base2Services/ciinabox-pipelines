@@ -261,7 +261,7 @@ class PackerTemplateBuilder implements Serializable {
 
     template.builders.push(this.builder)
     template.provisioners = this.provisioners
-
+    println(template)
     return JsonOutput.prettyPrint(JsonOutput.toJson(template))
   }
 }
