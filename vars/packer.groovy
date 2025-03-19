@@ -182,6 +182,7 @@ def call(body) {
       config.get('cookbookS3Path'))
     if (config.get('useCinc', false)) {
       ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('cincVersion'), true)
+      println(config.get('chefJSON'))
     } else {
       ptb.addChefSoloProvisioner(config.runList,config.get('chefJSON'),config.get('chefVersion'))
     }
