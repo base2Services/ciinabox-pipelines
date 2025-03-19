@@ -76,7 +76,7 @@ class PackerTemplateBuilder implements Serializable {
     this.builder.launch_block_device_mappings = [block_device_mapping]
   }
 
-  public void addChefSoloProvisioner(List runList, Map json, String version, Boolean useCinc=false) {
+  public void addChefSoloProvisioner(List runList, String json, String version, Boolean useCinc=false) {
     def chefProvisioner = [
       type: 'chef-solo',
       chef_license: 'accept-silent',
@@ -262,6 +262,6 @@ class PackerTemplateBuilder implements Serializable {
     template.builders.push(this.builder)
     template.provisioners = this.provisioners
 
-    return JsonOutput.prettyPrint(JsonOutput.toJson(template))
+    return JsonOutput.toJson(template))
   }
 }
