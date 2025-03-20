@@ -85,18 +85,9 @@ class PackerTemplateBuilder implements Serializable {
     ]
 
     if (json) {
-      /*
-      Map provisioner = [
-        type: 'powershell',
-        script: script,
-        environment_vars: [
-          "SOURCE_BUCKET=${bucket}",
-          "BUCKET_REGION=${region}",
-          "COOKBOOK_PATH=${path}"
-        ]
-      ]
-      this.provisioners.push(provisioner)*/
-      chefProvisioner.json = json
+      Map json_map = [:]
+      json.each{ k, v -> json_map[k] = v }
+      chefProvisioner.json = json_map
     }
     if (version) {
       chefProvisioner.version = version
