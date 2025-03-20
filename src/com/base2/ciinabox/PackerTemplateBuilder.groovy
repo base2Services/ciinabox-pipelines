@@ -1,6 +1,7 @@
 package com.base2.ciinabox
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurperClassic
 
 class PackerTemplateBuilder implements Serializable {
 
@@ -84,6 +85,17 @@ class PackerTemplateBuilder implements Serializable {
     ]
 
     if (json) {
+      /*
+      Map provisioner = [
+        type: 'powershell',
+        script: script,
+        environment_vars: [
+          "SOURCE_BUCKET=${bucket}",
+          "BUCKET_REGION=${region}",
+          "COOKBOOK_PATH=${path}"
+        ]
+      ]
+      this.provisioners.push(provisioner)*/
       chefProvisioner.json = json
     }
     if (version) {
