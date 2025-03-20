@@ -87,7 +87,7 @@ class PackerTemplateBuilder implements Serializable {
     if (json) {
       //def json_json = JsonOutput.toJson(json)
       Map json_map = [:]
-      json_json.each{ k, v -> json_map[k] = v }
+      json.each{ k, v -> json_map[k] = v }
       chefProvisioner.json = json_map
     }
     if (version) {
