@@ -209,7 +209,7 @@ def call(body) {
   // push the chefjson into the packer template - provisioners - chef-solo - json
   //packerTemplate.putAt(['provisioners']['chef-solo']config.get('chefJSON'))
   //println("Showing below that there are no quotations")
-  //println(ptb.debugStuff())
+  println(ptb.debugStuff())
   def packerPath = config.get('packerPath', '/opt/packer/packer')
 
   if (debug) {
