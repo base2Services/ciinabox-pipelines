@@ -84,7 +84,7 @@ class PackerTemplateBuilder implements Serializable {
     ]
 
     if (json) {
-      chefProvisioner.json = JsonOutput.toJson(json.replace('"', ''))
+      chefProvisioner.json = json
     }
     if (version) {
       chefProvisioner.version = version
@@ -266,6 +266,6 @@ class PackerTemplateBuilder implements Serializable {
     template.builders.push(this.builder)
     template.provisioners = this.provisioners
     
-    return JsonOutput.toJson(template)
+    return JsonOutput.prettyPrint(JsonOutput.toJson(template))
   }
 }
