@@ -40,6 +40,7 @@ def call(body) {
   bakeEnv << "DEVICE_NAME=${config.get('deviceName', '')}"
   bakeEnv << "AMI_BUILD_NUMBER=${config.get('amiBuildNumber', env.BUILD_NUMBER)}"
   bakeEnv << "DEBUG=${config.get('debug', 'false')}"
+  bakeEnv << "RELEASE_VERSION=${config.get('releaseVersion', '')}"
   if (fileExists('.git/config')) {
     shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
   } else if(env.GIT_COMMIT != null) {
