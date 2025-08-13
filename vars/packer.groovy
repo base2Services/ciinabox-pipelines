@@ -133,6 +133,29 @@ def call(body) {
     throw new GroovyRuntimeException("Unable to find AMI")
   }
 
+  // Handle SSM parameter lookup for environment variables
+  def ssmEnvVars = [:]
+  if (config.ssmLookup) {
+    println "Looking up SSM parameters from path: ${config.ssmLookup}"
+    try {
+      def ssmParams = ssmParameter(
+        action: 'get',
+        parameter: config.ssmLookup,
+        region: region
+      )
+      
+      ssmParams.each { param ->
+        // Convert SSM parameter name to environment variable name
+        // e.g., /ciinabox/packer/my_var -> MY_VAR
+        def envVarName = param.name.split('/').last().toUpperCase()
+        ssmEnvVars[envVarName] = param.value
+        println "Found SSM parameter: ${param.name} -> ${envVarName}"
+      }
+    } catch (Exception e) {
+      println "Warning: Failed to lookup SSM parameters from ${config.ssmLookup}: ${e.message}"
+    }
+  }
+
   if ((config.ebsVolumeSize && !config.ebsDeviceName) || (!config.ebsVolumeSize && config.ebsDeviceName)) {
     throw new GroovyRuntimeException("Supply both ebs Volume Size and DeviceName")
   }
@@ -236,7 +259,19 @@ ${packerTemplate}
   """)
 
   def debugFlag = (debug) ? '-debug' : ''
-  sh "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
+  
+  // Build environment variables string for packer command
+  def envVarsString = ""
+  if (ssmEnvVars) {
+    envVarsString = ssmEnvVars.collect { key, value -> "${key}='${value}'" }.join(' ')
+    println "Setting environment variables from SSM: ${ssmEnvVars.keySet().join(', ')}"
+  }
+  
+  def packerCommand = envVarsString ? 
+    "${envVarsString} ${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json" :
+    "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
+    
+  sh packerCommand
 
   def manifest = readFile(file: "${ptb.id}.manifest.json")
 
