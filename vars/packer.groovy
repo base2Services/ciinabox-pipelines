@@ -197,22 +197,47 @@ def call(body) {
   // Add SSM environment variables as a shell provisioner
   if (ssmEnvVars) {
     if (platformType.startsWith('windows')) {
-      // For Windows, create a PowerShell script to set environment variables
-      def envVarCommands = ssmEnvVars.collect { key, value -> 
+      // For Windows, create a PowerShell script file to set environment variables
+      def scriptContent = ssmEnvVars.collect { key, value -> 
         "[Environment]::SetEnvironmentVariable('${key}', '${value}', 'Machine')" 
-      }
+      }.join('\n')
+      
+      writeFile(file: "set_ssm_env_vars.ps1", text: scriptContent)
+      
+      ptb.provisioners.push([
+        type: 'file',
+        source: 'set_ssm_env_vars.ps1',
+        destination: 'C:\\temp\\set_ssm_env_vars.ps1'
+      ])
+      
       ptb.provisioners.push([
         type: 'powershell',
-        inline: envVarCommands
+        inline: [
+          'C:\\temp\\set_ssm_env_vars.ps1',
+          'Remove-Item C:\\temp\\set_ssm_env_vars.ps1 -Force'
+        ]
       ])
     } else {
-      // For Linux, add to /etc/environment and current session
-      def envVarCommands = ssmEnvVars.collect { key, value -> 
-        "echo '${key}=${value}' | sudo tee -a /etc/environment && export ${key}='${value}'"
-      }
+      // For Linux, create a shell script file to set environment variables
+      def scriptContent = ssmEnvVars.collect { key, value -> 
+        "echo '${key}=${value}' | sudo tee -a /etc/environment\nexport ${key}='${value}'"
+      }.join('\n')
+      
+      writeFile(file: "set_ssm_env_vars.sh", text: scriptContent)
+      
+      ptb.provisioners.push([
+        type: 'file',
+        source: 'set_ssm_env_vars.sh',
+        destination: '/tmp/set_ssm_env_vars.sh'
+      ])
+      
       ptb.provisioners.push([
         type: 'shell',
-        inline: envVarCommands
+        inline: [
+          'chmod +x /tmp/set_ssm_env_vars.sh',
+          '/tmp/set_ssm_env_vars.sh',
+          'rm -f /tmp/set_ssm_env_vars.sh'
+        ]
       ])
     }
     println "Added SSM environment variables provisioner (${ssmEnvVars.size()} variables from ${config.ssmLookup})"
@@ -256,13 +281,24 @@ def call(body) {
   def packerPath = config.get('packerPath', '/opt/packer/packer')
 
   if (debug) {
-    println("""
+    if (ssmEnvVars) {
+      println("""
+=================================================
+| Generated packer template (SSM vars hidden)  |
+=================================================
+Template generated but not displayed due to sensitive SSM variables.
+Use 'packer validate ${ptb.id}.json' to check template syntax.
+=================================================
+      """)
+    } else {
+      println("""
 =================================================
 | Generated packer template                     |
 =================================================
 ${packerTemplate}
 =================================================
-    """)
+      """)
+    }
   }
 
   writeFile(file: "${ptb.id}.json", text: packerTemplate)
@@ -289,7 +325,7 @@ ${packerTemplate}
 
   println("""
 =================================================
-| Generated packer template                     |
+| Packer build manifest                         |
 =================================================
 ${manifest}
 =================================================
