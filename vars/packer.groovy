@@ -194,6 +194,30 @@ def call(body) {
   ptb.addCommunicator(config.get('username', 'ec2-user'), config.get('credssp', false))
   ptb.addInstall7zipProvisioner()
 
+  // Add SSM environment variables as a shell provisioner
+  if (ssmEnvVars) {
+    if (platformType.startsWith('windows')) {
+      // For Windows, create a PowerShell script to set environment variables
+      def envVarCommands = ssmEnvVars.collect { key, value -> 
+        "[Environment]::SetEnvironmentVariable('${key}', '${value}', 'Machine')" 
+      }
+      ptb.provisioners.push([
+        type: 'powershell',
+        inline: envVarCommands
+      ])
+    } else {
+      // For Linux, add to /etc/environment and current session
+      def envVarCommands = ssmEnvVars.collect { key, value -> 
+        "echo '${key}=${value}' | sudo tee -a /etc/environment && export ${key}='${value}'"
+      }
+      ptb.provisioners.push([
+        type: 'shell',
+        inline: envVarCommands
+      ])
+    }
+    println "Added SSM environment variables provisioner (${ssmEnvVars.size()} variables from ${config.ssmLookup})"
+  }
+
   if (config.winUpdate) {
     ptb.addWindowsUpdate()
   }
@@ -259,19 +283,7 @@ ${packerTemplate}
   """)
 
   def debugFlag = (debug) ? '-debug' : ''
-  
-  // Build environment variables string for packer command
-  def envVarsString = ""
-  if (ssmEnvVars) {
-    envVarsString = ssmEnvVars.collect { key, value -> "${key}='${value}'" }.join(' ')
-    println "Setting environment variables from SSM: ${ssmEnvVars.keySet().join(', ')}"
-  }
-  
-  def packerCommand = envVarsString ? 
-    "${envVarsString} ${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json" :
-    "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
-    
-  sh packerCommand
+  sh "${packerPath} build ${debugFlag} -machine-readable ${ptb.id}.json"
 
   def manifest = readFile(file: "${ptb.id}.manifest.json")
 
