@@ -34,6 +34,8 @@
     winUpdate: true|false,  // (optional, whether to perform windows updates on AMI) 
     ec2LaunchV2: true|false, // (optional, set to true if windows ami is using EC2 Launch V2 package)
     uninstallCinc: true|false, // (optional, uninstall the cinc installation after the cinc provisioner)
+    linuxBashScript: 'linux_bash.sh', // (optional, custom bash script to run on Linux instances)
+    linuxBashCommands: ['command1', 'command2'], // (optional, inline bash commands to run on Linux instances)
     credssp: true|false //(optional, defaults to false. Uses a CredSSP WinRM connection when connecting to windows instances)
   )
 ************************************/
@@ -261,6 +263,15 @@ def call(body) {
 
   if (config.uninstallCinc) {
     ptb.addUninstallCincProvisioner()
+  }
+
+  if (config.linuxBashScript) {
+    writeScript("packer/${config.linuxBashScript}")
+    ptb.addLinuxBashProvisioner(config.linuxBashScript)
+  }
+
+  if (config.linuxBashCommands) {
+    ptb.addLinuxBashProvisioner('', config.linuxBashCommands)
   }
 
   if (config.ec2LaunchV2) {

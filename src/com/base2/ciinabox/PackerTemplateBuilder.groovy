@@ -246,6 +246,32 @@ class PackerTemplateBuilder implements Serializable {
     }
   }
 
+  public void addLinuxBashProvisioner(String script = 'linux_bash.sh', List<String> commands = []) {
+    if (!this.type.startsWith('windows')) {
+      if (commands && !commands.isEmpty()) {
+        // Use inline commands with same environment context as Chef
+        this.provisioners.push([
+          type: 'shell',
+          inline: commands,
+          environment_vars: [
+            'DEBIAN_FRONTEND=noninteractive'
+          ],
+          execute_command: 'chmod +x {{ .Path }}; {{ .Vars }} sudo -E bash {{ .Path }}'
+        ])
+      } else {
+        // Use script file with same environment context
+        this.provisioners.push([
+          type: 'shell',
+          script: script,
+          environment_vars: [
+            'DEBIAN_FRONTEND=noninteractive'
+          ],
+          execute_command: 'chmod +x {{ .Path }}; {{ .Vars }} sudo -E bash {{ .Path }}'
+        ])
+      }
+    }
+  }
+
   public String toJson() {
     Map template = [
       builders: [],
