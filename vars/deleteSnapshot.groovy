@@ -24,10 +24,6 @@ def call(body) {
     error("type must be specified for deleteSnapshot()")
   }
 
-  if(!(config.resource)){
-    error("resource must be specified for deleteSnapshot()")
-  }
-
   if(!(config.region)){
     error("region must be specified for deleteSnapshot()")
   }
