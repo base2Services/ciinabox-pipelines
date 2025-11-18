@@ -22,6 +22,10 @@ washery(
     databases: ['mydb', 'anotherdb'] // (optional list of databases to dump, defaults to all databases)
     taskCPU: '1024' // // (optional, provide if overidding default task cpu value)
     taskMemory: '1024' // // (optional, provide if overidding default task memory value)
+    tags: [ // (optional, provide if you want to tag the resources created by washery)
+        Key1: 'Value1',
+        Key2: 'Value2'
+    ],
     resetUserPasswordParameter: '/path/password' // // (optional, path to user password SSM parameter)
 )
 ************************************/
@@ -89,6 +93,11 @@ def call(body) {
 
     if (config.containerImage) {
         opts = "${opts} -c ${config.containerImage}"
+    }
+
+    if (config.tags) {
+        def tagString = config.tags.collect { key, value -> "${key}=${value}" }.join(",")
+        opts = "${opts} -t ${tagString}"
     }
         
     def command = "cd /opt/washery && ./main.sh ${opts}"
