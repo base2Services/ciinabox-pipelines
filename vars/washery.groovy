@@ -96,7 +96,7 @@ def call(body) {
     }
 
     if (config.tags) {
-        def tagString = config.tags.collect { key, value -> "${key}=${value}" }.join(",")
+        def tagString = config.tags.collect { key, value -> "${key}=${value}" }.join(" ")
         opts = "${opts} -t ${tagString}"
     }
         
