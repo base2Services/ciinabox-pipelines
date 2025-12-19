@@ -28,6 +28,13 @@ import com.base2.ciinabox.aws.AwsClientBuilder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import com.amazonaws.services.rds.waiters.AmazonRDSWaiters
+import com.amazonaws.waiters.WaiterParameters
+import com.amazonaws.waiters.WaiterUnrecoverableException
+import com.amazonaws.waiters.NoOpWaiterHandler
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.services.rds.AmazonRDSClientBuilder
+
 def call(body) {
   def config = body
 
@@ -106,7 +113,22 @@ def handleRds(client, config) {
   def create_snapshot_result = client.createDBSnapshot(create_request)
   echo("Snapshot ${snapshot_identifier} created")
 
-  String snapshot_status = ""
+  def success = wait(clientBuilder, snapshot_identifier, config)
+  // have a go at this later
+  /*if (!success) {
+    rdsclient = clientBuilder.rds()
+    def events = new CloudformationStackEvents(rdsclient, config.region, stackName)
+    echo events.getFailedEventsTable()
+    events = null
+    rdsclient = null
+    error "${stackName} changeset ${changeSetName} failed to execute."
+  }*/
+  
+  rdsclient = null
+  clientBuilder = null
+  echo "Snapshot ${snapshot_identifier} available"
+
+  /*String snapshot_status = ""
   while(snapshot_status != "available") {
     def describe_request = new DescribeDBSnapshotsRequest()
       .withDBSnapshotIdentifier(snapshot_identifier)
@@ -132,7 +154,7 @@ def handleRds(client, config) {
     } catch(InterruptedException ex) {
       // suppress and continue
     }
-  }
+  }*/
 }
 
 @NonCPS
@@ -171,4 +193,66 @@ def handleRedshift(client, config) {
       // suppress and continue
     }
   }
+}
+
+@NonCPS
+def wait(clientBuilder, snapshotIdentifier, config) {
+  def rdsclient = clientBuilder.rds()
+  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  def count = 0
+
+  try {
+    def future = waiter.runAsync(
+      new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
+      new NoOpWaiterHandler()
+    )
+    while(!future.isDone()) {
+      try {
+        echo "Waiting for snapshot to become available ..."
+        Thread.sleep(10000)
+        count++
+        // Initialise new client and waiter if count exceeds set timeout value
+        if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+          rdsclient = updateClient(clientBuilder, rdsclient, config.region) 
+          waiter = updateWaiter(rdsclient)
+          future = waiter.runAsync(
+             new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
+             new NoOpWaiterHandler()
+          )
+          count = 0
+        }
+
+      } catch(InterruptedException ex) {
+          // suppress and continue
+      }
+    }
+  } catch(Exception ex) {
+    rdsclient = null
+    echo "Take snapshot failed with error ${ex.getMessage()}"
+    return false
+  }  
+  return true
+}
+
+@NonCPS
+def updateClient(clientBuilder, rdsclient, region){
+  echo "Updating Client"
+  def cb = new AmazonRDSClientBuilder().standard()
+    .withClientConfiguration(clientBuilder.config())
+  if (region) {
+    cb.withRegion(region)
+  }
+  def creds =  clientBuilder.getNewCreds()
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
+  return cb.build()
+}
+
+@NonCPS
+def updateWaiter(rdsclient){
+  echo "Updating Waiter"
+  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  echo "Created new waiter - ${waiter}"
+  return waiter
 }
