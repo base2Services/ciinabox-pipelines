@@ -105,6 +105,65 @@ def handleDBCluster(client, config) {
   }  
 }
 
+def wait(clientBuilder, snapshotIdentifier, config) {
+  def rdsclient = clientBuilder.rds()
+  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  def count = 0
+
+  try {
+    def future = waiter.runAsync(
+      new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
+      new NoOpWaiterHandler()
+    )
+    while(!future.isDone()) {
+      try {
+        echo "Waiting for snapshot to become available ..."
+        Thread.sleep(10000)
+        count++
+        // Initialise new client and waiter if count exceeds set timeout value
+        if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
+          rdsclient = updateClient(clientBuilder, rdsclient, config.region) 
+          waiter = updateWaiter(rdsclient)
+          future = waiter.runAsync(
+             new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
+             new NoOpWaiterHandler()
+          )
+          count = 0
+        }
+
+      } catch(InterruptedException ex) {
+          // suppress and continue
+      }
+    }
+  } catch(Exception ex) {
+    rdsclient = null
+    echo "Take snapshot failed with error ${ex.getMessage()}"
+    return false
+  }  
+  return true
+}
+
+def updateClient(clientBuilder, rdsclient, region){
+  echo "Updating Client"
+  def cb = new AmazonRDSClientBuilder().standard()
+    .withClientConfiguration(clientBuilder.config())
+  if (region) {
+    cb.withRegion(region)
+  }
+  def creds =  clientBuilder.getNewCreds()
+  if(creds != null) {
+    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
+  }
+  return cb.build()
+}
+
+def updateWaiter(rdsclient){
+  echo "Updating Waiter"
+  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  echo "Created new waiter - ${waiter}"
+  return waiter
+}
+
 @NonCPS
 def handleRds(client, config) {
   def clientBuilder = new AwsClientBuilder([
@@ -201,63 +260,4 @@ def handleRedshift(client, config) {
       // suppress and continue
     }
   }
-}
-
-def wait(clientBuilder, snapshotIdentifier, config) {
-  def rdsclient = clientBuilder.rds()
-  def waiter = rdsclient.waiters().DBSnapshotAvailable()
-  def count = 0
-
-  try {
-    def future = waiter.runAsync(
-      new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
-      new NoOpWaiterHandler()
-    )
-    while(!future.isDone()) {
-      try {
-        echo "Waiting for snapshot to become available ..."
-        Thread.sleep(10000)
-        count++
-        // Initialise new client and waiter if count exceeds set timeout value
-        if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
-          rdsclient = updateClient(clientBuilder, rdsclient, config.region) 
-          waiter = updateWaiter(rdsclient)
-          future = waiter.runAsync(
-             new WaiterParameters<>(new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier(snapshotIdentifier)),
-             new NoOpWaiterHandler()
-          )
-          count = 0
-        }
-
-      } catch(InterruptedException ex) {
-          // suppress and continue
-      }
-    }
-  } catch(Exception ex) {
-    rdsclient = null
-    echo "Take snapshot failed with error ${ex.getMessage()}"
-    return false
-  }  
-  return true
-}
-
-def updateClient(clientBuilder, rdsclient, region){
-  echo "Updating Client"
-  def cb = new AmazonRDSClientBuilder().standard()
-    .withClientConfiguration(clientBuilder.config())
-  if (region) {
-    cb.withRegion(region)
-  }
-  def creds =  clientBuilder.getNewCreds()
-  if(creds != null) {
-    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
-  }
-  return cb.build()
-}
-
-def updateWaiter(rdsclient){
-  echo "Updating Waiter"
-  def waiter = rdsclient.waiters().DBSnapshotAvailable()
-  echo "Created new waiter - ${waiter}"
-  return waiter
 }
