@@ -107,6 +107,14 @@ def handleDBCluster(client, config) {
 
 @NonCPS
 def handleRds(client, config) {
+  def clientBuilder = new AwsClientBuilder([
+    region: config.region,
+    awsAccountId: config.get('awsAccountId'),
+    role: config.get('role'),
+    maxErrorRetry: config.get('maxErrorRetry', 3),
+    env: env,
+    duration: config.get('duration', 3600)])
+  
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
   def create_request = new CreateDBSnapshotRequest().withDBInstanceIdentifier(config.resource).withDBSnapshotIdentifier(snapshot_identifier)
