@@ -109,7 +109,7 @@ def handleDBCluster(client, config) {
 def handleRds(client, config) {
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
-    awsAccountId: config.get('awsAccountId'),
+    awsAccountId: config.get('accountId'),
     role: config.get('role'),
     maxErrorRetry: config.get('maxErrorRetry', 3),
     env: env,
