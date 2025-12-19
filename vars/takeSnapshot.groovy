@@ -203,7 +203,6 @@ def handleRedshift(client, config) {
   }
 }
 
-@NonCPS
 def wait(clientBuilder, snapshotIdentifier, config) {
   def rdsclient = clientBuilder.rds()
   def waiter = rdsclient.waiters().DBSnapshotAvailable()
@@ -242,7 +241,6 @@ def wait(clientBuilder, snapshotIdentifier, config) {
   return true
 }
 
-@NonCPS
 def updateClient(clientBuilder, rdsclient, region){
   echo "Updating Client"
   def cb = new AmazonRDSClientBuilder().standard()
@@ -257,7 +255,6 @@ def updateClient(clientBuilder, rdsclient, region){
   return cb.build()
 }
 
-@NonCPS
 def updateWaiter(rdsclient){
   echo "Updating Waiter"
   def waiter = rdsclient.waiters().DBSnapshotAvailable()
