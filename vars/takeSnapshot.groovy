@@ -159,7 +159,7 @@ def updateClient(clientBuilder, rdsclient, region){
 
 def updateWaiter(rdsclient){
   echo "Updating Waiter"
-  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  def waiter = rdsclient.waiters().dBSnapshotAvailable()
   echo "Created new waiter - ${waiter}"
   return waiter
 }
