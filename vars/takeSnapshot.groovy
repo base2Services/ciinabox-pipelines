@@ -107,7 +107,7 @@ def handleDBCluster(client, config) {
 
 def wait(clientBuilder, snapshotIdentifier, config) {
   def rdsclient = clientBuilder.rds()
-  def waiter = rdsclient.waiters().DBSnapshotAvailable()
+  def waiter = rdsclient.waiters().dbSnapshotAvailable()
   def count = 0
 
   try {
