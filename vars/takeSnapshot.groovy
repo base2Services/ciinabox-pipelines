@@ -191,9 +191,8 @@ def handleRds(client, config) {
   
   rdsclient = null
   clientBuilder = null
-  env[outputName] = snapshots.get(0).getDBSnapshotIdentifier()
-  env["${outputName}_ARN"] = snapshots.get(0).getDBSnapshotArn()
-  echo("RDS snapshot created for ${config.resource} created on ${snapshots.get(0).getSnapshotCreateTime().format('d/M/yyyy HH:mm:ss')} is available")
+  env[outputName] = snapshot_identifier
+  echo("RDS snapshot created for ${config.resource} is available")
 
   /*String snapshot_status = ""
   while(snapshot_status != "available") {
