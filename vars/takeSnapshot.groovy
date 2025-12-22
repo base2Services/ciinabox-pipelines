@@ -68,7 +68,6 @@ def call(body) {
 
 }
 
-@NonCPS
 def handleDBCluster(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
@@ -105,7 +104,6 @@ def handleDBCluster(client, config) {
   }  
 }
 
-@NonCPS
 def wait(clientBuilder, snapshotIdentifier, config) {
   def rdsclient = clientBuilder.rds()
   def waiter = rdsclient.waiters().dBSnapshotAvailable()
@@ -144,7 +142,6 @@ def wait(clientBuilder, snapshotIdentifier, config) {
   return true
 }
 
-@NonCPS
 def updateClient(clientBuilder, rdsclient, region){
   echo "Updating Client"
   def cb = new AmazonRDSClientBuilder().standard()
@@ -159,7 +156,6 @@ def updateClient(clientBuilder, rdsclient, region){
   return cb.build()
 }
 
-@NonCPS
 def updateWaiter(rdsclient){
   echo "Updating Waiter"
   def waiter = rdsclient.waiters().dBSnapshotAvailable()
@@ -167,7 +163,6 @@ def updateWaiter(rdsclient){
   return waiter
 }
 
-@NonCPS
 def handleRds(client, config) {
   def clientBuilder = new AwsClientBuilder([
     region: config.region,
@@ -229,7 +224,6 @@ def handleRds(client, config) {
   }*/
 }
 
-@NonCPS
 def handleRedshift(client, config) {
   def outputName = config.get('envVarName', 'SNAPSHOT_ID')
 
