@@ -19,27 +19,30 @@ import com.amazonaws.regions.*
 
 def call(body) {
   def config = body
-  // Resolve file relative to current dir (respects dir() block in pipeline)
-  def baseDir = pwd().toString()
-  File file = new File(baseDir, config.file)
-  if (!file.exists()) {
-    error "s3Put: file not found: ${file.absolutePath}"
+
+  // NOTE: this Groovy runs on the controller, but the workspace lives on the agent.
+  // Use Pipeline steps to read the file from the agent workspace.
+  if (!fileExists(config.file)) {
+    error "s3Put: file not found in workspace: ${pwd()}/${config.file}"
   }
+  byte[] bytes = readFile(file: config.file).getBytes('UTF-8')
+
   AmazonS3 s3 = setupClient(config.region)
-  putObject(s3,file,config)
+  putObject(s3, bytes, config)
 }
 
-def putObject(client,file,config) {
-
-  def inputStream = new FileInputStream(file)
+def putObject(client, byte[] bytes, config) {
+  def inputStream = new ByteArrayInputStream(bytes)
   def keyPrefix = config.prefix != null ? config.prefix : config.key
   def s3Key = keyPrefix != null ? "${keyPrefix}${config.file}" : config.file
+  def metadata = new ObjectMetadata()
+  metadata.setContentLength(bytes.length)
 
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
     s3Key,
     inputStream,
-    new ObjectMetadata()
+    metadata
   )
 
   if (config.publicRead) {
