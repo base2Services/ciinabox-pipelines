@@ -19,7 +19,12 @@ import com.amazonaws.regions.*
 
 def call(body) {
   def config = body
-  File file = new File(config.file)
+  // Resolve file relative to current dir (respects dir() block in pipeline)
+  def baseDir = pwd().toString()
+  File file = new File(baseDir, config.file)
+  if (!file.exists()) {
+    error "s3Put: file not found: ${file.absolutePath}"
+  }
   AmazonS3 s3 = setupClient(config.region)
   putObject(s3,file,config)
 }
@@ -27,10 +32,12 @@ def call(body) {
 def putObject(client,file,config) {
 
   def inputStream = new FileInputStream(file)
+  def keyPrefix = config.prefix != null ? config.prefix : config.key
+  def s3Key = keyPrefix != null ? "${keyPrefix}${config.file}" : config.file
 
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
-    "${config.prefix}${config.file}",
+    s3Key,
     inputStream,
     new ObjectMetadata()
   )
@@ -38,7 +45,7 @@ def putObject(client,file,config) {
   if (config.publicRead) {
     request.withCannedAcl(CannedAccessControlList.PublicRead)
   }
-  println "copying ${config.file} to s3://${config.bucket}/${config.prefix}${config.file}"
+  println "copying ${config.file} to s3://${config.bucket}/${s3Key}"
   client.putObject(request)
 
 }
