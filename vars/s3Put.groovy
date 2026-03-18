@@ -20,8 +20,6 @@ import com.amazonaws.regions.*
 def call(body) {
   def config = body
 
-  // NOTE: this Groovy runs on the controller, but the workspace lives on the agent.
-  // Use Pipeline steps to read the file from the agent workspace.
   if (!fileExists(config.file)) {
     error "s3Put: file not found in workspace: ${pwd()}/${config.file}"
   }
