@@ -19,26 +19,34 @@ import com.amazonaws.regions.*
 
 def call(body) {
   def config = body
-  File file = new File(config.file)
+
+  if (!fileExists(config.file)) {
+    error "s3Put: file not found in workspace: ${pwd()}/${config.file}"
+  }
+  byte[] bytes = readFile(file: config.file).getBytes('UTF-8')
+
   AmazonS3 s3 = setupClient(config.region)
-  putObject(s3,file,config)
+  putObject(s3, bytes, config)
 }
 
-def putObject(client,file,config) {
-
-  def inputStream = new FileInputStream(file)
+def putObject(client, byte[] bytes, config) {
+  def inputStream = new ByteArrayInputStream(bytes)
+  def keyPrefix = config.prefix != null ? config.prefix : config.key
+  def s3Key = keyPrefix != null ? "${keyPrefix}${config.file}" : config.file
+  def metadata = new ObjectMetadata()
+  metadata.setContentLength(bytes.length)
 
   PutObjectRequest request = new PutObjectRequest(
     config.bucket,
-    "${config.prefix}${config.file}",
+    s3Key,
     inputStream,
-    new ObjectMetadata()
+    metadata
   )
 
   if (config.publicRead) {
     request.withCannedAcl(CannedAccessControlList.PublicRead)
   }
-  println "copying ${config.file} to s3://${config.bucket}/${config.prefix}${config.file}"
+  println "copying ${config.file} to s3://${config.bucket}/${s3Key}"
   client.putObject(request)
 
 }
