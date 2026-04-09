@@ -2,10 +2,9 @@
 .SYNOPSIS
   Silently install 7-Zip
 .DESCRIPTION
-  Install 7-Zip using powershell during a packer bake
+  7-Zip source - http://www.7-zip.org/download.html
 .PARAMETER version
-  7-Zip MSI build number (filename), default 2301 -> 7z2301-x64.msi from GitHub ip7z/7zip release 23.01.
-  Other values use https://www.7-zip.org/a/7z{version}-x64.msi
+  7-Zip version, defaults to 1900 -> https://www.7-zip.org/a/7z1900-x64.msi
 #>
 
 param (
@@ -30,12 +29,8 @@ if (Test-Path -Path $workdir -PathType Container) {
     [System.Net.SecurityProtocolType]::Tls12
 )
 
-# Download the installer (23.01+ MSIs: official hosting is GitHub; www.7-zip.org often 404s)
-if ($version -eq "2301") {
-  $source = "https://github.com/ip7z/7zip/releases/download/23.01/7z2301-x64.msi"
-} else {
-  $source = "https://www.7-zip.org/a/7z$version-x64.msi"
-}
+# Download the installer 
+$source = "https://www.7-zip.org/a/7z$version-x64.msi"
 $destination = "$workdir\7-Zip.msi"
 Write-Host "INFO: Downloading 7-Zip $version msi from $source"
 Invoke-WebRequest $source -OutFile $destination
