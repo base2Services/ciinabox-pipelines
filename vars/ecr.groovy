@@ -30,34 +30,87 @@ def call(body) {
 
   def rules = [
     [
-      rulePriority: 100,
-      description: "remove all untagged images",
+      rulePriority: 1,
+      description: "Keep only the last 20 prodnz tagged images",
+      selection: [
+        tagStatus: "tagged",
+        tagPrefixList: ["prodnz"],
+        countType: "imageCountMoreThan",
+        countNumber: 20
+      ],
+      action: [
+        type: "expire"
+      ]
+    ],
+    [
+      rulePriority: 2,
+      description: "Keep only the last 20 prod tagged images",
+      selection: [
+        tagStatus: "tagged",
+        tagPrefixList: ["prod"],
+        countType: "imageCountMoreThan",
+        countNumber: 20
+      ],
+      action: [
+        type: "expire"
+      ]
+    ],
+    [
+      rulePriority: 3,
+      description: "Expire latest-tagged images older than 6 months",
+      selection: [
+        tagStatus: "tagged",
+        tagPrefixList: ["latest"],
+        countType: "sinceImagePushed",
+        countUnit: "days",
+        countNumber: 183
+      ],
+      action: [
+        type: "expire"
+      ]
+    ],
+    [
+      rulePriority: 4,
+      description: "Expire release tagged images older than 6 months",
+      selection: [
+        tagStatus: "tagged",
+        tagPrefixList: ["release"],
+        countType: "sinceImagePushed",
+        countUnit: "days",
+        countNumber: 183
+      ],
+      action: [
+        type: "expire"
+      ]
+    ],
+    [
+      rulePriority: 5,
+      description: "Expire feature tagged images older than 6 months",
+      selection: [
+        tagStatus: "tagged",
+        tagPrefixList: ["feature"],
+        countType: "sinceImagePushed",
+        countUnit: "days",
+        countNumber: 183
+      ],
+      action: [
+        type: "expire"
+      ]
+    ],
+    [
+      rulePriority: 10,
+      description: "Expire untagged images older than 3 months",
       selection: [
         tagStatus: "untagged",
-        countType: "imageCountMoreThan",
-        countNumber: 1
+        countType: "sinceImagePushed",
+        countUnit: "days",
+        countNumber: 90
       ],
       action: [
         type: "expire"
       ]
     ]
   ]
-
-  if (config.taggedCleanup) {
-    rules << [
-      rulePriority: 200,
-      description: "Keep last 10 ${config.taggedCleanup.join(" ")} builds",
-      selection: [
-        tagStatus: "tagged",
-        countType: "imageCountMoreThan",
-        countNumber: 10,
-        tagPrefixList: config.taggedCleanup
-      ],
-      action: [
-        type: "expire"
-      ]
-    ]
-  }
   
   setRepoTags(ecr,config)
   setLifcyclePolicy(ecr,rules,config)
