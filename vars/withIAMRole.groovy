@@ -35,7 +35,7 @@ def assumeRole(awsAccountId, region, roleName, options) {
   }
 
   def request = new AssumeRoleRequest()
-        .withRoleArn(roleArn).withDurationSeconds(3600)
+        .withRoleArn(roleArn).withDurationSeconds(43200)
         .withRoleSessionName(roleSessionName)
 
   if(options.externalId) {
