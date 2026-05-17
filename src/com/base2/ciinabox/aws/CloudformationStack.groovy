@@ -140,7 +140,8 @@ class CloudformationStack implements Serializable {
 
     def s3Client = new AwsClientBuilder([region: bucketRegion]).s3()
     def template = null
-    def templateBody = s3Client.getObject(new GetObjectRequest(s3URI.getBucket(), s3URI.getKey())).getObjectContent()
+    def templateBodyStream = s3Client.getObject(new GetObjectRequest(s3URI.getBucket(), s3URI.getKey())).getObjectContent()
+    def templateBody = templateBodyStream.getText('UTF-8')
 
     if (s3URI.getKey().endsWith('yaml') || s3URI.getKey().endsWith('yml')) {
       Yaml yaml = new Yaml(new IntrinsicsYamlConstructor())
