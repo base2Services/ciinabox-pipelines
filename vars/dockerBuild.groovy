@@ -20,6 +20,7 @@ dockerBuild(
   pull: true | false, // (optional, Always attempt to pull a newer version of the image. defaults to false)
   noCache: true | false // (optional, Do not use cache when building the image. defaults to false)
   target: true | false // (optional, Set the target build stage to build. defaults to false)
+  platform: 'linux/amd64' // (optional, Set the target platform for build. defaults to false
 )
 ************************************/
 
@@ -37,6 +38,7 @@ def call(body) {
   def noCache = config.get('noCache', false)
   def target = config.get('target', false)
   def pull = config.get('pull', false)
+  def platform = config.get('platform', false)
   def buildArgs = ""
   config.get('args',[:]).each { arg, value ->
      buildArgs += "--build-arg ${arg}=${value} "
@@ -49,7 +51,9 @@ def call(body) {
   if(noCache) {
     cliOpts += " --no-cache "
   }
-
+  if(platform) {
+    cliOpts += " --platform ${platform} "
+  }
   if(target) {
     cliOpts += " --target ${target} "
   }
