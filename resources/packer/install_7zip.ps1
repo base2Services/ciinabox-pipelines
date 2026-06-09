@@ -2,14 +2,13 @@
 .SYNOPSIS
   Silently install 7-Zip
 .DESCRIPTION
-  Install 7-Zip using powershell during a packer bake
   7-Zip source - http://www.7-zip.org/download.html
 .PARAMETER version
   7-Zip version, defaults to 1900 -> https://www.7-zip.org/a/7z1900-x64.msi
 #>
 
 param (
-  [string]$version = "2107"
+  [string]$version = "2301"
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,7 +29,7 @@ if (Test-Path -Path $workdir -PathType Container) {
     [System.Net.SecurityProtocolType]::Tls12
 )
 
-# Download the installer
+# Download the installer 
 $source = "https://www.7-zip.org/a/7z$version-x64.msi"
 $destination = "$workdir\7-Zip.msi"
 Write-Host "INFO: Downloading 7-Zip $version msi from $source"
