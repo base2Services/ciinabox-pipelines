@@ -152,6 +152,11 @@ def call(body) {
     suites: []
   ]
 
+  def useSSM = config.get('useSSM', false)
+  if(useSSM) {
+     kitchenYaml.use_ssm_session_manager = true
+  }
+
   def provisioner = config.get('provisioner', 'chef')
 
   switch(provisioner) {
