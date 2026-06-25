@@ -109,7 +109,7 @@ class PackerTemplateBuilder implements Serializable {
         } else {
           chefProvisioner.install_command = 'powershell.exe -ExecutionPolicy Bypass -c "' + cincInstallCommand + '"'
         }
-        chefProvisioner.execute_command = 'C:/cinc-project/cinc/bin/chef-solo.bat --no-color -c C:/Windows/Temp/packer-chef-solo/solo.rb -j C:/Windows/Temp/packer-chef-solo/node.json'
+        chefProvisioner.execute_command = 'C:/cinc-project/cinc/bin/cinc-solo.bat --no-color -c C:/Windows/Temp/packer-chef-solo/solo.rb -j C:/Windows/Temp/packer-chef-solo/node.json'
       }
 
     } else {
