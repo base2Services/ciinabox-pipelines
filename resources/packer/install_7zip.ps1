@@ -8,7 +8,7 @@
 #>
 
 param (
-  [string]$version = "2301"
+  [string]$version = "2602"
 )
 
 $ErrorActionPreference = "Stop"
