@@ -8,6 +8,7 @@
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
    taggedCleanup: ['master','develop'],
+   lifecyclePolicy: 'default' | 'custom',
    imutableTags: true | false,
    scanOnPush: true | false,
    repoTags: [
@@ -28,7 +29,61 @@ def call(body) {
     setRepositoryPolicy(ecr,config)
   }
 
+  def rules = buildLifecycleRules(config)
+  
+  setRepoTags(ecr,config)
+  setLifcyclePolicy(ecr,rules,config)
+  setImutableTags(ecr,config)
+  setScanningConfig(ecr,config)
+}
+
+def buildLifecycleRules(config) {
+  def policy = config.get('lifecyclePolicy', 'default')
+  switch(policy.toString().toLowerCase()) {
+    case 'custom':
+      return customLifecycleRules()
+    default:
+      return defaultLifecycleRules(config)
+  }
+}
+
+def defaultLifecycleRules(config) {
   def rules = [
+    [
+      rulePriority: 100,
+      description: "remove all untagged images",
+      selection: [
+        tagStatus: "untagged",
+        countType: "imageCountMoreThan",
+        countNumber: 1
+      ],
+      action: [
+        type: "expire"
+      ]
+    ]
+  ]
+
+  if (config.taggedCleanup) {
+    rules << [
+      rulePriority: 200,
+      description: "Keep last 10 ${config.taggedCleanup.join(" ")} builds",
+      selection: [
+        tagStatus: "tagged",
+        countType: "imageCountMoreThan",
+        countNumber: 10,
+        tagPrefixList: config.taggedCleanup
+      ],
+      action: [
+        type: "expire"
+      ]
+    ]
+  }
+
+  return rules
+}
+
+def customLifecycleRules() {
+  return [
     [
       rulePriority: 1,
       description: "Keep only the last 20 prodnz tagged images",
@@ -111,11 +166,6 @@ def call(body) {
       ]
     ]
   ]
-  
-  setRepoTags(ecr,config)
-  setLifcyclePolicy(ecr,rules,config)
-  setImutableTags(ecr,config)
-  setScanningConfig(ecr,config)
 }
 
 @NonCPS
