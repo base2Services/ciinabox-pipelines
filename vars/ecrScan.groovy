@@ -17,6 +17,7 @@
 import com.amazonaws.services.ecr.AmazonECRClientBuilder
 import com.amazonaws.services.ecr.model.DescribeImageScanFindingsRequest
 import com.amazonaws.services.ecr.model.ImageIdentifier
+import com.amazonaws.services.ecr.model.LimitExceededException
 import com.amazonaws.services.ecr.model.StartImageScanRequest
 import com.amazonaws.services.ecr.waiters.AmazonECRWaiters
 import com.amazonaws.waiters.WaiterParameters
@@ -126,11 +127,15 @@ def getScanResults(ecr,config) {
 @NonCPS
 def triggerScan(ecr,config) {
   def imageId = new ImageIdentifier().withImageTag(config.tag)
-  ecr.startImageScan(new StartImageScanRequest()
-    .withRepositoryName(config.image)
-    .withRegistryId(config.accountId)
-    .withImageId(imageId) 
-  )
+  try {
+    ecr.startImageScan(new StartImageScanRequest()
+      .withRepositoryName(config.image)
+      .withRegistryId(config.accountId)
+      .withImageId(imageId)
+    )
+  } catch (LimitExceededException e) {
+    echo "ECR scan quota exceeded for ${config.image}:${config.tag}; using existing scan results. ${e.getErrorMessage()}"
+  }
 }
 
 @NonCPS
