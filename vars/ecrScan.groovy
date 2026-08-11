@@ -134,7 +134,7 @@ def triggerScan(ecr,config) {
       .withImageId(imageId)
     )
   } catch (LimitExceededException e) {
-    echo "ECR scan quota exceeded for ${config.image}:${config.tag}; using existing scan results. ${e.getErrorMessage()}"
+    println "ECR scan quota exceeded for ${config.image}:${config.tag}; using existing scan results. ${e.getErrorMessage()}"
   }
 }
 
