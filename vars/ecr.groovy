@@ -8,7 +8,11 @@
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
    taggedCleanup: ['master','develop'],
-   lifecyclePolicy: 'default' | 'custom',
+   // lifecyclePolicy options:
+   //   omitted/'default' - built-in default rules
+   //   false/'none'/'disabled' - skip applying a lifecycle policy
+   //   [ ... ] - pass rules directly from the Jenkinsfile
+   lifecyclePolicy: 'default' | false | [...],
    imutableTags: true | false,
    scanOnPush: true | false,
    repoTags: [
@@ -32,18 +36,44 @@ def call(body) {
   def rules = buildLifecycleRules(config)
   
   setRepoTags(ecr,config)
-  setLifcyclePolicy(ecr,rules,config)
+  if (rules != null) {
+    setLifcyclePolicy(ecr,rules,config)
+  } else {
+    println "Skipping ECR lifecycle policy for ${config.image}"
+  }
   setImutableTags(ecr,config)
   setScanningConfig(ecr,config)
 }
 
 def buildLifecycleRules(config) {
-  def policy = config.get('lifecyclePolicy', 'default')
+  if (!config.containsKey('lifecyclePolicy')) {
+    return defaultLifecycleRules(config)
+  }
+
+  def policy = config.lifecyclePolicy
+  if (policy == false || policy == null) {
+    return null
+  }
+
+  // Rules list passed from Jenkinsfile
+  if (policy instanceof List) {
+    return policy
+  }
+
+  // Full policy document { rules: [...] } passed from Jenkinsfile
+  if (policy instanceof Map && policy.containsKey('rules')) {
+    return policy.rules
+  }
+
   switch(policy.toString().toLowerCase()) {
-    case 'custom':
-      return customLifecycleRules()
-    default:
+    case 'none':
+    case 'disabled':
+    case 'skip':
+      return null
+    case 'default':
       return defaultLifecycleRules(config)
+    default:
+      error("Unknown lifecyclePolicy '${policy}'. Use 'default', false, or a rules list.")
   }
 }
 
@@ -80,92 +110,6 @@ def defaultLifecycleRules(config) {
   }
 
   return rules
-}
-
-def customLifecycleRules() {
-  return [
-    [
-      rulePriority: 1,
-      description: "Keep only the last 20 prodnz tagged images",
-      selection: [
-        tagStatus: "tagged",
-        tagPrefixList: ["prodnz"],
-        countType: "imageCountMoreThan",
-        countNumber: 20
-      ],
-      action: [
-        type: "expire"
-      ]
-    ],
-    [
-      rulePriority: 2,
-      description: "Keep only the last 20 prod tagged images",
-      selection: [
-        tagStatus: "tagged",
-        tagPrefixList: ["prod"],
-        countType: "imageCountMoreThan",
-        countNumber: 20
-      ],
-      action: [
-        type: "expire"
-      ]
-    ],
-    [
-      rulePriority: 3,
-      description: "Expire latest-tagged images older than 6 months",
-      selection: [
-        tagStatus: "tagged",
-        tagPrefixList: ["latest"],
-        countType: "sinceImagePushed",
-        countUnit: "days",
-        countNumber: 183
-      ],
-      action: [
-        type: "expire"
-      ]
-    ],
-    [
-      rulePriority: 4,
-      description: "Expire release tagged images older than 6 months",
-      selection: [
-        tagStatus: "tagged",
-        tagPrefixList: ["release"],
-        countType: "sinceImagePushed",
-        countUnit: "days",
-        countNumber: 183
-      ],
-      action: [
-        type: "expire"
-      ]
-    ],
-    [
-      rulePriority: 5,
-      description: "Expire feature tagged images older than 6 months",
-      selection: [
-        tagStatus: "tagged",
-        tagPrefixList: ["feature"],
-        countType: "sinceImagePushed",
-        countUnit: "days",
-        countNumber: 183
-      ],
-      action: [
-        type: "expire"
-      ]
-    ],
-    [
-      rulePriority: 10,
-      description: "Expire untagged images older than 3 months",
-      selection: [
-        tagStatus: "untagged",
-        countType: "sinceImagePushed",
-        countUnit: "days",
-        countNumber: 90
-      ],
-      action: [
-        type: "expire"
-      ]
-    ]
-  ]
 }
 
 @NonCPS
