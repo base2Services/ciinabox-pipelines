@@ -8,6 +8,11 @@
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
    taggedCleanup: ['master','develop'],
+   // lifecyclePolicy options:
+   //   omitted/'default' - built-in default rules
+   //   false/'none'/'disabled' - skip applying a lifecycle policy
+   //   [ ... ] - pass rules directly from the Jenkinsfile
+   lifecyclePolicy: 'default' | false | [...],
    imutableTags: true | false,
    scanOnPush: true | false,
    repoTags: [
@@ -28,6 +33,51 @@ def call(body) {
     setRepositoryPolicy(ecr,config)
   }
 
+  def rules = buildLifecycleRules(config)
+  
+  setRepoTags(ecr,config)
+  if (rules != null) {
+    setLifcyclePolicy(ecr,rules,config)
+  } else {
+    println "Skipping ECR lifecycle policy for ${config.image}"
+  }
+  setImutableTags(ecr,config)
+  setScanningConfig(ecr,config)
+}
+
+def buildLifecycleRules(config) {
+  if (!config.containsKey('lifecyclePolicy')) {
+    return defaultLifecycleRules(config)
+  }
+
+  def policy = config.lifecyclePolicy
+  if (policy == false || policy == null) {
+    return null
+  }
+
+  // Rules list passed from Jenkinsfile
+  if (policy instanceof List) {
+    return policy
+  }
+
+  // Full policy document { rules: [...] } passed from Jenkinsfile
+  if (policy instanceof Map && policy.containsKey('rules')) {
+    return policy.rules
+  }
+
+  switch(policy.toString().toLowerCase()) {
+    case 'none':
+    case 'disabled':
+    case 'skip':
+      return null
+    case 'default':
+      return defaultLifecycleRules(config)
+    default:
+      error("Unknown lifecyclePolicy '${policy}'. Use 'default', false, or a rules list.")
+  }
+}
+
+def defaultLifecycleRules(config) {
   def rules = [
     [
       rulePriority: 100,
@@ -58,11 +108,8 @@ def call(body) {
       ]
     ]
   }
-  
-  setRepoTags(ecr,config)
-  setLifcyclePolicy(ecr,rules,config)
-  setImutableTags(ecr,config)
-  setScanningConfig(ecr,config)
+
+  return rules
 }
 
 @NonCPS
