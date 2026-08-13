@@ -1,6 +1,7 @@
 /***********************************
  ecr DSL
  Creates ECR repository
+
  example usage
  ecr(
    accountId: '1234567890',
@@ -8,16 +9,46 @@
    image: 'myrepo/image',
    otherAccountIds: ['0987654321','5432167890'],
    taggedCleanup: ['master','develop'],
-   // lifecyclePolicy options:
-   //   omitted/'default' - built-in default rules
-   //   false/'none'/'disabled' - skip applying a lifecycle policy
-   //   [ ... ] - pass rules directly from the Jenkinsfile
-   lifecyclePolicy: 'default' | false | [...],
+   // lifecyclePolicy: omit/'default' | false | [custom rules]
    imutableTags: true | false,
    scanOnPush: true | false,
    repoTags: [
      'Key': 'Value'
    ]
+ )
+
+ custom lifecyclePolicy example
+ def myLifecyclePolicy = [
+   [
+     rulePriority: 1,
+     description: "Keep last 20 prod images",
+     selection: [
+       tagStatus: "tagged",
+       tagPrefixList: ["prod"],
+       countType: "imageCountMoreThan",
+       countNumber: 20
+     ],
+     action: [ type: "expire" ]
+   ],
+   [
+     rulePriority: 2,
+     description: "Expire untagged images older than 90 days",
+     selection: [
+       tagStatus: "untagged",
+       countType: "sinceImagePushed",
+       countUnit: "days",
+       countNumber: 90
+     ],
+     action: [ type: "expire" ]
+   ]
+ ]
+
+ ecr(
+   accountId: env.OPS_ACCOUNT_ID,
+   region: env.AWS_REGION,
+   image: "my-app",
+   otherAccountIds: [env.DEV_ACCOUNT_ID, env.PRD_ACCOUNT_ID],
+   lifecyclePolicy: myLifecyclePolicy
  )
  ************************************/
 
