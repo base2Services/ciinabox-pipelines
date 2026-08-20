@@ -27,7 +27,7 @@ def call(body) {
   // evaluate the body block, and collect configuration into the object
   def config = body
 
-  def tags = config.get('tags',['latest'])
+  def tags = config.get('tags',['latest']).unique()
   def dockerRepo = "${config.repo}/${config.image}"
   def buildDir = config.get('dir', '.')
   def dockerfile = config.get('dockerfile', 'Dockerfile')
