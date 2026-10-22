@@ -185,6 +185,7 @@ class PackerTemplateBuilder implements Serializable {
       Map provisioner = [
         type: 'powershell',
         script: script,
+        max_retries: 3,
         environment_vars: [
           "SOURCE_BUCKET=${bucket}",
           "BUCKET_REGION=${region}",

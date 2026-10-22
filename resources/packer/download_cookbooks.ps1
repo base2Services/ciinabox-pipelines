@@ -20,6 +20,13 @@ $SourceBucket    = $ENV:SOURCE_BUCKET
 $BucketRegion    = $ENV:BUCKET_REGION
 $CookbookPath    = $ENV:COOKBOOK_PATH
 
+# Fail fast if packer's environment_vars didn't reach this session, so the
+# provisioner's max_retries can try again instead of waiting on Read-S3Object
+if ([string]::IsNullOrEmpty($SourceBucket) -or [string]::IsNullOrEmpty($BucketRegion) -or [string]::IsNullOrEmpty($CookbookPath)) {
+  Write-Output "ERROR: SOURCE_BUCKET, BUCKET_REGION or COOKBOOK_PATH is not set (got '$SourceBucket', '$BucketRegion', '$CookbookPath')"
+  exit 1
+}
+
 Write-Output "INFO: Downloading cookbooks from s3 location: $SourceBucket/$CookbookPath"
 Read-S3Object -Region $BucketRegion -BucketName $SourceBucket -Key $CookbookPath -File "$WorkDir\cookbooks.tar.gz"
 
