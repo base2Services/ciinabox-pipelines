@@ -20,13 +20,6 @@ import com.base2.ciinabox.aws.CloudformationStack
 import com.base2.ciinabox.aws.CloudformationStackEvents
 import com.amazonaws.services.cloudformation.model.ExecuteChangeSetRequest
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
-import com.amazonaws.services.cloudformation.waiters.AmazonCloudFormationWaiters
-import com.amazonaws.waiters.WaiterParameters
-import com.amazonaws.waiters.WaiterUnrecoverableException
-import com.amazonaws.waiters.NoOpWaiterHandler
-import java.util.concurrent.Future
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 
 def call(body) {
   def config = body
@@ -52,12 +45,7 @@ def apply(config, stackName, stackNameUpper) {
     env: env,
     duration: config.get('duration', 3600)])
     
-  def cfclient = clientBuilder.cloudformation()
-  def cfstack = new CloudformationStack(clientBuilder, stackName)
-  
-  def changeSetType = cfstack.getChangeSetType()
-  cfStack = null
-  cfclient = null
+  def changeSetType = new CloudformationStack(clientBuilder, stackName).getChangeSetType()
   def changeSetName = null
     
   if (config.changeSetName) {
@@ -68,119 +56,67 @@ def apply(config, stackName, stackNameUpper) {
 
   echo "Session duration: " + config.get('duration', 3600).toString()
   echo "Executing change set ${changeSetName}"
+  def before = stackState(clientBuilder, stackName)
   executeChangeSet(clientBuilder, stackName, changeSetName)
-  def success = wait(clientBuilder, stackName, changeSetType, config)
+  def success = wait(clientBuilder, stackName, changeSetType, before)
 
   if (!success) {
-    cfclient = clientBuilder.cloudformation()
-    def events = new CloudformationStackEvents(cfclient, config.region, stackName)
-    echo events.getFailedEventsTable()
-    events = null
-    cfclient = null
+    echo failedEventsTable(clientBuilder, config.region, stackName)
     error "${stackName} changeset ${changeSetName} failed to execute."
   }
   
-  cfclient = null
   clientBuilder = null
   echo "Change set ${changeSetName} ${changeSetType}D"
 }
 
+// The AWS calls are @NonCPS so their clients never live in a CPS frame: Jenkins can save the
+// pipeline while a parallel branch is part way through CPS code, not only at a step, and a
+// client there fails the build with a NotSerializableException. They run no steps.
+@NonCPS
 def executeChangeSet(clientBuilder, stackName, changeSetName) {
-  def cfclient = clientBuilder.cloudformation()
-  cfclient.executeChangeSet(new ExecuteChangeSetRequest()
+  clientBuilder.cloudformation().executeChangeSet(new ExecuteChangeSetRequest()
     .withChangeSetName(changeSetName)
     .withStackName(stackName))
-  cfclient = null 
 }
 
-def wait(clientBuilder, stackName, changeSetType, config) {
-  def cfclient = clientBuilder.cloudformation()
-  def waiter = null
-  def count = 0
-  switch(changeSetType) {
-    case 'CREATE':
-      waiter = cfclient.waiters().stackCreateComplete()
-      break
-    default:
-      waiter = cfclient.waiters().stackUpdateComplete()
-      break
-  }
+@NonCPS
+def failedEventsTable(clientBuilder, region, stackName) {
+  return new CloudformationStackEvents(clientBuilder.cloudformation(), region, stackName).getFailedEventsTable()
+}
 
-  try {
-    def future = waiter.runAsync(
-      new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
-      new NoOpWaiterHandler()
-    )
-    while(!future.isDone()) {
-      try {
-        echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
-        Thread.sleep(10000)
-        count++
-        // Initialise new client and waiter if count exceeds set timeout value
-        if (count > 300) { //3000 seconds = 50 minutes, thread sleep is 10 secs so 300 iterations
-          cfclient = updateClient(clientBuilder, cfclient, config.region) 
-          waiter = updateWaiter(cfclient,changeSetType)
-          future = waiter.runAsync(
-             new WaiterParameters<>(new DescribeStacksRequest().withStackName(stackName)),
-             new NoOpWaiterHandler()
-          )
-          count = 0
-        }
-
-      } catch(InterruptedException ex) {
-          // suppress and continue
-      }
+// Polls the stack until the change set's execution finishes. Only plain values are held here,
+// across the echo and sleep steps. Each poll builds its own client in stackState, so it also
+// picks up fresh credentials, and a long update never outlives them.
+def wait(clientBuilder, stackName, changeSetType, before) {
+  def state = null
+  while (true) {
+    state = stackState(clientBuilder, stackName)
+    // An update hasn't started until the stack's LastUpdatedTime moves; until then the stack
+    // may still report the previous update's UPDATE_COMPLETE.
+    def started = changeSetType == 'CREATE' || state.updated != before.updated
+    def finished = !state.status.endsWith('_IN_PROGRESS') || state.status == 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'
+    if (started && finished) {
+      break
     }
-  } catch(Exception ex) {
-    cfclient = null
-    echo "execute changeset ${changeSetType.toLowerCase()} failed with error ${ex.getMessage()}"
-    return false
+    echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
+    sleep(time: 10, unit: 'SECONDS')
   }
-  
+
   // check the final state of the stack to check for any false positive stack status such as ROLLBACK_COMPLETE
-  def request = new DescribeStacksRequest().withStackName(stackName)
-  def stacks = cfclient.describeStacks(request).getStacks()
-  def finalStatus = stacks[0].getStackStatus()
-  cfclient = null
-  if (!finalStatus.matches("UPDATE_COMPLETE|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS|CREATE_COMPLETE")) {
-    echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${finalStatus}"
+  if (!state.status.matches("UPDATE_COMPLETE|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS|CREATE_COMPLETE")) {
+    echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${state.status}"
     return false
   }
-  
+
   return true
 }
 
-def updateClient(clientBuilder, cfclient, region){
-  
-  echo "Updating Client"
-
-  def cb = new AmazonCloudFormationClientBuilder().standard()
-    .withClientConfiguration(clientBuilder.config())
-
-  if (region) {
-    cb.withRegion(region)
-  }
-
-  def creds =  clientBuilder.getNewCreds()
-
-  if(creds != null) {
-    cb.withCredentials(new AWSStaticCredentialsProvider(creds))
-  }
-
-  return cb.build()
-
-}
-
-def updateWaiter(cfclient, changeSetType){
-  echo "Updating Waiter"
-  switch(changeSetType) {
-    case 'CREATE':
-      def waiter = cfclient.waiters().stackCreateComplete()
-      echo "Created new waiter - ${waiter}"
-      return waiter
-    default:
-      def waiter = cfclient.waiters().stackUpdateComplete()
-      echo "Created new waiter - ${waiter}"
-      return waiter
-  }
+// Returns the stack's status and LastUpdatedTime (epoch millis, null if never updated) as plain
+// values, so the caller holds nothing that can't be serialized.
+@NonCPS
+def stackState(clientBuilder, stackName) {
+  def stack = clientBuilder.cloudformation()
+    .describeStacks(new DescribeStacksRequest().withStackName(stackName))
+    .getStacks()[0]
+  return [status: stack.getStackStatus().toString(), updated: stack.getLastUpdatedTime()?.getTime()]
 }

@@ -1,5 +1,6 @@
 package com.base2.ciinabox.aws
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicSessionCredentials
@@ -22,6 +23,9 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder
 
+// Every method is @NonCPS: none runs a step, and Jenkins can save a running pipeline while a
+// parallel branch is part way through CPS code, so a builder or client held in a CPS local can
+// fail the build with a NotSerializableException. It also lets other @NonCPS code build clients.
 class AwsClientBuilder implements Serializable {
   
   def region
@@ -40,6 +44,7 @@ class AwsClientBuilder implements Serializable {
     this.duration = config.get('duration', 3600)
   }
 
+  @NonCPS
   def sqs() {
     def cb = new AmazonSQSClientBuilder().standard()
       .withClientConfiguration(config())
@@ -56,6 +61,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def redshift() {
     def cb = new AmazonRedshiftClientBuilder().standard()
       .withClientConfiguration(config())
@@ -72,6 +78,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def rds() {
     def cb = new AmazonRDSClientBuilder().standard()
       .withClientConfiguration(config())
@@ -88,6 +95,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
   
+  @NonCPS
   def ecs() {
     def cb = new AmazonECSClientBuilder().standard()
       .withClientConfiguration(config())
@@ -104,6 +112,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
   
+  @NonCPS
   def ec2() {
     def cb = new AmazonEC2ClientBuilder().standard()
       .withClientConfiguration(config())
@@ -120,6 +129,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def s3() {
     def cb = new AmazonS3ClientBuilder().standard()
       .withClientConfiguration(config())
@@ -136,6 +146,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def cloudformation() {
     def cb = new AmazonCloudFormationClientBuilder().standard()
       .withClientConfiguration(config())
@@ -152,6 +163,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def codeartifact() {
     def cb = new AWSCodeArtifactClientBuilder().standard()
       .withClientConfiguration(config())
@@ -168,6 +180,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
 
+  @NonCPS
   def cloudwatch() {
     def cb = new AmazonCloudWatchClientBuilder().standard()
       .withClientConfiguration(config())
@@ -184,6 +197,7 @@ class AwsClientBuilder implements Serializable {
     return cb.build()
   }
   
+  @NonCPS
   def asg() {
     def cb = new AmazonAutoScalingClientBuilder().standard()
       .withClientConfiguration(config())
@@ -201,6 +215,7 @@ class AwsClientBuilder implements Serializable {
   
   }
 
+  @NonCPS
   def config() {
     def clientConfiguration = new ClientConfiguration()
       .withRetryPolicy(new RetryPolicy(
@@ -212,6 +227,7 @@ class AwsClientBuilder implements Serializable {
     return clientConfiguration
   }
 
+  @NonCPS
   private def assumeRole() {
     def roleArn = "arn:aws:iam::" + awsAccountId + ":role/" + role
     def roleSessionName = "sts-session-" + awsAccountId
@@ -226,6 +242,7 @@ class AwsClientBuilder implements Serializable {
     return assumeRoleResult.getCredentials()
   }
 
+  @NonCPS
   private def getCredentials() {
     if(env['AWS_SESSION_TOKEN'] != null) {
       return new BasicSessionCredentials(
@@ -245,6 +262,7 @@ class AwsClientBuilder implements Serializable {
     }
   }
 
+  @NonCPS
   def getNewCreds() {
     def stsCreds = assumeRole()
     def creds =  new BasicSessionCredentials(
