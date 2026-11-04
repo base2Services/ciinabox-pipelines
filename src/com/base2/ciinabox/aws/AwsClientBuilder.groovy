@@ -235,11 +235,17 @@ class AwsClientBuilder implements Serializable {
     if (!region.equals("us-east-1")) {
         sts.setEndpoint("sts." + region + ".amazonaws.com")
     }
-    def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
-              .withRoleArn(roleArn)
-              .withDurationSeconds(duration)
-              .withRoleSessionName(roleSessionName))
-    return assumeRoleResult.getCredentials()
+    try {
+      def assumeRoleResult = sts.assumeRole(new AssumeRoleRequest()
+                .withRoleArn(roleArn)
+                .withDurationSeconds(duration)
+                .withRoleSessionName(roleSessionName))
+      return assumeRoleResult.getCredentials()
+    } finally {
+      // The STS client is used once; shut it down so its connection pool isn't kept
+      // by the SDK's idle connection reaper.
+      sts.shutdown()
+    }
   }
 
   @NonCPS
