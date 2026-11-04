@@ -165,7 +165,9 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
 // Builds and submits the create change set request, returning an error message (or null) for
 // the caller to fail with. The AWS calls in this file are @NonCPS so their clients, requests and
 // waiters never live in a CPS frame: Jenkins can save the pipeline while a parallel branch is
-// part way through CPS code, and they can't be serialized. A @NonCPS method runs no steps.
+// part way through CPS code, and they can't be serialized. A @NonCPS method runs no steps. Each
+// shuts its client down: the SDK's idle connection reaper keeps every client's connection pool
+// until then.
 @NonCPS
 def submitChangeSet(clientBuilder, changeSetName, stackName, changeSetType, params, config) {
   def request = new CreateChangeSetRequest()
@@ -207,8 +209,9 @@ def submitChangeSet(clientBuilder, changeSetName, stackName, changeSetType, para
     request.withIncludeNestedStacks(true)
   }
 
+  def cfclient = clientBuilder.cloudformation()
   try {
-    clientBuilder.cloudformation().createChangeSet(request)
+    cfclient.createChangeSet(request)
   } catch (AlreadyExistsException ex) {
     return "Change set with name ${changeSetName} already exists. Use a different name and try again."
   } catch (AmazonCloudFormationException ex) {
@@ -217,6 +220,8 @@ def submitChangeSet(clientBuilder, changeSetName, stackName, changeSetType, para
     } else {
       return "Failed to create the changeset due to error: ${ex.getErrorMessage()}"
     }
+  } finally {
+    cfclient.shutdown()
   }
   return null
 }
@@ -228,11 +233,13 @@ def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
   def listRequest = new ListChangeSetsRequest()
     .withStackName(stackName)
 
-  def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
-  def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
-
-  cfclient = null
-  return selected ? selected.getChangeSetName() : null
+  try {
+    def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
+    def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
+    return selected ? selected.getChangeSetName() : null
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
 def wait(clientBuilder, changeSetName, stackName, verbose) {
@@ -256,8 +263,9 @@ def waitForChangeSet(clientBuilder, changeSetName, stackName) {
     .withStackName(stackName)
     .withChangeSetName(changeSetName)
 
+  def waiters = new AmazonCloudFormationWaiters(cfclient)
   try {
-    new AmazonCloudFormationWaiters(cfclient).changeSetCreateComplete().run(new WaiterParameters(request))
+    waiters.changeSetCreateComplete().run(new WaiterParameters(request))
   } catch (WaiterUnrecoverableException ex) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
@@ -269,6 +277,9 @@ def waitForChangeSet(clientBuilder, changeSetName, stackName) {
       }
     }
     throw ex
+  } finally {
+    waiters.shutdown()
+    cfclient.shutdown()
   }
 
   return true
@@ -281,9 +292,11 @@ def getChangeSetDetails(clientBuilder, stackName, changeSetName) {
   def request = new DescribeChangeSetRequest()
       .withStackName(stackName)
       .withChangeSetName(changeSetName)
-  def cs =  cfclient.describeChangeSet(request).getChanges()
-  cfclient = null
-  return cs
+  try {
+    return cfclient.describeChangeSet(request).getChanges()
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
 @NonCPS

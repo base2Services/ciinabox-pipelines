@@ -72,38 +72,62 @@ def apply(config, stackName, stackNameUpper) {
 // The AWS calls are @NonCPS so their clients never live in a CPS frame: Jenkins can save the
 // pipeline while a parallel branch is part way through CPS code, not only at a step, and a
 // client there fails the build with a NotSerializableException. They run no steps.
+// Each shuts its client down: the SDK's idle connection reaper keeps every client's connection
+// pool until then.
 @NonCPS
 def executeChangeSet(clientBuilder, stackName, changeSetName) {
-  clientBuilder.cloudformation().executeChangeSet(new ExecuteChangeSetRequest()
-    .withChangeSetName(changeSetName)
-    .withStackName(stackName))
+  def cfclient = clientBuilder.cloudformation()
+  try {
+    cfclient.executeChangeSet(new ExecuteChangeSetRequest()
+      .withChangeSetName(changeSetName)
+      .withStackName(stackName))
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
 @NonCPS
 def failedEventsTable(clientBuilder, region, stackName) {
-  return new CloudformationStackEvents(clientBuilder.cloudformation(), region, stackName).getFailedEventsTable()
+  def cfclient = clientBuilder.cloudformation()
+  try {
+    return new CloudformationStackEvents(cfclient, region, stackName).getFailedEventsTable()
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
-// Polls the stack until the change set's execution finishes. Only plain values are held here,
-// across the echo and sleep steps. Each poll builds its own client in stackState, so it also
-// picks up fresh credentials, and a long update never outlives them.
+// Polls the stack until the change set's execution finishes, including an update's cleanup
+// (UPDATE_COMPLETE_CLEANUP_IN_PROGRESS): until it ends, CloudFormation rejects another update of
+// the stack. Only plain values are held here, across the echo and sleep steps; each poll builds
+// its own client in stackState.
+//
+// Credentials from the environment (AWS_SESSION_TOKEN, as inside withIAMRole) can expire during a
+// long update. As the waiter this replaced did, after 50 minutes the polls stop using them and
+// assume the role (when one is given) on each poll instead.
 def wait(clientBuilder, stackName, changeSetType, before) {
   def state = null
+  def polls = 0
+  def pollBuilder = clientBuilder
   while (true) {
-    state = stackState(clientBuilder, stackName)
+    state = stackState(pollBuilder, stackName)
     // An update hasn't started until the stack's LastUpdatedTime moves; until then the stack
     // may still report the previous update's UPDATE_COMPLETE.
     def started = changeSetType == 'CREATE' || state.updated != before.updated
-    def finished = !state.status.endsWith('_IN_PROGRESS') || state.status == 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'
+    def finished = !state.status.endsWith('_IN_PROGRESS')
     if (started && finished) {
       break
     }
     echo "waiting for execute changeset to ${changeSetType.toLowerCase()} ..."
     sleep(time: 10, unit: 'SECONDS')
+    polls++
+    if (polls == 300 && clientBuilder?.awsAccountId && clientBuilder?.role) {
+      echo "Refreshing credentials: assuming role ${clientBuilder.role} in ${clientBuilder.awsAccountId} on each poll"
+      pollBuilder = roleCredentials(clientBuilder)
+    }
   }
 
   // check the final state of the stack to check for any false positive stack status such as ROLLBACK_COMPLETE
-  if (!state.status.matches("UPDATE_COMPLETE|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS|CREATE_COMPLETE")) {
+  if (!state.status.matches("UPDATE_COMPLETE|CREATE_COMPLETE")) {
     echo "execute changeset ${changeSetType.toLowerCase()} failed with status ${state.status}"
     return false
   }
@@ -115,8 +139,22 @@ def wait(clientBuilder, stackName, changeSetType, before) {
 // values, so the caller holds nothing that can't be serialized.
 @NonCPS
 def stackState(clientBuilder, stackName) {
-  def stack = clientBuilder.cloudformation()
-    .describeStacks(new DescribeStacksRequest().withStackName(stackName))
-    .getStacks()[0]
-  return [status: stack.getStackStatus().toString(), updated: stack.getLastUpdatedTime()?.getTime()]
+  def cfclient = clientBuilder.cloudformation()
+  try {
+    def stack = cfclient.describeStacks(new DescribeStacksRequest().withStackName(stackName)).getStacks()[0]
+    return [status: stack.getStackStatus().toString(), updated: stack.getLastUpdatedTime()?.getTime()]
+  } finally {
+    cfclient.shutdown()
+  }
+}
+
+// The same builder without the environment's credentials, so each client assumes the role afresh.
+def roleCredentials(clientBuilder) {
+  return new AwsClientBuilder([
+    region: clientBuilder.region,
+    awsAccountId: clientBuilder.awsAccountId,
+    role: clientBuilder.role,
+    maxErrorRetry: clientBuilder.maxErrorRetry,
+    env: [:],
+    duration: clientBuilder.duration])
 }
