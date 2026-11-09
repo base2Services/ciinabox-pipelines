@@ -1,5 +1,6 @@
 package com.base2.ciinabox.aws
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException
 
@@ -19,6 +20,7 @@ class CloudformationStackEvents implements Serializable {
   Grabs all events for a stack and prints details of each failed resource
   including error message and link to event in web console
   **/
+  @NonCPS
   def getFailedEventsTable() {
     def events = getFailedEvents()
     def text = "\n" + " FAILED EVENTS ".center(165,'-') + "\n"
@@ -43,6 +45,7 @@ class CloudformationStackEvents implements Serializable {
     return text
   }
   
+  @NonCPS
   def getFailedEvents() {
     def states = "CREATE_FAILED|ROLLBACK_IN_PROGRESS|UPDATE_FAILED|DELETE_FAILED"
     def events = getStackEvents(stackName)
@@ -73,6 +76,7 @@ class CloudformationStackEvents implements Serializable {
     return failures
   }
   
+  @NonCPS
   def getStackEvents(String stack) {
 
      def request = new DescribeStackEventsRequest().withStackName(stack)
@@ -91,6 +95,7 @@ class CloudformationStackEvents implements Serializable {
     return results
   }
   
+  @NonCPS
   def seperator(list=[]) {
     def line = '+'
     list.each { line = line + '-'.multiply(it) + '+' }
@@ -98,6 +103,7 @@ class CloudformationStackEvents implements Serializable {
     return line
   }
 
+  @NonCPS
   def values(list=[:]) {
     def line = '|'
     list.each { k,v ->

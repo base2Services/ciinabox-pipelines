@@ -1,5 +1,6 @@
 package com.base2.ciinabox.aws
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.base2.ciinabox.aws.AwsClientBuilder
 import com.base2.ciinabox.aws.IntrinsicsYamlConstructor
 
@@ -13,6 +14,8 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException
 import com.amazonaws.services.cloudformation.model.Parameter
 
+// The methods are @NonCPS so the AWS clients they use never live in a CPS frame (see
+// AwsClientBuilder). They run no steps.
 class CloudformationStack implements Serializable {
   
   def clientBuilder
@@ -27,6 +30,7 @@ class CloudformationStack implements Serializable {
   Checks if the CloudFormation stack exists and return the required change set type
   returns 'CREATE || UPDATE'
   **/
+  @NonCPS
   def getChangeSetType() {
     def request = new DescribeStacksRequest()
       .withStackName(stackName)
@@ -60,6 +64,7 @@ class CloudformationStack implements Serializable {
   and overrides values with given parameters
   returns a list of cloudformation parameters
   **/
+  @NonCPS
   def getStackParams(Map overrideParams, String templateUrl, region=null) {
     def stackParams = [:]
     def newTemplateParams = []
@@ -109,13 +114,15 @@ class CloudformationStack implements Serializable {
     }
     
     println "stack params: ${stackParams.values()}"
-    return stackParams.values()
+    // A list, not the map's values view, which can't be serialized in the caller's CPS frame.
+    return stackParams.values().toList()
   }
   
   /**
   Gets template parameters names from a S3 URL
   returns a list of parameter names
   **/
+  @NonCPS
   def getTemplateParameterNames(String templateUrl) {
     def template = getTemplateFromUrl(templateUrl)
     def parameterNames = []
@@ -132,6 +139,7 @@ class CloudformationStack implements Serializable {
   Gets a cloudformation template in S3 from a S3 URL
   returns the template object
   **/
+  @NonCPS
   def getTemplateFromUrl(String templateUrl) {
     def s3URI = new AmazonS3URI(templateUrl)
 
@@ -158,6 +166,7 @@ class CloudformationStack implements Serializable {
   Looks up a S3 Bucket region and returns a complete 
   region string that can be used in a client
   **/
+  @NonCPS
   def getBucketRegion(String bucket) {
     def s3GetRegionClient = new AwsClientBuilder([region: clientBuilder.region]).s3()
     def bucketRegion = s3GetRegionClient.getBucketLocation(bucket)

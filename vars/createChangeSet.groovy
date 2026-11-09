@@ -134,10 +134,42 @@ def call(body) {
 
 
 def createChangeSet(clientBuilder,changeSetName,stackName,config) {
-  def cfclient = clientBuilder.cloudformation()
   def cfstack = new CloudformationStack(clientBuilder, stackName)
   def changeSetType = cfstack.getChangeSetType()
 
+  if (config.roleArn) {
+    steps.echo "using cloudformation service role arn ${config.roleArn}"
+  }
+
+  def params = []
+  try {
+    params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
+  } catch (AmazonS3Exception ex) {
+    println(ex)
+    if(ex.message.contains('Access Denied (Service: Amazon S3; Status Code: 403;')) {
+      throw ex;
+    }
+    println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
+    env.ERROR_S3_KEY_DOES_NOT_EXIST = true
+    currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+  }
+
+  steps.echo "Creating change set ${changeSetName} for stack ${stackName} with operation ${changeSetType}"
+
+  def error = submitChangeSet(clientBuilder, changeSetName, stackName, changeSetType, params, config)
+  if (error) {
+    steps.error(error)
+  }
+}
+
+// Builds and submits the create change set request, returning an error message (or null) for
+// the caller to fail with. The AWS calls in this file are @NonCPS so their clients, requests and
+// waiters never live in a CPS frame: Jenkins can save the pipeline while a parallel branch is
+// part way through CPS code, and they can't be serialized. A @NonCPS method runs no steps. Each
+// shuts its client down: the SDK's idle connection reaper keeps every client's connection pool
+// until then.
+@NonCPS
+def submitChangeSet(clientBuilder, changeSetName, stackName, changeSetType, params, config) {
   def request = new CreateChangeSetRequest()
     .withStackName(stackName)
     .withChangeSetType(changeSetType)
@@ -157,23 +189,11 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
   }
 
   if (config.roleArn) {
-    steps.echo "using cloudformation service role arn ${config.roleArn}"
     request.withRoleARN(config.roleArn)
   }
 
-  try {
-    def params = cfstack.getStackParams(config.parameters, config.get('templateUrl'))
-    if (params.size() > 0) {
-      request.withParameters(params)
-    }
-  } catch (AmazonS3Exception ex) {
-    println(ex)
-    if(ex.message.contains('Access Denied (Service: Amazon S3; Status Code: 403;')) {
-      throw ex;
-    }
-    println ("============\nThe specified CloudFormation template ${config.get('templateUrl')} was not found!\nIt seems it was not built in previous build task.\n============\n")
-    env.ERROR_S3_KEY_DOES_NOT_EXIST = true
-    currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+  if (params.size() > 0) {
+    request.withParameters(params)
   }
 
   def tags = []
@@ -189,78 +209,94 @@ def createChangeSet(clientBuilder,changeSetName,stackName,config) {
     request.withIncludeNestedStacks(true)
   }
 
-  steps.echo "Creating change set ${changeSetName} for stack ${stackName} with operation ${changeSetType}"
-
+  def cfclient = clientBuilder.cloudformation()
   try {
     cfclient.createChangeSet(request)
   } catch (AlreadyExistsException ex) {
-    steps.error("Change set with name ${changeSetName} already exists. Use a different name and try again.")
+    return "Change set with name ${changeSetName} already exists. Use a different name and try again."
   } catch (AmazonCloudFormationException ex) {
     if (ex.getErrorMessage().find(/^Parameters:(.*)must\shave\svalues$/)) {
-      steps.error("Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}")
+      return "Missing parameters in the createChangeSet() step. ${ex.getErrorMessage()}"
     } else {
-      steps.error("Failed to create the changeset due to error: ${ex.getErrorMessage()}")
+      return "Failed to create the changeset due to error: ${ex.getErrorMessage()}"
     }
   } finally {
-      cfstack = null
-      cfclient = null
+    cfclient.shutdown()
   }
+  return null
 }
 
 
+@NonCPS
 def getNestedChangeSet(clientBuilder, changeSetName, stackName) {
   def cfclient = clientBuilder.cloudformation()
   def listRequest = new ListChangeSetsRequest()
     .withStackName(stackName)
 
-  def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
-  def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
-
-  cfclient = null
-  return selected ? selected.getChangeSetName() : null
+  try {
+    def changeSets = cfclient.listChangeSets(listRequest).getSummaries()
+    def selected = changeSets.find {it.getChangeSetName().contains(changeSetName)}
+    return selected ? selected.getChangeSetName() : null
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
 def wait(clientBuilder, changeSetName, stackName, verbose) {
-  def cfclient = clientBuilder.cloudformation()
   if (verbose) {
     echo "Waiting for change set ${changeSetName} for stack ${stackName} to complete"
   }
 
+  if (!waitForChangeSet(clientBuilder, changeSetName, stackName)) {
+    steps.echo("WARNING: No changes were detected when creating the changeset")
+    return false
+  }
+
+  return true
+}
+
+// Waits for the change set to be created. One with no changes is deleted and false returned.
+@NonCPS
+def waitForChangeSet(clientBuilder, changeSetName, stackName) {
+  def cfclient = clientBuilder.cloudformation()
   def request = new DescribeChangeSetRequest()
     .withStackName(stackName)
     .withChangeSetName(changeSetName)
 
+  def waiters = new AmazonCloudFormationWaiters(cfclient)
   try {
-    new AmazonCloudFormationWaiters(cfclient).changeSetCreateComplete().run(new WaiterParameters(request))
+    waiters.changeSetCreateComplete().run(new WaiterParameters(request))
   } catch (WaiterUnrecoverableException ex) {
     if (ex.getMessage().equals('Resource never entered the desired state as it failed.')) {
       def changeset = cfclient.describeChangeSet(request)
       if (changeset.getStatusReason().contains("The submitted information didn't contain changes.") || changeset.getStatusReason().contains("No updates are to be performed.")) {
-        steps.echo("WARNING: No changes were detected when creating the changeset")
-        def deleteRequest =  new DeleteChangeSetRequest()
-            .withStackName(stackName)
-            .withChangeSetName(changeSetName)
-        def r = cfclient.deleteChangeSet(deleteRequest)
+        cfclient.deleteChangeSet(new DeleteChangeSetRequest()
+          .withStackName(stackName)
+          .withChangeSetName(changeSetName))
         return false
       }
     }
     throw ex
   } finally {
-    cfclient = null
+    waiters.shutdown()
+    cfclient.shutdown()
   }
-  
+
   return true
 }
 
 
+@NonCPS
 def getChangeSetDetails(clientBuilder, stackName, changeSetName) {
   def cfclient = clientBuilder.cloudformation()
   def request = new DescribeChangeSetRequest()
       .withStackName(stackName)
       .withChangeSetName(changeSetName)
-  def cs =  cfclient.describeChangeSet(request).getChanges()
-  cfclient = null
-  return cs
+  try {
+    return cfclient.describeChangeSet(request).getChanges()
+  } finally {
+    cfclient.shutdown()
+  }
 }
 
 @NonCPS
