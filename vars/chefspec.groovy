@@ -17,7 +17,9 @@ def call(body) {
       echo "=========================================="
       cd $WORKSPACE/$COOKBOOK
       gem install version
-      gem install rspec_junit_formatter
+      # pinned: newer releases require Ruby >= 3.3 but ChefDK ships Ruby 2.6, so an
+      # unpinned install fails and rspec then dies on --format RspecJunitFormatter
+      gem install rspec_junit_formatter -v 0.6.2
       berks install
       if [ $? -ne 0 ]; then
         echo "Berkshelf install Failed!"
